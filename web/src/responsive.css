@@ -1,0 +1,31 @@
+@media (max-width: 1100px) {
+  .app .study-pane { position: fixed; z-index: 40; right: 0; top: 0; bottom: 0; width: min(520px, 92vw); max-width: none; min-width: 0; box-shadow: -8px 0 40px #20282015; }
+  .app .pane-shade { display: block; position: fixed; inset: 0; z-index: 39; background: #20282045; }
+}
+@media (max-width: 760px) {
+  .app .sidebar { position: fixed; top: 0; bottom: 0; left: 0; z-index: 50; width: min(285px, 86vw); box-shadow: 8px 0 40px #20282015; }
+  .app .drawer-shade { display: block; position: fixed; inset: 0; z-index: 49; background: #20282045; }
+  .app .topbar { height: 56px; padding: 0 12px; gap: 10px; }
+  .app .breadcrumb { gap: 8px; }
+  .app .breadcrumb > span { display: none; }
+  .app .mode-badge { font-size: 10px; padding: 2px 5px; }
+  .app .conversation-toolbar { padding: 10px 17px; min-height: 52px; }
+  .app .message-scroll { padding: 0 20px 20px; }
+  .app .welcome { margin-top: 7vh; }
+  .app .welcome h1 { font-size: 22px; }
+  .app .composer-region { padding: 8px 14px max(10px, env(safe-area-inset-bottom)); }
+  .app .composer { padding: 11px 12px 9px; }
+  .app .message { margin: 18px 0 26px; }
+  .app .study-pane { width: min(520px, 96vw); }
+  .app .slide-scroll { padding: 22px 16px; }
+  .app .pane-header { padding: 12px 16px; }
+  .app .error-banner { flex-wrap: wrap; gap: 2px; }
+}
+@media (max-height: 600px) {
+  .app .welcome { margin-top: 10px; margin-bottom: 12px; }
+  .app .welcome-icon { margin-bottom: 6px; }
+  .app .starter-actions { margin-top: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
