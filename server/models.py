@@ -84,4 +84,4 @@ class TutorAnswer(StrictModel):
 
 
 class ChatResponse(TutorAnswer):
-    mode: Literal["offline", "ai"]
+    mode: Literal["ai"]

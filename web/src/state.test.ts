@@ -10,6 +10,14 @@ function storage() {
 }
 
 describe('chapter persistence', () => {
+  it('migrates only the page from legacy history, never old assistant interactions', () => {
+    const store = storage();
+    store.setItem('chapter-tutor:v1:a', JSON.stringify({ slide: 3, messages: [
+      { id: 'u', role: 'user', content: '旧问题' },
+      { id: 'a', role: 'assistant', content: '旧讲解', mode: 'offline' },
+    ] }));
+    expect(loadSession(store, 'a', 8)).toEqual({ ...emptySession(), slide: 3 });
+  });
   it('isolates chapter messages and resumes the saved page', () => {
     const store = storage();
     const session = { ...emptySession(), slide: 4,

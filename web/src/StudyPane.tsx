@@ -2,10 +2,11 @@ import { lazy, Suspense, useState } from 'react';
 import { ChevronLeft, ChevronRight, Download, X } from 'lucide-react';
 import type { ChapterDetail, Diagram } from './types';
 import IconButton from './IconButton';
+import Roadmap, { type RoadmapProps } from './Roadmap';
 
 const DiagramCanvas = lazy(() => import('./DiagramCanvas'));
 
-export type Pane = 'slides' | 'diagram';
+export type Pane = 'slides' | 'diagram' | 'outline';
 interface Props {
   chapter: ChapterDetail;
   page: number;
@@ -15,8 +16,9 @@ interface Props {
   onClose: () => void;
   diagram?: Diagram;
   busy: boolean;
+  roadmap: Pick<RoadmapProps, 'outline' | 'error' | 'onRetry'>;
 }
-export default function StudyPane({ chapter, page, onPage, pane, onPane, onClose, diagram, busy }: Props) {
+export default function StudyPane({ chapter, page, onPage, pane, onPane, onClose, diagram, busy, roadmap }: Props) {
   const slide = chapter.slides.find(s => s.number === page);
   const [failedImage, setFailedImage] = useState<string>();
   const image = slide?.imageUrl && failedImage !== slide.imageUrl;
@@ -24,6 +26,7 @@ export default function StudyPane({ chapter, page, onPage, pane, onPane, onClose
     <header className="pane-header">
       <div className="tabs" role="tablist" aria-label="资料视图">
         <button role="tab" aria-selected={pane === 'slides'} onClick={() => onPane('slides')}>课件</button>
+        <button role="tab" aria-selected={pane === 'outline'} onClick={() => onPane('outline')}>大纲</button>
         <button role="tab" aria-selected={pane === 'diagram'} onClick={() => onPane('diagram')}>画布</button>
       </div>
       <IconButton label="关闭资料" onClick={onClose}><X size={18} /></IconButton>
@@ -58,7 +61,9 @@ export default function StudyPane({ chapter, page, onPage, pane, onPane, onClose
           <ChevronRight size={18} />
         </IconButton>
       </footer>
-    </> : <>
+    </> : pane === 'outline' ? <div className="outline-scroll">
+      <Roadmap {...roadmap} page={page} onPage={onPage} busy={busy} />
+    </div> : <>
       <div className="canvas-heading"><h2>{diagram?.title || '章节画布'}</h2></div>
       {diagram ? <Suspense fallback={<div className="pane-empty" role="status">正在打开画布…</div>}>
         <DiagramCanvas key={JSON.stringify(diagram)} diagram={diagram} />

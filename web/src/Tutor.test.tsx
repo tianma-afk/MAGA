@@ -3,7 +3,7 @@ import { StrictMode } from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import Tutor from './Tutor';
-import { api } from './api';
+import { api, ConfigurationError } from './api';
 import type { ChapterDetail, ChatResponse } from './types';
 
 const chapter: ChapterDetail = {
@@ -14,16 +14,23 @@ const chapter: ChapterDetail = {
   ],
 };
 const response: ChatResponse = {
-  content: '这是处理器的讲解。', slide: 2, citations: [{ slide: 1, title: '处理器概述' }], mode: 'offline',
+  content: '这是处理器的讲解。', slide: 2, citations: [{ slide: 1, title: '处理器概述' }], mode: 'ai',
 };
 beforeEach(() => {
   localStorage.clear();
   Element.prototype.scrollIntoView = vi.fn();
+  vi.spyOn(api, 'outline').mockResolvedValue({
+    chapterId: chapter.id, title: '处理器学习路线',
+    nodes: [
+      { id: 'overview', title: '认识处理器', summary: '从部件到功能', slides: [1] },
+      { id: 'execute', title: '理解执行', summary: '跟随指令的数据流', slides: [2] },
+    ], edges: [{ source: 'overview', target: 'execute' }],
+  });
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 function mount() {
-  return render(<StrictMode><Tutor chapter={chapter} mode="offline" onMode={() => {}} /></StrictMode>);
+  return render(<StrictMode><Tutor chapter={chapter} mode="ai" onMode={() => {}} /></StrictMode>);
 }
 function submit(text = '解释当前页') {
   fireEvent.change(screen.getByRole('textbox', { name: '向助教提问' }), { target: { value: text } });
@@ -36,7 +43,7 @@ it('sends a question, renders its answer and restores chapter history', async ()
   submit();
   expect(await screen.findByText(response.content)).toBeTruthy();
   expect(screen.getByText('解释当前页', { selector: '.message-body' })).toBeTruthy();
-  await waitFor(() => expect(JSON.parse(localStorage.getItem('chapter-tutor:v1:chapter4')!).messages).toHaveLength(2));
+  await waitFor(() => expect(JSON.parse(localStorage.getItem('chapter-tutor:v2:chapter4')!).messages).toHaveLength(2));
   view.unmount();
   mount();
   expect(screen.getByText(response.content)).toBeTruthy();
@@ -64,7 +71,7 @@ it('aborts on unmount and ignores a late reply even when transport ignores cance
   view.unmount();
   expect(signal.aborted).toBe(true);
   await act(async () => resolve(response));
-  expect(JSON.parse(localStorage.getItem('chapter-tutor:v1:chapter4')!).messages).toEqual([]);
+  expect(JSON.parse(localStorage.getItem('chapter-tutor:v2:chapter4')!).messages).toEqual([]);
 });
 
 it('stops a reply without accepting stale output and permits another request', async () => {
@@ -107,4 +114,39 @@ it('keeps study materials closed on initial desktop load', () => {
   } finally {
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: original });
   }
+});
+
+it('disables AI actions when unconfigured but permits reading', () => {
+  render(<Tutor chapter={chapter} mode="unconfigured" onMode={() => {}} />);
+  for (const name of ['开始讲解', '本页自测', '继续学习', '发送消息']) {
+    expect(screen.getByRole('button', { name })).toHaveProperty('disabled', true);
+  }
+  expect(screen.getByText('AI 尚未配置，完成配置并重新检查连接后可提问。')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: '打开课件' }));
+  expect(screen.getByLabelText('课件页码')).toBeTruthy();
+});
+
+it('shows the connected roadmap immediately and opens linked slides while unconfigured', async () => {
+  render(<Tutor chapter={chapter} mode="unconfigured" onMode={() => {}} />);
+  const node = await screen.findByRole('button', { name: '学习节点：理解执行' });
+  expect(document.querySelectorAll('.roadmap-connection')).toHaveLength(1);
+  fireEvent.click(node);
+  expect(screen.getByLabelText('课件页码')).toHaveProperty('value', '2');
+  fireEvent.click(screen.getByRole('tab', { name: '大纲' }));
+  expect(screen.getByRole('button', { name: '学习节点：理解执行' }).closest('li')?.getAttribute('aria-current')).toBe('step');
+  fireEvent.click(screen.getByRole('button', { name: '大纲第 1 页' }));
+  expect(screen.getByLabelText('课件页码')).toHaveProperty('value', '1');
+});
+
+it('reports a configuration change from chat without fabricating a reply', async () => {
+  vi.spyOn(api, 'chat').mockRejectedValue(new ConfigurationError('请填写 LLM_MODEL 并重启后端。'));
+  const onMode = vi.fn();
+  const view = render(<Tutor chapter={chapter} mode="ai" onMode={onMode} />);
+  submit();
+  expect(await screen.findByRole('alert')).toHaveProperty('textContent', expect.stringContaining('请填写 LLM_MODEL'));
+  expect(onMode).toHaveBeenCalledWith('unconfigured');
+  view.rerender(<Tutor chapter={chapter} mode="unconfigured" onMode={onMode} />);
+  expect(screen.getByRole('button', { name: '重试回复' })).toHaveProperty('disabled', true);
+  expect(screen.queryByText(response.content)).toBeNull();
+  expect(JSON.parse(localStorage.getItem('chapter-tutor:v2:chapter4')!).messages).toEqual([]);
 });

@@ -7,9 +7,9 @@ from fastapi.responses import FileResponse
 from starlette.concurrency import run_in_threadpool
 
 from .chapters import ChapterStore
-from .llm import ai_answer, ai_enabled
+from .config import read_ai_config
+from .llm import ai_answer
 from .models import Chapter, ChapterDetail, ChatRequest, ChatResponse
-from .tutor import offline_answer
 
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
@@ -28,7 +28,9 @@ def create_app(book_dir: Path | None = None, slides_dir: Path | None = None):
 
     @app.get("/api/health")
     def health():
-        return {"status": "ok", "mode": "ai" if ai_enabled() else "offline"}
+        config = read_ai_config()
+        return {"status": "ok", "mode": "unconfigured" if config.missing else "ai",
+                "missing": list(config.missing)}
 
     @app.get("/api/chapters", response_model=list[Chapter])
     def chapters():
@@ -38,6 +40,12 @@ def create_app(book_dir: Path | None = None, slides_dir: Path | None = None):
              response_model_exclude_none=True)
     def chapter(chapter_id: str):
         return store.read(chapter_id)
+
+    @app.get("/api/chapters/{chapter_id}/outline")
+    def outline(chapter_id: str):
+        from .outline import build_outline
+
+        return build_outline(store.read(chapter_id))
 
     @app.get("/api/chapters/{chapter_id}/file")
     def original(chapter_id: str):
@@ -62,9 +70,7 @@ def create_app(book_dir: Path | None = None, slides_dir: Path | None = None):
         chapter = await run_in_threadpool(store.read, request.chapterId)
         if request.slide > chapter.slideCount:
             raise HTTPException(422, "Slide number is outside this chapter")
-        if ai_enabled():
-            return await ai_answer(chapter, request, app.state.llm_transport)
-        return offline_answer(chapter, request)
+        return await ai_answer(chapter, request, app.state.llm_transport)
 
     return app
 

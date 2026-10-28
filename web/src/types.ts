@@ -1,4 +1,11 @@
-export type Mode = 'offline' | 'ai';
+export type Mode = 'unconfigured' | 'ai';
+export interface Health { status: 'ok'; mode: Mode; missing: string[] }
+export interface Outline {
+  chapterId: string;
+  title: string;
+  nodes: { id: string; title: string; summary: string; slides: number[] }[];
+  edges: { source: string; target: string }[];
+}
 export interface Chapter {
   id: string;
   title: string;
@@ -24,12 +31,12 @@ export interface Message {
   content: string;
   citations?: { slide: number; title: string }[];
   diagram?: Diagram;
-  mode?: Mode;
+  mode?: 'ai';
 }
 export interface ChatResponse {
   content: string;
   slide: number;
   citations: { slide: number; title: string }[];
   diagram?: Diagram;
-  mode: Mode;
+  mode: 'ai';
 }

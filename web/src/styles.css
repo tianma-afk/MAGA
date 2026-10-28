@@ -1,4 +1,5 @@
 @import url('./responsive.css');
+@import url('./learning.css');
 
 :root {
   font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
@@ -44,7 +45,7 @@ h1, h2, p { margin-top: 0; }
 .local-label { margin-left: auto; }
 .status-dot { width: 6px; height: 6px; flex-shrink: 0; border-radius: 50%; background: #a5aaa6; }
 .status-dot.ai { background: #52896a; }
-.status-dot.offline { background: #ac9660; }
+.status-dot.unconfigured { background: #ad7d48; }
 .workspace { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .topbar { height: 66px; flex-shrink: 0; display: flex; align-items: center; gap: 17px; border-bottom: 1px solid var(--line); padding: 0 24px; }
 .breadcrumb { display: flex; align-items: center; gap: 13px; flex: 1; min-width: 0; font-size: 12px; }
@@ -59,7 +60,7 @@ h1, h2, p { margin-top: 0; }
 .conversation-label { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
 .toolbar-actions { display: flex; gap: 4px; }
 .message-scroll { flex: 1; overflow: auto; overscroll-behavior: contain; padding: 0 30px 24px; }
-.welcome { max-width: 640px; margin: 9vh auto 42px; }
+.welcome { max-width: 640px; margin: 26px auto 32px; }
 .welcome-icon { color: var(--green); margin-bottom: 20px; }
 .welcome h1 { font-size: 25px; line-height: 1.5; font-weight: 600; overflow-wrap: anywhere; margin-bottom: 12px; }
 .welcome > p { color: var(--muted); font-size: 13px; }

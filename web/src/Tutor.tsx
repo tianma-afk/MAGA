@@ -1,16 +1,19 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { ArrowUp, BookOpen, ChevronRight, ClipboardCheck, GitBranch, LoaderCircle, RefreshCw, RotateCcw, Square } from 'lucide-react';
+import { ArrowUp, BookOpen, ChevronRight, ClipboardCheck, GitBranch, ListTree, LoaderCircle, RefreshCw, RotateCcw, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { api, errorText } from './api';
+import { api, ConfigurationError, errorText } from './api';
 import { clampPage, emptySession, loadSession, saveSession, sessionReducer } from './state';
 import type { ChapterDetail, Diagram, Mode } from './types';
 import IconButton from './IconButton';
 import StudyPane, { type Pane } from './StudyPane';
 import ResetDialog from './ResetDialog';
+import Roadmap from './Roadmap';
+import useOutline from './useOutline';
 
 interface Props { chapter: ChapterDetail; mode?: Mode; onMode: (mode: Mode) => void }
 
 export default function Tutor({ chapter, mode, onMode }: Props) {
+  const roadmap = useOutline(chapter.id);
   const [session, dispatch] = useReducer(sessionReducer, undefined, () => {
     try { return loadSession(localStorage, chapter.id, chapter.slideCount); }
     catch { return emptySession(); }
@@ -26,6 +29,8 @@ export default function Tutor({ chapter, mode, onMode }: Props) {
   const bottom = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const busy = session.pending !== null;
+  const unavailable = mode !== 'ai';
+  const disabledReason = unavailable ? 'AI 尚未配置，完成配置并重新检查连接后可提问。' : undefined;
   const diagram = chosenDiagram ?? [...session.messages].reverse().find(m => m.diagram)?.diagram;
 
   useEffect(() => () => { request.current?.abort(); }, []);
@@ -57,7 +62,7 @@ export default function Tutor({ chapter, mode, onMode }: Props) {
   }
   async function send(value: string, page = session.slide) {
     const text = value.trim();
-    if (!text || text.length > 8000 || request.current) return;
+    if (!text || text.length > 8000 || request.current || unavailable) return;
     const controller = new AbortController();
     request.current = controller;
     const requestId = crypto.randomUUID();
@@ -80,6 +85,7 @@ export default function Tutor({ chapter, mode, onMode }: Props) {
       }
     } catch (error) {
       if (!controller.signal.aborted && request.current === controller) {
+        if (error instanceof ConfigurationError) onMode('unconfigured');
         dispatch({ type: 'fail', requestId, error: errorText(error) });
       }
     } finally {
@@ -103,8 +109,11 @@ export default function Tutor({ chapter, mode, onMode }: Props) {
   return <main className={`tutor ${paneOpen ? 'pane-open' : ''}`}>
     <section className="conversation" aria-label="章节对话">
       <header className="conversation-toolbar">
-        <span className="conversation-label"><span className="status-dot ai" />本章对话</span>
+        <span className="conversation-label"><span className={`status-dot ${mode ?? 'unknown'}`} />本章对话</span>
         <div className="toolbar-actions">
+          <button className="text-button outline-entry" aria-label="打开大纲" onClick={() => openPane('outline')}>
+            <ListTree size={17} />大纲
+          </button>
           <IconButton label="打开课件" onClick={() => openPane('slides')}><BookOpen size={18} /></IconButton>
           <IconButton label="打开画布" onClick={() => openPane('diagram')}><GitBranch size={18} /></IconButton>
           <IconButton label="重置本章" onClick={() => setConfirmReset(true)}><RotateCcw size={17} /></IconButton>
@@ -115,11 +124,12 @@ export default function Tutor({ chapter, mode, onMode }: Props) {
           <BookOpen className="welcome-icon" size={30} strokeWidth={1.5} />
           <h1>{chapter.title}</h1>
           <p>{chapter.slideCount} 页课件 <span>·</span> 从第 {session.slide} 页开始</p>
+          {!paneOpen && <Roadmap {...roadmap} page={session.slide} onPage={goToPage} busy={busy} />}
           <div className="starter-actions">
-            <button onClick={() => void send('讲解本页')}>
+            <button disabled={unavailable} title={disabledReason} onClick={() => void send('讲解本页')}>
               <BookOpen size={17} /><span>开始讲解</span><ChevronRight size={16} />
             </button>
-            <button onClick={() => void send('自测')}>
+            <button disabled={unavailable} title={disabledReason} onClick={() => void send('自测')}>
               <ClipboardCheck size={17} /><span>本页自测</span><ChevronRight size={16} />
             </button>
           </div>
@@ -127,7 +137,6 @@ export default function Tutor({ chapter, mode, onMode }: Props) {
         <div className="messages" role="log" aria-label="对话记录" aria-live="polite">
           {session.messages.map(message => <article className={`message ${message.role}`} key={message.id}>
             <div className="message-meta">{message.role === 'user' ? '你' : '章节助教'}
-              {message.mode === 'offline' && <span>离线讲解</span>}
             </div>
             <div className="message-body">
               {message.role === 'user' ? message.content : <ReactMarkdown
@@ -154,14 +163,16 @@ export default function Tutor({ chapter, mode, onMode }: Props) {
       <div className="composer-region">
         {session.error && <div className="error-banner" role="alert">
           <span>{session.error}</span>
-          <button className="text-button" onClick={() => attempt && void send(attempt.text, attempt.slide)}>
+          <button className="text-button" disabled={unavailable} title={disabledReason}
+            onClick={() => attempt && void send(attempt.text, attempt.slide)}>
             <RefreshCw size={15} />重试回复
           </button>
         </div>}
         {storageFailed && <p className="storage-warning" role="status">无法保存到本地；关闭页面后可能丢失本次记录。</p>}
+        {unavailable && <p className="ai-disabled" role="status">{disabledReason}</p>}
         <form className="composer" onSubmit={event => { event.preventDefault(); void send(draft); }}>
           <textarea ref={input} aria-label="向助教提问" placeholder="向助教提问，或继续本章学习…"
-            value={draft} rows={2} disabled={busy} maxLength={8000}
+            value={draft} rows={2} disabled={busy || unavailable} maxLength={8000}
             onChange={event => setDraft(event.target.value)}
             onKeyDown={event => {
               if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) {
@@ -176,12 +187,12 @@ export default function Tutor({ chapter, mode, onMode }: Props) {
               {draft.length > 7000 && <span className="character-count">{draft.length} / 8000</span>}
               {busy ? <IconButton label="停止回复" onClick={stop}><Square size={16} /></IconButton>
                 : <button type="submit" className="send-button" aria-label="发送消息" title="发送消息"
-                  disabled={!draft.trim()}><ArrowUp size={19} /></button>}
+                  disabled={!draft.trim() || unavailable}><ArrowUp size={19} /></button>}
             </div>
           </div>
         </form>
-        <div className="composer-footer"><span>{mode === 'offline' ? '离线课件讲解' : '基于本章课件'}</span>
-          <button className="continue-button" disabled={busy} onClick={() => void send('继续学习')}>
+        <div className="composer-footer"><span>基于本章课件</span>
+          <button className="continue-button" disabled={busy || unavailable} title={disabledReason} onClick={() => void send('继续学习')}>
             继续学习<ChevronRight size={14} />
           </button>
         </div>
@@ -190,7 +201,7 @@ export default function Tutor({ chapter, mode, onMode }: Props) {
     {paneOpen && <>
       <button className="pane-shade" aria-label="关闭资料抽屉" onClick={() => setPaneOpen(false)} />
       <StudyPane chapter={chapter} page={session.slide} onPage={goToPage} pane={pane}
-        onPane={setPane} onClose={() => setPaneOpen(false)} diagram={diagram} busy={busy} />
+        onPane={setPane} onClose={() => setPaneOpen(false)} diagram={diagram} busy={busy} roadmap={roadmap} />
     </>}
     {confirmReset && <ResetDialog onCancel={() => setConfirmReset(false)} onConfirm={reset} />}
   </main>;

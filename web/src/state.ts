@@ -18,7 +18,7 @@ type Action =
 export const emptySession = (): Session => ({
   slide: 1, messages: [], pending: null, error: null,
 });
-const key = (id: string) => `chapter-tutor:v1:${id}`;
+const key = (id: string) => `chapter-tutor:v2:${id}`;
 export function boundedHistory(messages: Message[]): Pick<Message, 'role' | 'content'>[] {
   const result: Pick<Message, 'role' | 'content'>[] = [];
   let remaining = 32000;
@@ -37,15 +37,16 @@ function isMessage(value: unknown): value is Message {
   if (!value || typeof value !== 'object') return false;
   const m = value as Message;
   return typeof m.id === 'string' && typeof m.content === 'string'
-    && (m.role === 'assistant' || m.role === 'user');
+    && (m.role === 'user' || (m.role === 'assistant' && m.mode === 'ai'));
 }
 export function loadSession(store: StoragePort, id: string, count: number): Session {
   try {
-    const value = JSON.parse(store.getItem(key(id)) ?? 'null');
+    const saved = store.getItem(key(id));
+    const value = JSON.parse(saved ?? store.getItem(`chapter-tutor:v1:${id}`) ?? 'null');
     if (!value || typeof value !== 'object') return emptySession();
     return {
       ...emptySession(), slide: clampPage(value.slide, count),
-      messages: Array.isArray(value.messages) ? value.messages.filter(isMessage).map((m: Message) => ({
+      messages: saved && Array.isArray(value.messages) ? value.messages.filter(isMessage).map((m: Message) => ({
         ...m,
         citations: Array.isArray(m.citations)
           ? m.citations.filter(c => Number.isInteger(c?.slide) && typeof c?.title === 'string') : undefined,

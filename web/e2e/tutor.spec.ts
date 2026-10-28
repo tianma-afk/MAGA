@@ -6,7 +6,7 @@ const chapters = [1, 2, 4, 5, 6, 7, 8].map(n => ({
 }));
 const answer = {
   content: '指令由操作码和地址码组成。先理解操作的含义，再观察数据的流向。',
-  slide: 2, citations: [{ slide: 2, title: '指令的组成' }], mode: 'offline',
+  slide: 2, citations: [{ slide: 2, title: '指令的组成' }], mode: 'ai',
   diagram: {
     title: '指令执行过程',
     nodes: [{ id: 'fetch', label: '取指令' }, { id: 'decode', label: '译码' }, { id: 'execute', label: '执行指令' }],
@@ -14,8 +14,14 @@ const answer = {
   },
 };
 async function fixtures(page: Page) {
-  await page.route('**/api/health', route => route.fulfill({ json: { status: 'ok', mode: 'offline' } }));
+  await page.route('**/api/health', route => route.fulfill({ json: { status: 'ok', mode: 'ai', missing: [] } }));
   await page.route('**/api/chapters', route => route.fulfill({ json: chapters }));
+  await page.route('**/api/chapters/*/outline', route => route.fulfill({
+    json: { chapterId: 'c', title: '章节学习路线', nodes: [
+      { id: 'intro', title: '认识计算机', summary: '理解基本组成', slides: [1] },
+      { id: 'instruction', title: '理解指令', summary: '从操作码到执行过程', slides: [2, 3] },
+    ], edges: [{ source: 'intro', target: 'instruction' }] },
+  }));
   await page.route('**/api/chapters/chapter*', route => {
     const chapter = chapters.find(c => route.request().url().endsWith(c.id))!;
     return route.fulfill({ json: { ...chapter, slides: [1, 2, 3].map(number => ({
@@ -40,6 +46,8 @@ async function send(page: Page, text: string) {
 test('chapter history, StrictMode graph visibility, citations, image and confirmed reset', async ({ page }) => {
   await fixtures(page);
   await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('学习空间');
+  await page.getByRole('link', { name: `打开章节：${chapters[0].title}` }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(chapters[0].title);
   await expect(page.getByRole('button', { name: `章节：${chapters[2].title}` })).toBeVisible();
   await page.screenshot({ path: 'test-results/desktop-welcome.png', fullPage: true });
@@ -80,9 +88,8 @@ test('mobile drawers, composer and diagram stay inside the viewport', async ({ p
   await page.setViewportSize({ width: 390, height: 844 });
   await fixtures(page);
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await page.getByRole('button', { name: '展开章节目录' }).click();
-  await page.getByRole('button', { name: `章节：${chapters[2].title}` }).click();
+  await expect(page.getByRole('heading', { name: '学习空间' })).toBeVisible();
+  await page.getByRole('link', { name: `打开章节：${chapters[2].title}` }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(chapters[2].title);
   await page.screenshot({ path: 'test-results/mobile-welcome.png', fullPage: true });
   await send(page, '画出知识结构');
@@ -108,7 +115,9 @@ test('loading failures retry and switching chapters cancels in-flight work', asy
   await expect(page.getByRole('alert')).toContainText('503');
   listFailing = false;
   await page.getByRole('button', { name: '重新连接' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '学习空间' })).toBeVisible();
+  await page.getByRole('link', { name: `打开章节：${chapters[0].title}` }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(chapters[0].title);
   let replyAttempts = 0;
   await page.route('**/api/chat', async route => {
     replyAttempts++;
@@ -130,4 +139,56 @@ test('loading failures retry and switching chapters cancels in-flight work', asy
   await page.getByRole('button', { name: `章节：${chapters[0].title}` }).click();
   await expect(page.getByText('不应串入下一章的回复')).toHaveCount(0);
   await expect(page.getByText(answer.content)).toBeVisible();
+});
+
+test('home root, browser back, roadmap page links and unconfigured recovery', async ({ page }) => {
+  await fixtures(page);
+  let configured = false;
+  await page.route('**/api/health', route => route.fulfill({ json: {
+    status: 'ok', mode: configured ? 'ai' : 'unconfigured', missing: configured ? [] : ['LLM_API_KEY', 'LLM_MODEL'],
+  } }));
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: '学习空间' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /打开章节/ })).toHaveCount(7);
+  await expect(page.getByText('Copy-Item .env.example .env')).toBeVisible();
+  await page.screenshot({ path: 'test-results/desktop-home-unconfigured.png', fullPage: true });
+  await page.getByRole('link', { name: `打开章节：${chapters[0].title}` }).click();
+  for (const name of ['开始讲解', '本页自测', '继续学习', '发送消息']) {
+    await expect(page.getByRole('button', { name })).toBeDisabled();
+  }
+  await expect(page.locator('.roadmap-connection')).toHaveCount(1);
+  await page.getByRole('button', { name: '学习节点：理解指令' }).click();
+  await expect(page.getByLabel('课件页码')).toHaveValue('2');
+  await page.getByRole('tab', { name: '大纲' }).click();
+  await expect(page.locator('.roadmap-nodes > li[aria-current=step]')).toContainText('理解指令');
+  await page.screenshot({ path: 'test-results/desktop-roadmap.png', fullPage: true });
+  await page.getByRole('button', { name: '大纲第 3 页' }).click();
+  await expect(page.getByLabel('课件页码')).toHaveValue('3');
+  await page.getByRole('button', { name: '关闭资料', exact: true }).click();
+  await page.goBack();
+  await expect(page.getByRole('heading', { name: '学习空间' })).toBeVisible();
+  await expect(page.getByText('上次读到第 3 页')).toBeVisible();
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: '学习空间' })).toBeVisible();
+  configured = true;
+  await page.getByRole('button', { name: '重新检查连接' }).click();
+  await expect(page.getByText('Copy-Item .env.example .env')).toHaveCount(0);
+  await page.getByRole('link', { name: `打开章节：${chapters[0].title}` }).click();
+  await expect(page.getByRole('button', { name: '开始讲解' })).toBeEnabled();
+});
+
+test('mobile home and immediate roadmap fit without horizontal overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await fixtures(page);
+  await page.goto('/');
+  await page.screenshot({ path: 'test-results/mobile-home.png', fullPage: true });
+  await page.getByRole('link', { name: `打开章节：${chapters[0].title}` }).click();
+  await expect(page.getByRole('button', { name: '学习节点：认识计算机' })).toBeVisible();
+  await page.screenshot({ path: 'test-results/mobile-roadmap-welcome.png', fullPage: true });
+  await page.getByRole('button', { name: '打开大纲' }).click();
+  await expect(page.getByRole('tab', { name: '大纲' })).toHaveAttribute('aria-selected', 'true');
+  await page.screenshot({ path: 'test-results/mobile-roadmap.png', fullPage: true });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole('button', { name: '学习节点：理解指令' }).click();
+  await expect(page.getByLabel('课件页码')).toHaveValue('2');
 });

@@ -1,122 +1,96 @@
-// Run against the local offline server. PLAYWRIGHT_MODULE may point to a bundled install.
+// Real API smoke test without credentials; it never simulates AI teaching.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 const require = createRequire(import.meta.url);
-const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
-
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || '../web/node_modules/playwright');
 const origin = process.env.APP_URL || 'http://127.0.0.1:5173';
 const output = fileURLToPath(new URL('../data/verification', import.meta.url));
 
-async function checkNoOverflow(page) {
-  const dimensions = await page.evaluate(() => ({
-    viewport: innerWidth, width: document.documentElement.scrollWidth,
-  }));
-  assert.ok(dimensions.width <= dimensions.viewport, JSON.stringify(dimensions));
+async function noOverflow(page) {
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+}
+
+async function loadedSlide(page) {
+  await page.waitForFunction(() => {
+    const image = document.querySelector('.slide-image');
+    return image && image.complete && image.naturalWidth > 0;
+  });
 }
 
 async function run() {
   await fs.mkdir(output, { recursive: true });
   const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 960 } });
-  const page = await context.newPage();
+  const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   try {
     const health = await (await page.request.get(`${origin}/api/health`)).json();
-    assert.equal(health.mode, 'offline', 'Smoke tests require offline mode to avoid paid requests.');
+    assert.equal(health.mode, 'unconfigured', 'Run without credentials; no paid AI requests.');
     const chapters = await (await page.request.get(`${origin}/api/chapters`)).json();
-    assert.deepEqual(chapters.map(c => c.slideCount), [85, 22, 32, 39, 41, 62, 59]);
-    await page.goto(origin);
-    await page.getByRole('textbox', { name: '向助教提问' }).waitFor();
-    await page.getByRole('button', { name: '打开课件', exact: true }).click();
-    const image = page.locator('.slide-image');
-    await image.waitFor();
-    await page.waitForFunction(() => {
-      const img = document.querySelector('.slide-image');
-      return img && img.complete && img.naturalWidth > 0;
+    assert.equal(chapters.length, 7);
+    const outlines = [];
+    for (const chapter of chapters) {
+      const response = await page.request.get(`${origin}/api/chapters/${chapter.id}/outline`);
+      assert.equal(response.status(), 200);
+      const outline = await response.json();
+      assert.ok(outline.nodes.length > 1);
+      assert.deepEqual(outline.nodes.flatMap(node => node.slides),
+        Array.from({ length: chapter.slideCount }, (_, i) => i + 1));
+      assert.equal(outline.edges.length, outline.nodes.length - 1);
+      outlines.push(outline);
+    }
+    const rejected = await page.request.post(`${origin}/api/chat`, {
+      data: { chapterId: chapters[0].id, slide: 1, message: '讲解本页', history: [] },
     });
-    await page.getByRole('combobox', { name: '课件页码' }).selectOption('5');
-    await page.getByRole('textbox', { name: '向助教提问' }).fill('继续学习');
-    await page.getByRole('button', { name: '发送消息' }).click();
-    await page.waitForFunction(() =>
-      JSON.parse(localStorage.getItem('chapter-tutor:v1:chapter-1') || '{}').messages?.length === 2);
-    assert.equal(await page.getByRole('combobox', { name: '课件页码' }).inputValue(), '6');
-    await page.reload();
-    await page.getByRole('textbox', { name: '向助教提问' }).waitFor();
-    await page.getByRole('button', { name: '打开课件', exact: true }).click();
-    assert.equal(await page.getByRole('combobox', { name: '课件页码' }).inputValue(), '6');
-    await page.getByRole('button', { name: `章节：${chapters[1].title}`, exact: true }).click();
-    await page.getByRole('textbox', { name: '向助教提问' }).waitFor();
-    assert.equal(await page.locator('.message-body').count(), 0);
-    await page.getByRole('button', { name: '开始讲解', exact: true }).click();
-    await page.waitForFunction(() =>
-      JSON.parse(localStorage.getItem('chapter-tutor:v1:chapter-2') || '{}').messages?.length === 2);
-    assert.ok(await page.locator('.citations button').count() > 0);
-    await page.getByRole('button', { name: '继续学习', exact: true }).click();
-    await page.waitForFunction(() =>
-      JSON.parse(localStorage.getItem('chapter-tutor:v1:chapter-2') || '{}').slide === 2);
-    await page.getByRole('button', { name: '重置本章', exact: true }).click();
-    await page.getByRole('button', { name: '保留记录', exact: true }).click();
-    assert.equal(await page.locator('.message-body').count(), 4);
-    await page.getByRole('button', { name: '重置本章', exact: true }).click();
-    await page.getByRole('button', { name: '清空本章', exact: true }).click();
-    await page.getByRole('button', { name: '开始讲解', exact: true }).waitFor();
-    assert.equal(await page.locator('.message-body').count(), 0);
-    await page.getByRole('button', { name: `章节：${chapters[0].title}`, exact: true }).click();
-    await page.locator('.message-body').first().waitFor();
-    assert.equal(await page.locator('.message-body').count(), 2);
-    await checkNoOverflow(page);
-    await page.screenshot({ path: path.join(output, 'desktop.png'), fullPage: true });
+    assert.equal(rejected.status(), 503);
+    assert.equal((await rejected.json()).detail.code, 'AI_NOT_CONFIGURED');
 
+    await page.goto(origin);
+    await page.getByRole('heading', { name: '学习空间', exact: true }).waitFor();
+    assert.equal(await page.getByRole('textbox', { name: '向助教提问' }).count(), 0);
+    await noOverflow(page);
+    await page.screenshot({ path: path.join(output, 'home.png'), fullPage: true });
     await page.getByRole('button', { name: `章节：${chapters[3].title}`, exact: true }).click();
     await page.getByRole('textbox', { name: '向助教提问' }).waitFor();
-    const detail = await (await page.request.get(`${origin}/api/chapters/chapter-5`)).json();
-    const heartbeat = detail.slides.find(s => /heartbeat/i.test(s.text) && /failure|fault/i.test(s.text));
-    assert.ok(heartbeat, 'Expected real heartbeat slide');
-    await page.getByRole('button', { name: '打开课件', exact: true }).click();
-    await page.getByRole('combobox', { name: '课件页码' }).selectOption(String(heartbeat.number));
-    await page.getByRole('textbox', { name: '向助教提问' }).fill('画个架构图');
-    await page.getByRole('button', { name: '发送消息' }).click();
-    await page.waitForFunction(() =>
-      JSON.parse(localStorage.getItem('chapter-tutor:v1:chapter-5') || '{}').messages?.length === 2);
-    if (!(await page.locator('.react-flow__node').count())) {
-      await page.getByRole('tab', { name: '画布', exact: true }).click();
+    assert.ok(await page.getByRole('textbox', { name: '向助教提问' }).isDisabled());
+    assert.ok(await page.getByRole('button', { name: '发送消息', exact: true }).isDisabled());
+    const node = outlines[3].nodes[2];
+    if (!(await page.getByRole('button', { name: `学习节点：${node.title}`, exact: true }).count())) {
+      await page.getByRole('button', { name: '打开大纲', exact: true }).click();
     }
-    await page.locator('.react-flow__node').first().waitFor();
-    assert.ok(await page.locator('.react-flow__node').count() >= 2);
-    await page.screenshot({ path: path.join(output, 'diagram.png'), fullPage: true });
+    await page.getByRole('button', { name: `学习节点：${node.title}`, exact: true }).click();
+    await loadedSlide(page);
+    assert.equal(await page.getByRole('combobox', { name: '课件页码' }).inputValue(), String(node.slides[0]));
+    await noOverflow(page);
+    await page.screenshot({ path: path.join(output, 'outline-slide.png'), fullPage: true });
+    await page.getByRole('button', { name: '打开大纲', exact: true }).click();
+    await page.getByRole('button', { name: `学习节点：${node.title}`, exact: true }).waitFor();
+    await page.screenshot({ path: path.join(output, 'outline.png'), fullPage: true });
 
-    await page.route('**/api/chat', route => route.fulfill({
-      status: 502, contentType: 'application/json', body: '{"detail":"Test outage"}',
-    }), { times: 1 });
-    await page.getByRole('textbox', { name: '向助教提问' }).fill('导读');
-    await page.getByRole('button', { name: '发送消息' }).click();
-    await page.getByRole('button', { name: '重试回复' }).waitFor();
-    await page.getByRole('button', { name: '重试回复' }).click();
-    await page.waitForFunction(() =>
-      JSON.parse(localStorage.getItem('chapter-tutor:v1:chapter-5') || '{}').messages?.length === 4);
-
+    await page.goto(origin);
+    await page.getByRole('heading', { name: '学习空间', exact: true }).waitFor();
+    await page.reload();
+    await page.getByRole('heading', { name: '学习空间', exact: true }).waitFor();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.reload();
+    await page.getByRole('heading', { name: '学习空间', exact: true }).waitFor();
+    await noOverflow(page);
+    await page.screenshot({ path: path.join(output, 'mobile-home.png'), fullPage: true });
+    await page.getByRole('button', { name: '展开章节目录', exact: true }).click();
+    await page.getByRole('button', { name: `章节：${chapters[3].title}`, exact: true }).click();
     await page.getByRole('textbox', { name: '向助教提问' }).waitFor();
-    await checkNoOverflow(page);
-    await page.screenshot({ path: path.join(output, 'mobile.png'), fullPage: true });
-    await page.getByRole('button', { name: '打开课件', exact: true }).click();
-    await page.getByRole('combobox', { name: '课件页码' }).waitFor();
-    await page.waitForFunction(() => {
-      const img = document.querySelector('.slide-image');
-      return img && img.complete && img.naturalWidth > 0;
-    });
-    await checkNoOverflow(page);
-    await page.screenshot({ path: path.join(output, 'mobile-slide.png'), fullPage: true });
+    await page.getByRole('button', { name: '打开大纲', exact: true }).click();
+    await page.getByRole('button', { name: `学习节点：${node.title}`, exact: true }).click();
+    await loadedSlide(page);
+    await noOverflow(page);
+    await page.screenshot({ path: path.join(output, 'mobile-outline-slide.png'), fullPage: true });
     assert.deepEqual(errors, []);
-    console.log('PASS: real slides, navigation, persistence, isolation, diagram, retry, responsive layout.');
+    console.log('PASS: home, seven complete roadmaps, PPT links, unconfigured API guard, mobile layout.');
   } finally {
     await browser.close();
   }
 }
-
 run().catch(error => { console.error(error); process.exitCode = 1; });

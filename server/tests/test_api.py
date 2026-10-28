@@ -24,7 +24,10 @@ def deck(path, title):
 
 @pytest.fixture
 def setup(tmp_path, monkeypatch):
-    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    import dotenv
+    monkeypatch.setattr(dotenv, "load_dotenv", lambda *args, **kwargs: None)
+    for name in ("LLM_API_KEY", "LLM_MODEL", "LLM_BASE_URL"):
+        monkeypatch.delenv(name, raising=False)
     book = tmp_path / "book"
     book.mkdir()
     deck(book / "Chapter 10.pptx", "Tenth chapter")
@@ -60,26 +63,20 @@ def test_images_and_bounds(setup):
     assert client.get(f"/api/chapters/{chapter_id}/slides/1/image").status_code == 404
 
 
-def test_offline_navigation_quiz_and_retrieval(setup):
+def test_unconfigured_chat_has_actionable_error(setup):
     client, _, _ = setup
     chapter_id = client.get("/api/chapters").json()[0]["id"]
-    assert client.get("/api/health").json() == {"status": "ok", "mode": "offline"}
-    def chat(message, slide=1):
-        response = client.post("/api/chat", json={
-            "chapterId": chapter_id, "message": message, "slide": slide, "history": [],
-        })
-        assert response.status_code == 200
-        return response.json()
-    assert chat("next")["slide"] == 2
-    assert chat("next", 3)["slide"] == 3
-    quiz = chat("quiz", 2)
-    assert "?" in quiz["content"] or "\uff1f" in quiz["content"]
-    assert quiz["mode"] == "offline"
-    match = chat("latency")
-    assert match["citations"][0]["slide"] == 3
-    assert "Latency is the time to respond." in match["content"]
-    assert "\u79bb\u7ebf" in match["content"]
-    assert not chat("unrelated astronomy")["citations"]
+    assert client.get("/api/health").json() == {
+        "status": "ok", "mode": "unconfigured", "missing": ["LLM_API_KEY", "LLM_MODEL"],
+    }
+    response = client.post("/api/chat", json={
+        "chapterId": chapter_id, "message": "guide", "slide": 1,
+    })
+    assert response.status_code == 503
+    assert response.json()["detail"] == {
+        "code": "AI_NOT_CONFIGURED",
+        "message": "请将 .env.example 复制为 .env，填写 LLM_API_KEY 和 LLM_MODEL 后重启后端。",
+    }
 
 
 @pytest.mark.parametrize("change", [
@@ -191,34 +188,26 @@ def test_upstream_error_not_hidden(setup, monkeypatch, status):
     ("\u51fa\u4e00\u9053\u9898", 2), ("\u81ea\u6d4b", 2),
     ("\u753b\u56fe", 2), ("\u753b\u4e2a\u67b6\u6784\u56fe", 2),
 ])
-def test_chinese_current_slide_intents(setup, message, expected):
+def test_unconfigured_chinese_intents_never_fabricate_answers(setup, message, expected):
     client, _, _ = setup
     response = client.post("/api/chat", json={
         "chapterId": "chapter-2", "message": message, "slide": 2, "history": [],
     })
-    assert response.status_code == 200
-    answer = response.json()
-    assert answer["slide"] == expected
-    assert "\u79bb\u7ebf" in answer["content"]
-    if "\u56fe" in message:
-        assert "\u6559\u5b66\u793a\u610f" in answer["diagram"]["title"]
-        assert len(answer["diagram"]["edges"]) >= 1
-    if message in ("\u81ea\u6d4b", "\u51fa\u4e00\u9053\u9898"):
-        assert "\uff1f" in answer["content"]
+    assert response.status_code == 503
+    assert response.json()["detail"]["code"] == "AI_NOT_CONFIGURED"
 
 
 def test_diagram_does_not_invent_unrelated_structure(setup):
     client, _, _ = setup
-    answer = client.post("/api/chat", json={
+    response = client.post("/api/chat", json={
         "chapterId": "chapter-2", "message": "\u753b\u56fe", "slide": 1,
-    }).json()
-    assert answer["slide"] == 1
-    assert answer.get("diagram") is None
-    assert "\u4e0d\u8db3" in answer["content"]
+    })
+    assert response.status_code == 503
+    assert "diagram" not in response.json()
 
 
 @pytest.mark.parametrize("model", [None, "", "   "])
-def test_key_without_model_remains_offline(setup, monkeypatch, model):
+def test_key_without_model_is_unconfigured(setup, monkeypatch, model):
     client, _, _ = setup
     monkeypatch.setenv("LLM_API_KEY", "secret")
     if model is None:
@@ -229,43 +218,40 @@ def test_key_without_model_remains_offline(setup, monkeypatch, model):
     def unexpected_call(request):
         pytest.fail("Incomplete configuration must not call the provider")
     app.state.llm_transport = httpx.MockTransport(unexpected_call)
-    assert client.get("/api/health").json()["mode"] == "offline"
-    answer = client.post("/api/chat", json={
+    assert client.get("/api/health").json() == {
+        "status": "ok", "mode": "unconfigured", "missing": ["LLM_MODEL"],
+    }
+    response = client.post("/api/chat", json={
         "chapterId": "chapter-2", "message": "guide", "slide": 1,
-    }).json()
-    assert answer["mode"] == "offline"
+    })
+    assert response.status_code == 503
 
 
 def test_real_sparse_slide_warns_about_unparsed_visuals(monkeypatch):
+    from server.tutor import excerpt
+    from server.models import ChapterDetail
     monkeypatch.delenv("LLM_API_KEY", raising=False)
     module = importlib.import_module("server.main")
     client = TestClient(module.create_app())
     for number in (2, 3):
-        answer = client.post("/api/chat", json={
-            "chapterId": "chapter-5", "message": "guide", "slide": number,
-        }).json()
-        assert "\u56fe\u50cf\u5185\u5bb9\u5c1a\u672a\u89e3\u6790" in answer["content"]
+        chapter = ChapterDetail.model_validate(client.get("/api/chapters/chapter-5").json())
+        assert "\u56fe\u50cf\u5185\u5bb9\u5c1a\u672a\u89e3\u6790" in excerpt(chapter.slides[number - 1])
 
 
 @pytest.mark.parametrize("number", [10, 17, 18])
-def test_real_heartbeat_diagram_uses_current_source(monkeypatch, number):
+def test_real_heartbeat_source_is_retained(monkeypatch, number):
+    from server.tutor import excerpt
+    from server.models import ChapterDetail
     monkeypatch.delenv("LLM_API_KEY", raising=False)
     module = importlib.import_module("server.main")
     client = TestClient(module.create_app())
-    response = client.post("/api/chat", json={
-        "chapterId": "chapter-5", "message": "\u753b\u4e2a\u67b6\u6784\u56fe",
-        "slide": number,
-    })
-    assert response.status_code == 200
-    answer = response.json()
-    assert answer["slide"] == number
-    assert [citation["slide"] for citation in answer["citations"]] == [number]
-    assert "\u6559\u5b66\u793a\u610f" in answer["diagram"]["title"]
-    assert "\u975e\u539f\u7a3f" in answer["diagram"]["title"]
-    assert "heartbeat" in answer["content"].lower()
+    chapter = ChapterDetail.model_validate(client.get("/api/chapters/chapter-5").json())
+    assert "heartbeat" in excerpt(chapter.slides[number - 1]).lower()
 
 
 def test_image_only_slide_does_not_invent_diagram(setup):
+    from server.tutor import excerpt
+    from server.models import Slide
     client, _, root = setup
     presentation = Presentation()
     slide = presentation.slides.add_slide(presentation.slide_layouts[5])
@@ -276,24 +262,26 @@ def test_image_only_slide_does_not_invent_diagram(setup):
     (images / "1.png").write_bytes(b"image-only-slide")
     detail = client.get("/api/chapters/chapter-2").json()
     assert detail["slides"][0]["imageUrl"]
-    answer = client.post("/api/chat", json={
+    response = client.post("/api/chat", json={
         "chapterId": "chapter-2", "message": "\u753b\u56fe", "slide": 1,
-    }).json()
-    assert answer.get("diagram") is None
-    assert answer["citations"][0]["slide"] == 1
-    assert "\u56fe\u50cf\u5185\u5bb9\u5c1a\u672a\u89e3\u6790" in answer["content"]
+    })
+    assert response.status_code == 503
+    assert "\u56fe\u50cf\u5185\u5bb9\u5c1a\u672a\u89e3\u6790" in excerpt(
+        Slide.model_validate(detail["slides"][0]))
 
 
 @pytest.mark.parametrize("key", ["", "   "])
-def test_model_without_key_remains_offline(setup, monkeypatch, key):
+def test_model_without_key_is_unconfigured(setup, monkeypatch, key):
     client, _, _ = setup
     monkeypatch.setenv("LLM_MODEL", "configured-model")
     monkeypatch.setenv("LLM_API_KEY", key)
-    assert client.get("/api/health").json()["mode"] == "offline"
-    answer = client.post("/api/chat", json={
+    assert client.get("/api/health").json() == {
+        "status": "ok", "mode": "unconfigured", "missing": ["LLM_API_KEY"],
+    }
+    response = client.post("/api/chat", json={
         "chapterId": "chapter-2", "message": "guide", "slide": 1,
-    }).json()
-    assert answer["mode"] == "offline"
+    })
+    assert response.status_code == 503
 
 
 @pytest.mark.parametrize("body", [
