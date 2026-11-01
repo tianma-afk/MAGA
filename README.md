@@ -103,6 +103,7 @@ pwsh -NoProfile -STA -File scripts/render-slides.ps1 -Chapter 5 -Overwrite
 | `scripts/` | 原稿渲染、500 行限制检查 |
 | `docs/spec/` | 产品范围与体系结构说明 |
 | `docs/plan/` | 实施与验收记录 |
+| `docs/AGENT_HANDOVER.md` | 多轮对话历史、最初需求与 Agent 交接指引 |
 
 ```powershell
 python -m pytest server/tests -q
@@ -122,3 +123,4 @@ node scripts/check-file-lengths.mjs
 手写代码文件限制为 500 行；依赖、生成资源和锁文件不参与该限制。
 这是单用户本地项目，没有账号系统、云同步或正式成绩管理。
 公网部署前需要补充认证、限流和隐私控制。
+
