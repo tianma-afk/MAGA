@@ -3,6 +3,7 @@ import { ArrowUp, BookOpen, ChevronRight, ClipboardCheck, GitBranch, ListTree, L
 import ReactMarkdown from 'react-markdown';
 import { api, ConfigurationError, errorText } from './api';
 import { clampPage, emptySession, loadSession, saveSession, sessionReducer } from './state';
+import { clearQuizStore } from './quiz';
 import type { ChapterDetail, Diagram, Mode } from './types';
 import IconButton from './IconButton';
 import StudyPane, { type Pane } from './StudyPane';
@@ -10,9 +11,15 @@ import ResetDialog from './ResetDialog';
 import Roadmap from './Roadmap';
 import useOutline from './useOutline';
 
-interface Props { chapter: ChapterDetail; mode?: Mode; onMode: (mode: Mode) => void }
+interface Props {
+  chapter: ChapterDetail;
+  mode?: Mode;
+  onMode: (mode: Mode) => void;
+  jump?: { slide: number; token: number };
+  onJumpHandled?: () => void;
+}
 
-export default function Tutor({ chapter, mode, onMode }: Props) {
+export default function Tutor({ chapter, mode, onMode, jump, onJumpHandled }: Props) {
   const roadmap = useOutline(chapter.id);
   const [session, dispatch] = useReducer(sessionReducer, undefined, () => {
     try { return loadSession(localStorage, chapter.id, chapter.slideCount); }
@@ -26,6 +33,7 @@ export default function Tutor({ chapter, mode, onMode }: Props) {
   const [confirmReset, setConfirmReset] = useState(false);
   const [storageFailed, setStorageFailed] = useState(false);
   const request = useRef<AbortController | null>(null);
+  const handledJump = useRef(0);
   const bottom = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const busy = session.pending !== null;
@@ -41,6 +49,14 @@ export default function Tutor({ chapter, mode, onMode }: Props) {
   useEffect(() => {
     bottom.current?.scrollIntoView({ block: 'end' });
   }, [session.messages, session.pending, session.error]);
+  useEffect(() => {
+    if (!jump || handledJump.current === jump.token) return;
+    handledJump.current = jump.token;
+    dispatch({ type: 'page', slide: clampPage(jump.slide, chapter.slideCount) });
+    setPane('slides');
+    setPaneOpen(true);
+    onJumpHandled?.();
+  }, [jump, chapter.slideCount, onJumpHandled]);
   useEffect(() => {
     if (!input.current) return;
     input.current.style.height = 'auto';
@@ -94,6 +110,8 @@ export default function Tutor({ chapter, mode, onMode }: Props) {
   }
   function reset() {
     stop();
+    try { clearQuizStore(localStorage, chapter.id); }
+    catch { /* Storage is optional. */ }
     dispatch({ type: 'reset' });
     setDraft('');
     setAttempt(undefined);
@@ -114,6 +132,7 @@ export default function Tutor({ chapter, mode, onMode }: Props) {
           <button className="text-button outline-entry" aria-label="打开大纲" onClick={() => openPane('outline')}>
             <ListTree size={17} />大纲
           </button>
+          <IconButton label="打开自测" onClick={() => openPane('quiz')}><ClipboardCheck size={18} /></IconButton>
           <IconButton label="打开课件" onClick={() => openPane('slides')}><BookOpen size={18} /></IconButton>
           <IconButton label="打开画布" onClick={() => openPane('diagram')}><GitBranch size={18} /></IconButton>
           <IconButton label="重置本章" onClick={() => setConfirmReset(true)}><RotateCcw size={17} /></IconButton>
@@ -129,7 +148,7 @@ export default function Tutor({ chapter, mode, onMode }: Props) {
             <button disabled={unavailable} title={disabledReason} onClick={() => void send('讲解本页')}>
               <BookOpen size={17} /><span>开始讲解</span><ChevronRight size={16} />
             </button>
-            <button disabled={unavailable} title={disabledReason} onClick={() => void send('自测')}>
+            <button onClick={() => openPane('quiz')} title="打开自测">
               <ClipboardCheck size={17} /><span>本页自测</span><ChevronRight size={16} />
             </button>
           </div>
@@ -201,7 +220,8 @@ export default function Tutor({ chapter, mode, onMode }: Props) {
     {paneOpen && <>
       <button className="pane-shade" aria-label="关闭资料抽屉" onClick={() => setPaneOpen(false)} />
       <StudyPane chapter={chapter} page={session.slide} onPage={goToPage} pane={pane}
-        onPane={setPane} onClose={() => setPaneOpen(false)} diagram={diagram} busy={busy} roadmap={roadmap} />
+        onPane={setPane} onClose={() => setPaneOpen(false)} diagram={diagram} busy={busy}
+        mode={mode} onMode={onMode} roadmap={roadmap} />
     </>}
     {confirmReset && <ResetDialog onCancel={() => setConfirmReset(false)} onConfirm={reset} />}
   </main>;

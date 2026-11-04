@@ -85,3 +85,53 @@ class TutorAnswer(StrictModel):
 
 class ChatResponse(TutorAnswer):
     mode: Literal["ai"]
+
+
+class QuizRequest(StrictModel):
+    chapterId: str = Field(min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_-]+$")
+    slide: int = Field(ge=1, strict=True)
+
+
+class QuizQuestion(StrictModel):
+    question: str = Field(min_length=1, max_length=600)
+    options: list[str] = Field(min_length=2, max_length=6)
+    correctIndex: int = Field(ge=0, strict=True)
+    explanation: str = Field(min_length=1, max_length=2000)
+    citations: list[Citation] = Field(min_length=1, max_length=4)
+
+    @field_validator("options")
+    @classmethod
+    def valid_options(cls, value):
+        if any(not option or len(option) > 300 for option in value):
+            raise ValueError("Quiz options must be non-empty and <= 300 characters")
+        if len(set(value)) != len(value):
+            raise ValueError("Quiz options must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def index_in_range(self):
+        if self.correctIndex >= len(self.options):
+            raise ValueError("correctIndex must reference an option")
+        return self
+
+
+class QuizAnswer(StrictModel):
+    questions: list[QuizQuestion] = Field(min_length=3, max_length=5)
+
+
+class QuizResponse(QuizAnswer):
+    mode: Literal["ai"]
+
+
+class SearchResult(StrictModel):
+    chapterId: str
+    chapterTitle: str
+    slide: int = Field(ge=1, strict=True)
+    slideTitle: str
+    snippet: str
+    score: int = Field(ge=1, strict=True)
+
+
+class SearchResponse(StrictModel):
+    query: str
+    results: list[SearchResult]

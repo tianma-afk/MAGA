@@ -1,12 +1,13 @@
 import { lazy, Suspense, useState } from 'react';
 import { ChevronLeft, ChevronRight, Download, X } from 'lucide-react';
-import type { ChapterDetail, Diagram } from './types';
+import type { ChapterDetail, Diagram, Mode } from './types';
 import IconButton from './IconButton';
+import QuizPane from './QuizPane';
 import Roadmap, { type RoadmapProps } from './Roadmap';
 
 const DiagramCanvas = lazy(() => import('./DiagramCanvas'));
 
-export type Pane = 'slides' | 'diagram' | 'outline';
+export type Pane = 'slides' | 'diagram' | 'outline' | 'quiz';
 interface Props {
   chapter: ChapterDetail;
   page: number;
@@ -16,9 +17,13 @@ interface Props {
   onClose: () => void;
   diagram?: Diagram;
   busy: boolean;
+  mode?: Mode;
+  onMode: (mode: Mode) => void;
   roadmap: Pick<RoadmapProps, 'outline' | 'error' | 'onRetry'>;
 }
-export default function StudyPane({ chapter, page, onPage, pane, onPane, onClose, diagram, busy, roadmap }: Props) {
+export default function StudyPane({
+  chapter, page, onPage, pane, onPane, onClose, diagram, busy, mode, onMode, roadmap,
+}: Props) {
   const slide = chapter.slides.find(s => s.number === page);
   const [failedImage, setFailedImage] = useState<string>();
   const image = slide?.imageUrl && failedImage !== slide.imageUrl;
@@ -27,6 +32,7 @@ export default function StudyPane({ chapter, page, onPage, pane, onPane, onClose
       <div className="tabs" role="tablist" aria-label="资料视图">
         <button role="tab" aria-selected={pane === 'slides'} onClick={() => onPane('slides')}>课件</button>
         <button role="tab" aria-selected={pane === 'outline'} onClick={() => onPane('outline')}>大纲</button>
+        <button role="tab" aria-selected={pane === 'quiz'} onClick={() => onPane('quiz')}>自测</button>
         <button role="tab" aria-selected={pane === 'diagram'} onClick={() => onPane('diagram')}>画布</button>
       </div>
       <IconButton label="关闭资料" onClick={onClose}><X size={18} /></IconButton>
@@ -63,7 +69,8 @@ export default function StudyPane({ chapter, page, onPage, pane, onPane, onClose
       </footer>
     </> : pane === 'outline' ? <div className="outline-scroll">
       <Roadmap {...roadmap} page={page} onPage={onPage} busy={busy} />
-    </div> : <>
+    </div> : pane === 'quiz' ? <QuizPane chapter={chapter} page={page} mode={mode}
+      onMode={onMode} onPage={onPage} /> : <>
       <div className="canvas-heading"><h2>{diagram?.title || '章节画布'}</h2></div>
       {diagram ? <Suspense fallback={<div className="pane-empty" role="status">正在打开画布…</div>}>
         <DiagramCanvas key={JSON.stringify(diagram)} diagram={diagram} />

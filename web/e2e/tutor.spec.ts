@@ -153,9 +153,13 @@ test('home root, browser back, roadmap page links and unconfigured recovery', as
   await expect(page.getByText('Copy-Item .env.example .env')).toBeVisible();
   await page.screenshot({ path: 'test-results/desktop-home-unconfigured.png', fullPage: true });
   await page.getByRole('link', { name: `打开章节：${chapters[0].title}` }).click();
-  for (const name of ['开始讲解', '本页自测', '继续学习', '发送消息']) {
+  for (const name of ['开始讲解', '继续学习', '发送消息']) {
     await expect(page.getByRole('button', { name })).toBeDisabled();
   }
+  await page.getByRole('button', { name: '本页自测' }).click();
+  await expect(page.getByRole('button', { name: /生成本页自测/ })).toBeDisabled();
+  await expect(page.getByText(/可生成自测/)).toBeVisible();
+  await page.getByRole('button', { name: '关闭资料', exact: true }).click();
   await expect(page.locator('.roadmap-connection')).toHaveCount(1);
   await page.getByRole('button', { name: '学习节点：理解指令' }).click();
   await expect(page.getByLabel('课件页码')).toHaveValue('2');

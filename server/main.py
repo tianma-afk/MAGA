@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from starlette.concurrency import run_in_threadpool
@@ -9,7 +9,12 @@ from starlette.concurrency import run_in_threadpool
 from .chapters import ChapterStore
 from .config import read_ai_config
 from .llm import ai_answer
-from .models import Chapter, ChapterDetail, ChatRequest, ChatResponse
+from .models import (
+    Chapter, ChapterDetail, ChatRequest, ChatResponse, QuizRequest, QuizResponse,
+    SearchResponse,
+)
+from .quiz import ai_quiz
+from .search import search_all
 
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
@@ -31,6 +36,14 @@ def create_app(book_dir: Path | None = None, slides_dir: Path | None = None):
         config = read_ai_config()
         return {"status": "ok", "mode": "unconfigured" if config.missing else "ai",
                 "missing": list(config.missing)}
+
+    @app.get("/api/search", response_model=SearchResponse)
+    def search(q: str = Query(..., min_length=1, max_length=200),
+               limit: int = Query(20, ge=1, le=50)):
+        query = q.strip()
+        if not query:
+            raise HTTPException(422, "Search query must not be blank")
+        return search_all(store, query, limit)
 
     @app.get("/api/chapters", response_model=list[Chapter])
     def chapters():
@@ -71,6 +84,13 @@ def create_app(book_dir: Path | None = None, slides_dir: Path | None = None):
         if request.slide > chapter.slideCount:
             raise HTTPException(422, "Slide number is outside this chapter")
         return await ai_answer(chapter, request, app.state.llm_transport)
+
+    @app.post("/api/quiz", response_model=QuizResponse, response_model_exclude_none=True)
+    async def quiz(request: QuizRequest):
+        chapter = await run_in_threadpool(store.read, request.chapterId)
+        if request.slide > chapter.slideCount:
+            raise HTTPException(422, "Slide number is outside this chapter")
+        return await ai_quiz(chapter, request, app.state.llm_transport)
 
     return app
 

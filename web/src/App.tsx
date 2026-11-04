@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BookOpen, PanelLeftClose, PanelLeftOpen, RefreshCw } from 'lucide-react';
 import { api, errorText } from './api';
 import type { Chapter, ChapterDetail, Health, Mode } from './types';
 import IconButton from './IconButton';
 import Tutor from './Tutor';
 import Home from './Home';
+import GlobalSearch from './GlobalSearch';
 import ConnectionBanner from './ConnectionBanner';
 
 function routeChapter() {
@@ -14,6 +15,8 @@ function routeChapter() {
 export default function App() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [selected, setSelected] = useState(routeChapter);
+  const [jump, setJump] = useState<{ chapterId: string; slide: number; token: number }>();
+  const jumpToken = useRef(0);
   const [chapter, setChapter] = useState<ChapterDetail>();
   const [health, setHealth] = useState<Health>();
   const [healthError, setHealthError] = useState('');
@@ -85,6 +88,11 @@ export default function App() {
     window.location.hash = id ? `/chapter/${encodeURIComponent(id)}` : '/';
     if (window.innerWidth <= 760) setSidebar(false);
   };
+  const openSearchResult = (chapterId: string, slide: number) => {
+    setJump({ chapterId, slide, token: ++jumpToken.current });
+    window.location.hash = `/chapter/${encodeURIComponent(chapterId)}`;
+    if (window.innerWidth <= 760) setSidebar(false);
+  };
   const setMode = (next: Mode) => setHealth({ status: 'ok', mode: next,
     missing: next === 'unconfigured' ? health?.missing ?? [] : [] });
   return <div className={`app ${sidebar ? 'sidebar-open' : ''}`}>
@@ -120,6 +128,7 @@ export default function App() {
         <div className="breadcrumb"><button aria-label="返回学习空间" onClick={() => pickChapter('')}>学习空间</button>
           {selected && <><span>/</span><strong>{chapters.find(c => c.id === selected)?.title || '章节'}</strong></>}
         </div>
+        <GlobalSearch onOpen={openSearchResult} />
         {mode && <span className={`mode-badge ${mode}`}>{mode === 'unconfigured' ? 'AI 未配置' : 'AI 模式'}</span>}
       </header>
       <ConnectionBanner health={health} error={healthError} checking={checking}
@@ -131,7 +140,9 @@ export default function App() {
             : chapterError ? <div className="center-state" role="alert"><p>{chapterError}</p>
               <button className="text-button" onClick={() => setRetry(v => v + 1)}><RefreshCw size={16} />重试加载</button></div>
               : chapter && chapter.id === selected ? <Tutor key={chapter.id} chapter={chapter} mode={mode}
-                onMode={setMode} /> : <div className="center-state" role="status">正在打开课件…</div>}
+                onMode={setMode} jump={jump?.chapterId === chapter.id ? jump : undefined}
+                onJumpHandled={() => setJump(undefined)} />
+                : <div className="center-state" role="status">正在打开课件…</div>}
     </div>
   </div>;
 }

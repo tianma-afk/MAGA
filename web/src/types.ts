@@ -40,3 +40,36 @@ export interface ChatResponse {
   diagram?: Diagram;
   mode: 'ai';
 }
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+  citations: { slide: number; title: string }[];
+}
+export interface QuizResponse {
+  questions: QuizQuestion[];
+  mode: 'ai';
+}
+export interface QuizRecord {
+  id: string;
+  slide: number;
+  createdAt: string;
+  questions: QuizQuestion[];
+  answers: number[];
+}
+export interface QuizStore {
+  records: QuizRecord[];
+}
+export interface SearchResult {
+  chapterId: string;
+  chapterTitle: string;
+  slide: number;
+  slideTitle: string;
+  snippet: string;
+  score: number;
+}
+export interface SearchResponse {
+  query: string;
+  results: SearchResult[];
+}
