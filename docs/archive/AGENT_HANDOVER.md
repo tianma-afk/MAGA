@@ -4,6 +4,18 @@
 
 ---
 
+## 0. 当前状态（2026-11-05）
+
+- 当前分支：`feat/quiz-and-foundation`
+- 本轮新增：结构化自测（多次历史 + 跨页错题回顾）、跨章搜索、图片页 OCR 文本接入、当前接口/扩展文档。
+- 当前验证：后端 116 项、前端 48 项、E2E 8 项、Vite 生产构建、500 行检查均通过。真实模型冒烟需要在 `.env` 填写自己的 Key/模型后手动执行。
+- 当前 API 契约、存储格式和可复用扩展点：见 `docs/EXTENSION_POINTS.md`。
+- 图片页 OCR：已生成 82 页本地 OCR 文本；问答、自测和搜索会读取这些文本，但箭头/布局/图形关系仍未解析。
+- 已设计但未完成：共享上游调用 helper、检索质量评测、完整错题本导出、流式输出、视觉理解（OCR 文本已接入）。
+- 下方历史内容保留原貌；如与当前代码不一致，以当前代码和 `docs/EXTENSION_POINTS.md` 为准。
+
+---
+
 ## 1. 项目背景与最初需求
 
 ### 1.1 项目性质与目标
@@ -34,7 +46,7 @@
     - `book/Chapter 6.pptx`（41 页：Interoperability 互操作性）
     - `book/Chapter 7.pptx`（62 页：Modifiability 可修改性）
     - `book/Chapter 8.pptx`（59 页：Performance 性能）
-  - 结合已有的 Chapter 1（29 页）与 Chapter 5（95 页），**确立了全书 7 个核心章节、共 340 页的规范化课件基础**。
+  - 结合已有的 Chapter 1（85 页）与 Chapter 5（39 页），**确立了全书 7 个核心章节、共 340 页的规范化课件基础**。
 
 ### 阶段二：系统方案设计与全栈工程落地（第 2 次对话）
 - **用户指令**：*“我们想做一个 AI+软件体系结构的大作业，主要是通过 AI 助手教授 book 下的讲义。然后我们想要请你做出一个大致的方案来。”*
@@ -65,7 +77,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Web Frontend (React 18)                  │
+│                    Web Frontend (React 19)                  │
 │  - 学习空间主页 (Home.tsx)   - 章节思路大纲 (Roadmap.tsx)     │
 │  - 伴学问答区 (Chat.tsx)     - 课件预览 (SlideViewer.tsx)    │
 │  - 架构图解画布 (DiagramViewer.tsx)                         │
@@ -89,25 +101,31 @@
 
 | 文件路径 | 职责说明 | 关键约束与设计 |
 | --- | --- | --- |
-| `server/catalog.py` | 课件目录与解析器 | 读取 `book/*.pptx`，解析标题、文本、表格与备注；支持图片索引降级为文字 |
-| `server/outline.py` | 章节思路大纲元数据 | 预置 7 个章节的结构化主题大纲，覆盖全部 340 页，保证页码连续与单调递增 |
-| `server/tutor.py` | 教学编排与 Prompt 工程 | 组装当前页与相关页上下文，校验引用来源合法性，生成教学回复或体系结构图 |
-| `server/model_gateway.py` | 模型适配器与网关 | 适配标准 OpenAI 格式，严格校验 API Key，处理超时/格式错误并映射为标准错误 |
-| `server/main.py` | FastAPI 入口与路由 | 挂载 API 端点与静态文件服务，处理全局异常响应 |
-| `web/src/Home.tsx` | 学习空间主页 | 7 个章节卡片展示、本地最后阅读位置恢复、配置状态提醒 |
-| `web/src/Tutor.tsx` | 章节伴学工作台容器 | 管理章节路由、响应式布局、大纲抽屉与图解画布的折叠/展开 |
-| `web/src/Roadmap.tsx` | 思路大纲导航组件 | 展示章节主题节点树，支持点击节点/页码精准驱动课件翻页 |
-| `web/src/SlideViewer.tsx` | 课件原稿预览组件 | 显示真实 PPT 渲染图片，缺失时自动优雅降级为文字预览并提供原文件下载 |
-| `web/src/Chat.tsx` | 伴学对话问答交互 | 消息气泡渲染、Markdown 解析、课件页码引用跳转点击处理 |
-| `web/src/DiagramViewer.tsx` | 体系结构图解画布 | 渲染由模型生成的节点与连线，支持教学示意图可视化展示 |
-| `scripts/render-slides.ps1` | PPT 页面渲染脚本 | 借助 Windows 本地 PowerPoint 将 PPT 转换为逐页 PNG 原稿 |
-| `scripts/check-file-lengths.mjs` | 代码行数检查工具 | 强制要求所有手写代码文件不能超过 500 行，作为 CI/本地卡点 |
+| `server/chapters.py` | 课件目录、PPT 解析、mtime 缓存 | 读取 `book/*.pptx`，不修改原文件 |
+| `server/outline.py` | 章节主题大纲与页码映射 | 内容签名匹配失败时降级为标题分组 |
+| `server/tutor.py` | 章节内相关页检索与上下文节选 | 关键词排序，不建立向量库 |
+| `server/llm.py` | 聊天模型调用与结构化输出校验 | 无配置 503；引用必须来自上下文 |
+| `server/quiz.py` | 自测生成与输出校验 | 3–5 题、引用边界、稀疏页面 422 |
+| `server/search.py` | 跨章关键词搜索 | 标题加权；无需 AI；中英文 token |
+| `server/config.py` | 读取并校验模型配置 | Key 只在服务端读取 |
+| `server/main.py` | FastAPI 路由装配 | `/api/chat`、`/api/quiz`、`/api/search` 等 |
+| `web/src/App.tsx` | 路由、章节列表、搜索跳转 | hash 路由；`jump` 状态 |
+| `web/src/Home.tsx` | 学习空间主页 | 章节卡片与上次阅读页 |
+| `web/src/Tutor.tsx` | 章节会话容器 | 请求中止、重置、跳页、自测入口 |
+| `web/src/Roadmap.tsx` | 大纲导航 | 节点/页码驱动翻页 |
+| `web/src/StudyPane.tsx` | 课件/大纲/自测/画布抽屉 | `Pane` 联合类型 |
+| `web/src/QuizPane.tsx` | 自测生成、判分、历史、错题 | 按章节隔离 |
+| `web/src/GlobalSearch.tsx` | 跨章搜索入口 | 点击结果跳章节/页码 |
+| `web/src/state.ts` | 章节会话存储与 reducer | `chapter-tutor:v2:{id}` |
+| `web/src/quiz.ts` | 自测存储、判分、错题汇总 | `chapter-tutor:quiz:v1:{id}` |
+| `scripts/render-slides.ps1` | PPT 逐页渲染 | 需要桌面 PowerPoint |
+| `scripts/check-file-lengths.mjs` | 500 行检查 | 手写源码卡点 |
 
 ---
 
-## 4. 项目当前完成情况清单
+## 4. 历史阶段完成情况（截至 2026-11-01）
 
-截至目前（Git commit `8f2cfd4`），所有规划核心功能均已高质量完成：
+以下为历史阶段记录；本轮新增的自测和跨章搜索见第 0 节和 `docs/EXTENSION_POINTS.md`。
 
 | 模块 / 需求 | 完成状态 | 验收与验证依据 | 备注 |
 | --- | :---: | --- | --- |
@@ -184,6 +202,9 @@ npm --prefix web run build
 
 # 4. 代码 500 行规则检查
 node scripts/check-file-lengths.mjs
+
+# 5. 浏览器端 E2E（本机 Edge / Chromium）
+npm --prefix web run test:e2e
 ```
 
 ### 6.4 启动服务
@@ -198,19 +219,18 @@ npm --prefix web run dev -- --port 5173
 
 ---
 
-## 7. 后续建议与待办事项（Next Steps）
+## 7. 可扩展方向（仅供参考，不分配任务）
 
-未来接手的 Agent 或开发者若需要继续扩展本项目，建议按以下优先级推进：
+以下是当前设计中尚未完成或可继续探索的方向。它们只是接口/思路，不要求后续接手者按顺序完成；具体契约见 `docs/EXTENSION_POINTS.md`。
 
-1. **多模态与视觉识别（Vision/OCR 增强）**：
-   - 目前课件解析以 PPT 原生提取的文本框、表格和备注为主。对于含有较多示意图但文字稀少的 PPT 页面，建议在后端增加基于视觉模型的页面理解能力，提升图文综合理解率。
-2. **多章节跨章检索与 RAG 知识库**：
-   - 当前版本采用单章节内的有限滑动窗口上下文。若要实现“全书综合答疑”或“对比不同章节的质量属性”，可引入轻量向量数据库（如 SQLite-Vec / Chroma）或混合检索（BM25 + Dense）。
-3. **自测题库与学习评估扩展**：
-   - 当前已具备概念自测的初步交互，可进一步完善自测题目生成、答案对错智能评估以及错题复习本功能。
-4. **多用户与云端数据持久化**：
-   - 若项目未来计划部署至公网供多位同学使用，需补充基础的鉴权（JWT/OAuth）、数据库（PostgreSQL/SQLite）及学习进度的云端同步能力。
+- **视觉/OCR**：课件图片尚未被模型理解，图片型页面目前明确提示信息不足。若要让模型理解图中内容，可接入视觉模型或 OCR，并保留来源与错误提示。
+- **检索质量评测**：可离线测 `relevant_slides` 的 Hit/Recall，再决定是否升级中文分词、BM25 或混合检索。
+- **自测扩展**：当前已支持多次历史和跨页错题；可继续增加题型、按大纲节点聚合、错题本导出。
+- **跨章搜索扩展**：当前搜索是关键词打分；可在保持 `SearchResponse` 契约的前提下替换为 embedding/混合检索，或增加筛选、分页、高亮。
+- **部署与多用户**：当前是单用户本地应用；公网部署前需要鉴权、限流、审计、TLS、预算控制和隐私策略。
+- **流式输出**：当前结构化 JSON + 校验优先；若做流式，需要重新设计边流边校验的协议。
 
 ---
-*文档生成时间：2026-11-01*  
-*维护者：Codex Agent & 项目团队*
+*最后更新：2026-11-05*
+
+*维护者：项目团队*

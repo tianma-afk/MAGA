@@ -1,0 +1,3 @@
+# Optional OCR tooling for scripts/ocr-slides.py.
+# The FastAPI app only reads data/ocr/*.txt and does not import these packages.
+rapidocr_onnxruntime>=1.4.4,<2

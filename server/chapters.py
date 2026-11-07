@@ -39,6 +39,7 @@ class ChapterStore:
     def __init__(self, book_dir: Path, slides_dir: Path):
         self.book_dir = book_dir.resolve()
         self.slides_dir = slides_dir.resolve()
+        self.ocr_dir = (self.slides_dir.parent / "ocr").resolve()
         self._cache = {}
         self._lock = Lock()
 
@@ -66,6 +67,16 @@ class ChapterStore:
         if path.is_relative_to(self.slides_dir) and path.is_file():
             return path
         return None
+
+    def ocr(self, chapter_id: str, number: int):
+        path = (self.ocr_dir / chapter_id / f"{number}.txt").resolve()
+        if not path.is_relative_to(self.ocr_dir) or not path.is_file():
+            return None
+        try:
+            text = path.read_text(encoding="utf-8").strip()
+        except OSError:
+            return None
+        return text or None
 
     def read(self, chapter_id: str) -> ChapterDetail:
         path = self.file(chapter_id)
@@ -101,6 +112,7 @@ class ChapterStore:
         for slide in result.slides:
             if self.image(chapter_id, slide.number):
                 slide.imageUrl = f"/api/chapters/{chapter_id}/slides/{slide.number}/image"
+            slide.ocrText = self.ocr(chapter_id, slide.number)
         return result
 
     def list(self):

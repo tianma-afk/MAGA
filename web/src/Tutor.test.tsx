@@ -95,7 +95,6 @@ it('shows backend image URLs without substituting a fabricated slide', () => {
 
 it.each([
   ['开始讲解', '讲解本页'],
-  ['本页自测', '自测'],
   ['继续学习', '继续学习'],
 ])('quick action %s sends the exact supported intent %s', async (label, intent) => {
   const chat = vi.spyOn(api, 'chat').mockResolvedValue(response);
@@ -103,6 +102,23 @@ it.each([
   fireEvent.click(screen.getByRole('button', { name: label }));
   await screen.findByText(response.content);
   expect(chat).toHaveBeenCalledWith('chapter4', intent, 1, [], expect.any(AbortSignal));
+});
+
+it('opens the self-test pane without sending a chat intent', async () => {
+  const chat = vi.spyOn(api, 'chat');
+  mount();
+  fireEvent.click(screen.getByRole('button', { name: '本页自测' }));
+  expect(await screen.findByRole('heading', { name: '自测' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: '生成本页自测' })).toBeTruthy();
+  expect(chat).not.toHaveBeenCalled();
+});
+
+it('jumps to a searched slide and opens the slide pane', async () => {
+  const onJumpHandled = vi.fn();
+  render(<Tutor chapter={chapter} mode="ai" onMode={() => {}}
+    jump={{ slide: 2, token: 1 }} onJumpHandled={onJumpHandled} />);
+  expect(await screen.findByLabelText('课件页码')).toHaveProperty('value', '2');
+  expect(onJumpHandled).toHaveBeenCalled();
 });
 
 it('keeps study materials closed on initial desktop load', () => {
@@ -118,10 +134,14 @@ it('keeps study materials closed on initial desktop load', () => {
 
 it('disables AI actions when unconfigured but permits reading', () => {
   render(<Tutor chapter={chapter} mode="unconfigured" onMode={() => {}} />);
-  for (const name of ['开始讲解', '本页自测', '继续学习', '发送消息']) {
+  for (const name of ['开始讲解', '继续学习', '发送消息']) {
     expect(screen.getByRole('button', { name })).toHaveProperty('disabled', true);
   }
+  expect(screen.getByRole('button', { name: '本页自测' })).toHaveProperty('disabled', false);
   expect(screen.getByText('AI 尚未配置，完成配置并重新检查连接后可提问。')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: '本页自测' }));
+  expect(screen.getByRole('button', { name: '生成本页自测' })).toHaveProperty('disabled', true);
+  expect(screen.getByText(/可生成自测/)).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: '打开课件' }));
   expect(screen.getByLabelText('课件页码')).toBeTruthy();
 });

@@ -7,6 +7,10 @@ import pytest
 from fastapi.testclient import TestClient
 from pptx import Presentation
 
+from server.chapters import ChapterStore
+
+ROOT = Path(__file__).resolve().parents[2]
+
 
 def deck(path, title):
     presentation = Presentation()
@@ -227,14 +231,11 @@ def test_key_without_model_is_unconfigured(setup, monkeypatch, model):
     assert response.status_code == 503
 
 
-def test_real_sparse_slide_warns_about_unparsed_visuals(monkeypatch):
+def test_real_sparse_slide_warns_about_unparsed_visuals(tmp_path):
     from server.tutor import excerpt
-    from server.models import ChapterDetail
-    monkeypatch.delenv("LLM_API_KEY", raising=False)
-    module = importlib.import_module("server.main")
-    client = TestClient(module.create_app())
+    store = ChapterStore(ROOT / "book", tmp_path / "slides")
+    chapter = store.read("chapter-5")
     for number in (2, 3):
-        chapter = ChapterDetail.model_validate(client.get("/api/chapters/chapter-5").json())
         assert "\u56fe\u50cf\u5185\u5bb9\u5c1a\u672a\u89e3\u6790" in excerpt(chapter.slides[number - 1])
 
 
