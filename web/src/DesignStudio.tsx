@@ -224,17 +224,17 @@ export default function DesignStudio({ mode, onOpenSource }: Props) {
       <h2>1. 描述一个真实场景</h2>
       <p className="studio-muted">例如：在线考试系统、外卖订单系统、校园二手交易平台。</p>
       <label>设计标题
-        <input value={project.title} maxLength={200}
+        <input value={project.title} maxLength={200} disabled={loading}
           onChange={event => patch({ title: event.target.value })}
           placeholder="例如：在线考试系统" />
       </label>
       <label>场景描述
-        <textarea value={project.scenario} maxLength={3000} rows={4}
+        <textarea value={project.scenario} maxLength={3000} rows={4} disabled={loading}
           onChange={event => patch({ scenario: event.target.value })}
           placeholder="系统要解决什么问题？用户是谁？主要流程是什么？" />
       </label>
       <label>需求与约束
-        <textarea value={project.requirements} maxLength={6000} rows={3}
+        <textarea value={project.requirements} maxLength={6000} rows={3} disabled={loading}
           onChange={event => patch({ requirements: event.target.value })}
           placeholder="例如：考试期间不能中断；峰值 1 万人同时在线。" />
       </label>
@@ -283,6 +283,7 @@ export default function DesignStudio({ mode, onOpenSource }: Props) {
       <div className="studio-list">
         {project.tactics.map(tactic => <label className="studio-tactic" key={tactic.name}>
           <input type="checkbox" checked={project.selectedTactics.includes(tactic.name)}
+            disabled={loading}
             onChange={() => toggleTactic(tactic.name)} />
           <span>
             <strong>{tactic.name}</strong>

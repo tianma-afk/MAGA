@@ -101,3 +101,37 @@ it('keeps AI tactics that share a name as one selectable tactic', async () => {
   expect(draft.tactics).toHaveLength(1);
   view.unmount();
 });
+
+it('locks the draft inputs while a generation request is in flight', async () => {
+  vi.spyOn(api, 'designScenarios').mockResolvedValue(scenarios);
+  vi.spyOn(api, 'designTactics').mockResolvedValue(tactics);
+  let release: (value: DesignReviewResponse) => void = () => undefined;
+  vi.spyOn(api, 'designReview').mockImplementation(
+    () => new Promise<DesignReviewResponse>(resolve => { release = resolve; }));
+  const view = render(<DesignStudio mode="ai" onOpenSource={vi.fn()} />);
+  fireEvent.change(screen.getByLabelText('设计标题'), { target: { value: '在线考试系统' } });
+  fireEvent.change(screen.getByLabelText('场景描述'), { target: { value: '考试期间持续提供服务' } });
+  fireEvent.click(screen.getByRole('button', { name: '生成质量属性与场景' }));
+  expect(await screen.findByText('可用性')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: '推荐架构战术' }));
+  expect(await screen.findByText('心跳检测')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: '生成 AI 评审' }));
+  expect(screen.getByRole('checkbox')).toHaveProperty('disabled', true);
+  release(review);
+  expect(await screen.findByText('方案覆盖了可用性。')).toBeTruthy();
+  view.unmount();
+  // The pending scenario request must also lock the step-one inputs.
+  let hold: (value: DesignScenarioResponse) => void = () => undefined;
+  vi.spyOn(api, 'designScenarios').mockImplementation(
+    () => new Promise<DesignScenarioResponse>(resolve => { hold = resolve; }));
+  localStorage.clear();
+  render(<DesignStudio mode="ai" onOpenSource={vi.fn()} />);
+  fireEvent.change(screen.getByLabelText('设计标题'), { target: { value: '在线考试系统' } });
+  fireEvent.change(screen.getByLabelText('场景描述'), { target: { value: '考试期间持续提供服务' } });
+  fireEvent.click(screen.getByRole('button', { name: '生成质量属性与场景' }));
+  expect(screen.getByLabelText('设计标题')).toHaveProperty('disabled', true);
+  expect(screen.getByLabelText('场景描述')).toHaveProperty('disabled', true);
+  expect(screen.getByLabelText('需求与约束')).toHaveProperty('disabled', true);
+  hold(scenarios);
+  expect(await screen.findByText('可用性')).toBeTruthy();
+});

@@ -438,8 +438,8 @@ chapter-tutor:design:v1:current
 
 | 检查 | 结果 |
 | --- | --- |
-| 后端 pytest | 129 passed |
-| 前端 Vitest | 69 passed |
+| 后端 pytest | 131 passed |
+| 前端 Vitest | 70 passed |
 | Playwright E2E | 9 passed |
 | Vite 生产构建 | 通过 |
 | 500 行检查 | 72 个源码文件，0 超限 |

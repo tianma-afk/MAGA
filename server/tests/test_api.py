@@ -97,6 +97,17 @@ def test_bad_chat_requests(setup, change):
     assert client.post("/api/chat", json=payload).status_code == 422
 
 
+def test_lone_surrogate_in_request_returns_422_not_500(setup):
+    client, _, _ = setup
+    response = client.post("/api/chat", content=(
+        b'{"chapterId":"chapter-2","message":"\\ud800","slide":1,"history":[]}'
+    ), headers={"content-type": "application/json"})
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert detail[0]["type"] == "string_unicode"
+    assert "\ud800" not in detail[0]["input"]
+
+
 def test_unknown_chapter_and_cors(setup):
     client, _, _ = setup
     assert client.post("/api/chat", json={

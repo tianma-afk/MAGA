@@ -1,9 +1,11 @@
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from starlette.concurrency import run_in_threadpool
 
 from .chapters import ChapterStore
@@ -23,6 +25,16 @@ ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
 
 
+def _utf8_safe(value):
+    if isinstance(value, str):
+        return value.encode("utf-8", "replace").decode("utf-8")
+    if isinstance(value, list):
+        return [_utf8_safe(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _utf8_safe(item) for key, item in value.items()}
+    return value
+
+
 def create_app(book_dir: Path | None = None, slides_dir: Path | None = None):
     app = FastAPI(title="Chapter PPT Tutor")
     store = ChapterStore(book_dir or ROOT / "book", slides_dir or ROOT / "data" / "slides")
@@ -33,6 +45,15 @@ def create_app(book_dir: Path | None = None, slides_dir: Path | None = None):
         allow_methods=["GET", "POST"],
         allow_headers=["Content-Type"],
     )
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_errors(request: Request, exc: RequestValidationError):
+        # Invalid input is echoed back into the 422 detail; a lone surrogate in
+        # it would crash response rendering, so degrade unencodable characters.
+        return JSONResponse(
+            status_code=422,
+            content={"detail": _utf8_safe(jsonable_encoder(exc.errors()))},
+        )
 
     @app.get("/api/health")
     def health():

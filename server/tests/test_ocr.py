@@ -57,3 +57,16 @@ def test_sparse_page_without_ocr_still_returns_fallback(tmp_path):
     assert chapter.slides[0].ocrText is None
     assert "图像内容尚未解析" in excerpt(chapter.slides[0])
     assert not _has_source_text(chapter.slides[0])
+
+
+def test_non_utf8_ocr_file_degrades_to_none(tmp_path):
+    store = blank_deck(tmp_path)
+    target = tmp_path / "ocr" / "chapter-5"
+    target.mkdir(parents=True)
+    (target / "1.txt").write_bytes(b"\xff\xfe<\x00?\x00x\x00m\x00l\x00>\x00")
+    chapter = store.read("chapter-5")
+    assert chapter.slides[0].ocrText is None
+    client = TestClient(create_app(
+        book_dir=tmp_path / "book", slides_dir=tmp_path / "slides",
+    ))
+    assert client.get("/api/chapters").status_code == 200
