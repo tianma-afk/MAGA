@@ -10,9 +10,12 @@ from .chapters import ChapterStore
 from .config import read_ai_config
 from .llm import ai_answer
 from .models import (
-    Chapter, ChapterDetail, ChatRequest, ChatResponse, QuizRequest, QuizResponse,
+    Chapter, ChapterDetail, ChatRequest, ChatResponse, DesignReviewRequest,
+    DesignReviewResponse, DesignScenarioRequest, DesignScenarioResponse,
+    DesignTacticRequest, DesignTacticResponse, QuizRequest, QuizResponse,
     SearchResponse,
 )
+from .design import design_review, design_scenarios, design_tactics
 from .quiz import ai_quiz
 from .search import search_all
 
@@ -91,6 +94,18 @@ def create_app(book_dir: Path | None = None, slides_dir: Path | None = None):
         if request.slide > chapter.slideCount:
             raise HTTPException(422, "Slide number is outside this chapter")
         return await ai_quiz(chapter, request, app.state.llm_transport)
+
+    @app.post("/api/design/scenarios", response_model=DesignScenarioResponse)
+    async def scenarios(request: DesignScenarioRequest):
+        return await design_scenarios(store, request, app.state.llm_transport)
+
+    @app.post("/api/design/tactics", response_model=DesignTacticResponse)
+    async def tactics(request: DesignTacticRequest):
+        return await design_tactics(store, request, app.state.llm_transport)
+
+    @app.post("/api/design/review", response_model=DesignReviewResponse)
+    async def review(request: DesignReviewRequest):
+        return await design_review(store, request, app.state.llm_transport)
 
     return app
 

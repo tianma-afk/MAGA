@@ -26,7 +26,7 @@ it('root always opens the seven-chapter home and preserves resume pages', async 
   render(<App />);
   expect(await screen.findByRole('heading', { name: '学习空间' })).toBeTruthy();
   expect(screen.getAllByRole('link', { name: /打开章节/ })).toHaveLength(7);
-  expect(screen.getByText('上次读到第 2 页')).toBeTruthy();
+  expect(screen.getByText(/上次读到第 2 页/)).toBeTruthy();
   expect(api.chapter).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('link', { name: `打开章节：${chapters[4].title}` }));
   expect(await screen.findByRole('heading', { name: chapters[4].title })).toBeTruthy();
@@ -42,6 +42,13 @@ it('shows missing configuration and rechecks after restart', async () => {
   expect(screen.getByText(/OPENAI_API_KEY/)).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: '重新检查连接' }));
   await waitFor(() => expect(screen.queryByText('Copy-Item .env.example .env')).toBeNull());
+});
+
+it('opens the architecture studio from the home page', async () => {
+  render(<App />);
+  fireEvent.click(await screen.findByRole('link', { name: /架构实践/ }));
+  expect(await screen.findByRole('heading', { name: '架构实践' })).toBeTruthy();
+  expect(window.location.hash).toBe('#/studio');
 });
 
 it('keeps chapter reading available when health cannot be reached', async () => {

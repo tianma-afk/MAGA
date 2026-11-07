@@ -74,3 +74,63 @@ export interface SearchResponse {
   query: string;
   results: SearchResult[];
 }
+export interface DesignCitation {
+  chapterId: string;
+  slide: number;
+  title: string;
+}
+export interface DesignQualityAttribute {
+  name: string;
+  priority: 'high' | 'medium' | 'low';
+  reason: string;
+}
+export interface DesignScenario {
+  stimulus: string;
+  source: string;
+  artifact: string;
+  environment: string;
+  response: string;
+  measure: string;
+  citations: DesignCitation[];
+}
+export interface DesignTactic {
+  name: string;
+  rationale: string;
+  tradeoffs: string;
+  citations: DesignCitation[];
+}
+export interface DesignFinding {
+  area: string;
+  finding: string;
+  severity: 'high' | 'medium' | 'low';
+  suggestion: string;
+  citations: DesignCitation[];
+}
+export interface DesignReview {
+  summary: string;
+  findings: DesignFinding[];
+  questions: string[];
+}
+export interface DesignScenarioResponse {
+  qualityAttributes: DesignQualityAttribute[];
+  scenarios: DesignScenario[];
+  mode: 'ai';
+}
+export interface DesignTacticResponse {
+  tactics: DesignTactic[];
+  mode: 'ai';
+}
+export interface DesignReviewResponse extends DesignReview {
+  mode: 'ai';
+}
+export interface DesignProject {
+  title: string;
+  scenario: string;
+  requirements: string;
+  qualityAttributes: DesignQualityAttribute[];
+  scenarios: DesignScenario[];
+  tactics: DesignTactic[];
+  selectedTactics: string[];
+  review?: DesignReview;
+  updatedAt: string;
+}
