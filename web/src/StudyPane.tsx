@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
 import { ChevronLeft, ChevronRight, Download, X } from 'lucide-react';
-import type { ChapterDetail, Diagram, Mode } from './types';
+import type { ChapterDetail, Diagram, Mode, QuizStore } from './types';
 import IconButton from './IconButton';
 import QuizPane from './QuizPane';
 import Roadmap, { type RoadmapProps } from './Roadmap';
@@ -20,9 +20,12 @@ interface Props {
   mode?: Mode;
   onMode: (mode: Mode) => void;
   roadmap: Pick<RoadmapProps, 'outline' | 'error' | 'onRetry'>;
+  quizStore?: QuizStore;
+  onQuizChange?: () => void;
 }
 export default function StudyPane({
-  chapter, page, onPage, pane, onPane, onClose, diagram, busy, mode, onMode, roadmap,
+  chapter, page, onPage, pane, onPane, onClose, diagram, busy, mode, onMode,
+  roadmap, quizStore, onQuizChange,
 }: Props) {
   const slide = chapter.slides.find(s => s.number === page);
   const [failedImage, setFailedImage] = useState<string>();
@@ -74,9 +77,9 @@ export default function StudyPane({
         </IconButton>
       </footer>
     </> : pane === 'outline' ? <div className="outline-scroll">
-      <Roadmap {...roadmap} page={page} onPage={onPage} busy={busy} />
+      <Roadmap {...roadmap} page={page} onPage={onPage} busy={busy} quizStore={quizStore} />
     </div> : pane === 'quiz' ? <QuizPane chapter={chapter} page={page} mode={mode}
-      onMode={onMode} onPage={onPage} /> : <>
+      onMode={onMode} onPage={onPage} onQuizChange={onQuizChange} /> : <>
       <div className="canvas-heading"><h2>{diagram?.title || '章节画布'}</h2></div>
       {diagram ? <Suspense fallback={<div className="pane-empty" role="status">正在打开画布…</div>}>
         <DiagramCanvas key={JSON.stringify(diagram)} diagram={diagram} />

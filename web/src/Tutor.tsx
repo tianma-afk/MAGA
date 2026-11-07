@@ -3,8 +3,9 @@ import { ArrowUp, BookOpen, ChevronRight, ClipboardCheck, GitBranch, ListTree, L
 import ReactMarkdown from 'react-markdown';
 import { api, ConfigurationError, errorText } from './api';
 import { clampPage, emptySession, loadSession, saveSession, sessionReducer } from './state';
-import { clearQuizStore } from './quiz';
-import type { ChapterDetail, Diagram, Mode } from './types';
+import { clearQuizStore, emptyQuizStore, loadQuizStore } from './quiz';
+import { clearProgress, markVisited } from './progress';
+import type { ChapterDetail, Diagram, Mode, QuizStore } from './types';
 import IconButton from './IconButton';
 import StudyPane, { type Pane } from './StudyPane';
 import ResetDialog from './ResetDialog';
@@ -24,6 +25,10 @@ export default function Tutor({ chapter, mode, onMode, jump, onJumpHandled }: Pr
   const [session, dispatch] = useReducer(sessionReducer, undefined, () => {
     try { return loadSession(localStorage, chapter.id, chapter.slideCount); }
     catch { return emptySession(); }
+  });
+  const [quizStore, setQuizStore] = useState<QuizStore>(() => {
+    try { return loadQuizStore(localStorage, chapter.id); }
+    catch { return emptyQuizStore(); }
   });
   const [draft, setDraft] = useState('');
   const [attempt, setAttempt] = useState<{ text: string; slide: number }>();
@@ -57,6 +62,10 @@ export default function Tutor({ chapter, mode, onMode, jump, onJumpHandled }: Pr
     setPaneOpen(true);
     onJumpHandled?.();
   }, [jump, chapter.slideCount, onJumpHandled]);
+  useEffect(() => {
+    try { markVisited(localStorage, chapter.id, session.slide, chapter.slideCount); }
+    catch { /* Progress is optional. */ }
+  }, [chapter.id, chapter.slideCount, session.slide]);
   useEffect(() => {
     if (!input.current) return;
     input.current.style.height = 'auto';
@@ -108,10 +117,18 @@ export default function Tutor({ chapter, mode, onMode, jump, onJumpHandled }: Pr
       if (request.current === controller) request.current = null;
     }
   }
+  function refreshQuizStore() {
+    try { setQuizStore(loadQuizStore(localStorage, chapter.id)); }
+    catch { setQuizStore(emptyQuizStore()); }
+  }
+
   function reset() {
     stop();
-    try { clearQuizStore(localStorage, chapter.id); }
-    catch { /* Storage is optional. */ }
+    try {
+      clearQuizStore(localStorage, chapter.id);
+      clearProgress(localStorage, chapter.id);
+    } catch { /* Storage is optional. */ }
+    setQuizStore(emptyQuizStore());
     dispatch({ type: 'reset' });
     setDraft('');
     setAttempt(undefined);
@@ -143,7 +160,8 @@ export default function Tutor({ chapter, mode, onMode, jump, onJumpHandled }: Pr
           <BookOpen className="welcome-icon" size={30} strokeWidth={1.5} />
           <h1>{chapter.title}</h1>
           <p>{chapter.slideCount} 页课件 <span>·</span> 从第 {session.slide} 页开始</p>
-          {!paneOpen && <Roadmap {...roadmap} page={session.slide} onPage={goToPage} busy={busy} />}
+          {!paneOpen && <Roadmap {...roadmap} page={session.slide} onPage={goToPage}
+            busy={busy} quizStore={quizStore} />}
           <div className="starter-actions">
             <button disabled={unavailable} title={disabledReason} onClick={() => void send('讲解本页')}>
               <BookOpen size={17} /><span>开始讲解</span><ChevronRight size={16} />
@@ -221,7 +239,8 @@ export default function Tutor({ chapter, mode, onMode, jump, onJumpHandled }: Pr
       <button className="pane-shade" aria-label="关闭资料抽屉" onClick={() => setPaneOpen(false)} />
       <StudyPane chapter={chapter} page={session.slide} onPage={goToPage} pane={pane}
         onPane={setPane} onClose={() => setPaneOpen(false)} diagram={diagram} busy={busy}
-        mode={mode} onMode={onMode} roadmap={roadmap} />
+        mode={mode} onMode={onMode} roadmap={roadmap} quizStore={quizStore}
+        onQuizChange={refreshQuizStore} />
     </>}
     {confirmReset && <ResetDialog onCancel={() => setConfirmReset(false)} onConfirm={reset} />}
   </main>;

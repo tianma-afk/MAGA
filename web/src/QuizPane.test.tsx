@@ -32,8 +32,12 @@ const questions: QuizQuestion[] = [
 beforeEach(() => localStorage.clear());
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
-function mount(mode: 'ai' | 'unconfigured' = 'ai', onPage = vi.fn(), onMode = vi.fn()) {
-  return render(<QuizPane chapter={chapter} page={1} mode={mode} onPage={onPage} onMode={onMode} />);
+function mount(
+  mode: 'ai' | 'unconfigured' = 'ai', onPage = vi.fn(), onMode = vi.fn(),
+  onQuizChange = vi.fn(),
+) {
+  return render(<QuizPane chapter={chapter} page={1} mode={mode} onPage={onPage}
+    onMode={onMode} onQuizChange={onQuizChange} />);
 }
 
 it('generates, submits, scores, reviews wrong answers and persists history', async () => {
@@ -65,7 +69,7 @@ it('keeps saved history readable while generation is disabled', () => {
   expect(screen.getByRole('button', { name: /生成本页自测/ })).toHaveProperty('disabled', true);
   expect(screen.getByText(/可生成自测/)).toBeTruthy();
   expect(screen.getByText('1 / 3', { selector: '.quiz-score strong' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: /第 1 页/ })).toBeTruthy();
+  expect(screen.getByRole('button', { name: /^第 1 页/ })).toBeTruthy();
 });
 
 it('reports configuration loss without fabricating a quiz', async () => {
@@ -77,6 +81,30 @@ it('reports configuration loss without fabricating a quiz', async () => {
     expect.stringContaining('请配置模型'));
   expect(onMode).toHaveBeenCalledWith('unconfigured');
   expect(screen.queryByText('问题一')).toBeNull();
+});
+
+it('retries only wrong questions and deletes a history record', () => {
+  saveQuizRecord(localStorage, chapter.id,
+    newQuizRecord(1, questions, [0, 0, 0]));
+  const changed = vi.fn();
+  mount('ai', vi.fn(), vi.fn(), changed);
+  expect(screen.getByText('1 / 3', { selector: '.quiz-score strong' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: '导出错题' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: '只练错题（2）' }));
+  expect(screen.queryByText('问题一')).toBeNull();
+  const draft = document.querySelector('.quiz-draft') as HTMLElement;
+  expect(within(draft).getByText('问题二')).toBeTruthy();
+  expect(within(draft).getByText('问题三')).toBeTruthy();
+  fireEvent.click(screen.getByRole('radio', { name: '正确二' }));
+  fireEvent.click(screen.getByRole('radio', { name: '正确三' }));
+  fireEvent.click(screen.getByRole('button', { name: '提交自测' }));
+  expect(screen.getByText('2 / 2', { selector: '.quiz-score strong' })).toBeTruthy();
+  expect(JSON.parse(localStorage.getItem('chapter-tutor:quiz:v1:chapter4')!).records).toHaveLength(2);
+  const deletes = screen.getAllByRole('button', { name: '删除第 1 页自测记录' });
+  expect(deletes).toHaveLength(2);
+  fireEvent.click(deletes[0]);
+  expect(JSON.parse(localStorage.getItem('chapter-tutor:quiz:v1:chapter4')!).records).toHaveLength(1);
+  expect(changed).toHaveBeenCalled();
 });
 
 it('aborts an in-flight quiz request on unmount', () => {

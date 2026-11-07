@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-  MAX_RECORDS, chapterWrongAnswers, clearQuizStore, emptyQuizStore, loadQuizStore,
-  newQuizRecord, saveQuizRecord, scoreRecord, wrongAnswers,
+  MAX_RECORDS, chapterWrongAnswers, clearQuizStore, deleteQuizRecord, emptyQuizStore,
+  loadQuizStore, newQuizRecord, quizPercent, quizSummary, saveQuizRecord, scoreRecord,
+  wrongAnswers, wrongAnswersMarkdown,
 } from './quiz';
 import type { QuizQuestion } from './types';
 
@@ -40,6 +41,17 @@ describe('quiz persistence', () => {
     expect(loadQuizStore(store, 'b')).toEqual(emptyQuizStore());
     expect(clearQuizStore(store, 'a')).toBe(true);
     expect(loadQuizStore(store, 'a')).toEqual(emptyQuizStore());
+  });
+
+  it('allows short local retry records and deletes individual records', () => {
+    const store = storage();
+    const short = { ...record('short'), questions: [question('a')], answers: [1] };
+    expect(saveQuizRecord(store, 'a', short)).toBe(true);
+    expect(saveQuizRecord(store, 'a', record('full'))).toBe(true);
+    expect(loadQuizStore(store, 'a').records).toHaveLength(2);
+    expect(deleteQuizRecord(store, 'a', 'short')).toBe(true);
+    expect(loadQuizStore(store, 'a').records.map(item => item.id)).toEqual(['full']);
+    expect(deleteQuizRecord(store, 'a', 'missing')).toBe(false);
   });
 
   it('caps history at the bounded maximum', () => {
@@ -97,5 +109,19 @@ describe('quiz scoring and review', () => {
     expect(quiz.slide).toBe(4);
     expect(quiz.id).toBeTruthy();
     expect(scoreRecord(quiz)).toBe(3);
+  });
+
+  it('summarizes attempts and exports wrong answers as markdown', () => {
+    const partial = record('a', 2, [1, 0, 0]);
+    const perfect = record('b', 2, [1, 1, 1]);
+    expect(quizPercent(partial)).toBe(33);
+    expect(quizSummary({ records: [partial, perfect] })).toEqual({
+      attempts: 2, averagePercent: 67,
+    });
+    const markdown = wrongAnswersMarkdown(partial, '第5章');
+    expect(markdown).toContain('第5章自测错题');
+    expect(markdown).toContain('你的答案');
+    expect(markdown).toContain('正确答案：Latency');
+    expect(markdown).toContain('第 2 页 · Availability');
   });
 });

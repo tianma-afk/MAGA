@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { ClipboardCheck, LoaderCircle, RefreshCw } from 'lucide-react';
 import { api, ConfigurationError, errorText } from './api';
 import {
-  MAX_RECORDS, emptyQuizStore, formatQuizDate, loadQuizStore, newQuizRecord,
-  saveQuizRecord, scoreRecord,
+  MAX_RECORDS, deleteQuizRecord, emptyQuizStore, formatQuizDate, loadQuizStore,
+  newQuizRecord, saveQuizRecord, scoreRecord, wrongAnswers, wrongAnswersMarkdown,
 } from './quiz';
 import type { ChapterDetail, Mode, QuizQuestion, QuizStore } from './types';
 import QuizQuestionCard from './QuizQuestionCard';
@@ -17,9 +17,12 @@ interface Props {
   mode?: Mode;
   onMode: (mode: Mode) => void;
   onPage: (page: number) => void;
+  onQuizChange?: () => void;
 }
 
-export default function QuizPane({ chapter, page, mode, onMode, onPage }: Props) {
+export default function QuizPane({
+  chapter, page, mode, onMode, onPage, onQuizChange,
+}: Props) {
   const [store, setStore] = useState<QuizStore>(() => {
     try { return loadQuizStore(localStorage, chapter.id); }
     catch { return emptyQuizStore(); }
@@ -34,6 +37,7 @@ export default function QuizPane({ chapter, page, mode, onMode, onPage }: Props)
   const unavailable = mode !== 'ai';
   const active = store.records.find(record => record.id === activeId);
   const currentRecord = store.records.find(record => record.slide === page);
+  const wrongCount = active ? wrongAnswers(active).length : 0;
   const complete = !!draft && answers.length === draft.length && answers.every(answer => answer >= 0);
 
   useEffect(() => {
@@ -98,6 +102,42 @@ export default function QuizPane({ chapter, page, mode, onMode, onPage }: Props)
     setActiveId(record.id);
     setDraft(undefined);
     setAnswers([]);
+    onQuizChange?.();
+  }
+
+  function removeRecord(id: string) {
+    if (!deleteQuizRecord(localStorage, chapter.id, id)) {
+      setStorageFailed(true);
+      return;
+    }
+    setStore(loadQuizStore(localStorage, chapter.id));
+    if (activeId === id) setActiveId(undefined);
+    setStorageFailed(false);
+    onQuizChange?.();
+  }
+
+  function retryWrong() {
+    if (!active) return;
+    const wrong = wrongAnswers(active);
+    if (!wrong.length) return;
+    setDraft(wrong.map(item => item.question));
+    setAnswers(Array(wrong.length).fill(-1));
+    setActiveId(undefined);
+    setStorageFailed(false);
+  }
+
+  function exportWrong() {
+    if (!active) return;
+    const content = wrongAnswersMarkdown(active, chapter.title);
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${chapter.id}-page-${active.slide}-wrong-answers.md`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   }
 
   return <div className="quiz-pane">
@@ -141,6 +181,10 @@ export default function QuizPane({ chapter, page, mode, onMode, onPage }: Props)
     </> : active ? <>
       <p className="quiz-review-meta">第 {active.slide} 页 · {formatQuizDate(active.createdAt)}</p>
       <QuizReview record={active} onPage={onPage} />
+      {wrongCount > 0 && <div className="quiz-result-actions">
+        <button className="text-button" onClick={retryWrong}>只练错题（{wrongCount}）</button>
+        <button className="text-button" onClick={exportWrong}>导出错题</button>
+      </div>}
     </> : <div className="quiz-empty">
       <p>还没有本次自测。</p>
       {currentRecord && <button className="text-button"
@@ -149,13 +193,17 @@ export default function QuizPane({ chapter, page, mode, onMode, onPage }: Props)
     {store.records.length > 0 && <section className="quiz-history" aria-label="本章自测历史">
       <h3>本章自测历史</h3>
       <ul>
-        {store.records.map(record => <li key={record.id}>
-          <button aria-current={record.id === activeId ? 'true' : undefined}
+        {store.records.map(record => <li key={record.id} className="quiz-history-row">
+          <button className="quiz-history-open"
+            aria-current={record.id === activeId ? 'true' : undefined}
             onClick={() => setActiveId(record.id)}>
             <span>第 {record.slide} 页</span>
             <span>{scoreRecord(record)} / {record.questions.length}</span>
             <span>{formatQuizDate(record.createdAt)}</span>
           </button>
+          <button className="quiz-history-delete"
+            aria-label={`删除第 ${record.slide} 页自测记录`}
+            onClick={() => removeRecord(record.id)}>×</button>
         </li>)}
       </ul>
     </section>}

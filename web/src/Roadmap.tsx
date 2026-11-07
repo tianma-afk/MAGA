@@ -1,5 +1,5 @@
 import { ArrowDown, RefreshCw } from 'lucide-react';
-import type { Outline } from './types';
+import type { Outline, QuizStore } from './types';
 
 export interface RoadmapProps {
   outline?: Outline;
@@ -8,8 +8,30 @@ export interface RoadmapProps {
   page: number;
   onPage: (page: number) => void;
   busy: boolean;
+  quizStore?: QuizStore;
 }
-export default function Roadmap({ outline, error, onRetry, page, onPage, busy }: RoadmapProps) {
+
+function mastery(node: Outline['nodes'][number], store?: QuizStore) {
+  if (!store) return undefined;
+  let attempts = 0;
+  let correct = 0;
+  let total = 0;
+  for (const record of store.records) {
+    let counted = false;
+    record.questions.forEach((question, index) => {
+      if (!question.citations.some(citation => node.slides.includes(citation.slide))) return;
+      counted = true;
+      total += 1;
+      if (record.answers[index] === question.correctIndex) correct += 1;
+    });
+    if (counted) attempts += 1;
+  }
+  return { attempts, correct, total };
+}
+
+export default function Roadmap({
+  outline, error, onRetry, page, onPage, busy, quizStore,
+}: RoadmapProps) {
   if (error) return <div className="roadmap-status" role="alert">{error}
     <button className="text-button" onClick={onRetry}><RefreshCw size={14} />重试大纲</button>
   </div>;
@@ -23,6 +45,7 @@ export default function Roadmap({ outline, error, onRetry, page, onPage, busy }:
           .map(edge => outline.nodes.find(target => target.id === edge.target))
           .filter(target => target !== undefined);
         const pages = [...new Set(node.slides)].sort((a, b) => a - b);
+        const stats = mastery(node, quizStore);
         return <li key={node.id} aria-current={pages.includes(page) ? 'step' : undefined}>
           <span className="roadmap-marker" aria-hidden="true">{index + 1}</span>
           <div className="roadmap-topic">
@@ -32,6 +55,9 @@ export default function Roadmap({ outline, error, onRetry, page, onPage, busy }:
               {!!pages.length && <span>第 {pages[0]}{pages.length > 1 ? `–${pages.at(-1)}` : ''} 页</span>}
             </button>
             <p>{node.summary}</p>
+            {stats && <span className={`roadmap-mastery ${stats.total ? '' : 'empty'}`}>
+              {stats.total ? `${stats.attempts} 次自测 · ${Math.round(stats.correct / stats.total * 100)}%` : '未测'}
+            </span>}
             <div className="roadmap-pages">{pages.map(slide =>
               <button key={slide} disabled={busy} aria-label={`大纲第 ${slide} 页`}
                 aria-current={slide === page ? 'page' : undefined} onClick={() => onPage(slide)}>{slide}</button>)}</div>

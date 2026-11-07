@@ -2,6 +2,12 @@
 .home-heading { display: flex; align-items: center; gap: 13px; margin-bottom: 36px; }
 .home-heading > svg { color: var(--green); }
 .home h1 { font-size: 25px; font-weight: 600; margin: 0; }
+.home-studio { display: grid; grid-template-columns: 24px minmax(0, 1fr) 20px; gap: 14px; align-items: center; padding: 16px 18px; margin: 20px 0 32px; border: 1px solid #d8e5dd; border-radius: 8px; background: #f4f9f5; color: inherit; }
+.home-studio:hover { background: #eef7f0; }
+.home-studio > svg:first-child { color: var(--green); }
+.home-studio strong { display: block; font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+.home-studio small { display: block; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.home-studio > svg:last-child { color: #7a857e; }
 .home-list-label { display: flex; justify-content: space-between; align-items: center; color: var(--muted); }
 .home-list-label h2 { font-size: 12px; font-weight: 500; margin: 0; }
 .home-list-label > span { font-size: 11px; }
@@ -12,6 +18,7 @@
 .home-chapter-title { font-size: 14px; font-weight: 500; overflow-wrap: anywhere; }
 .home-chapter-title small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); margin-top: 5px; }
 .resume-page { font-size: 11px; color: var(--muted); }
+.resume-page small { display: block; margin-top: 3px; font-size: 10px; color: #7a857e; }
 .breadcrumb button { flex-shrink: 0; padding: 5px 0; color: #6d756f; }
 .connection-banner { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; padding: 12px 24px; border-bottom: 1px solid #e8dfcc; background: #fdfbf5; font-size: 11px; max-height: 30dvh; overflow: auto; flex-shrink: 0; }
 .connection-banner strong { color: #745d35; font-size: 12px; font-weight: 500; }
@@ -34,6 +41,8 @@
 .roadmap-node strong { font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
 .roadmap-node > span { font-size: 10px; color: var(--muted); white-space: nowrap; }
 .roadmap-topic > p { font-size: 11px; color: var(--muted); margin: 4px 0 8px; overflow-wrap: anywhere; }
+.roadmap-mastery { display: inline-block; margin: 0 0 8px; padding: 2px 6px; border: 1px solid #d6e3da; border-radius: 4px; color: #4c755d; font-size: 10px; }
+.roadmap-mastery.empty { color: #8a918c; border-color: var(--line); }
 .roadmap-pages { display: flex; flex-wrap: wrap; gap: 4px; }
 .roadmap-pages button { min-width: 28px; height: 28px; padding: 0 6px; border-radius: 4px; color: #68786e; font-size: 11px; }
 .roadmap-pages button[aria-current=page] { background: #e9f1eb; color: #276042; }

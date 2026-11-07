@@ -29,7 +29,7 @@ function isRecord(value: unknown): value is QuizRecord {
   if (typeof record.createdAt !== 'string' || !record.createdAt) return false;
   const questions = record.questions;
   const answers = record.answers;
-  if (!Array.isArray(questions) || questions.length < 3 || questions.length > 5) return false;
+  if (!Array.isArray(questions) || questions.length < 1 || questions.length > 5) return false;
   if (!questions.every(isQuestion)) return false;
   if (!Array.isArray(answers) || answers.length !== questions.length) return false;
   return answers.every((answer, index) => typeof answer === 'number'
@@ -64,6 +64,20 @@ export function saveQuizRecord(store: StoragePort, chapterId: string, record: Qu
 export function clearQuizStore(store: StoragePort, chapterId: string): boolean {
   try {
     store.removeItem(key(chapterId));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function deleteQuizRecord(
+  store: StoragePort, chapterId: string, recordId: string,
+): boolean {
+  const current = loadQuizStore(store, chapterId);
+  const records = current.records.filter(item => item.id !== recordId);
+  if (records.length === current.records.length) return false;
+  try {
+    store.setItem(key(chapterId), JSON.stringify({ records }));
     return true;
   } catch {
     return false;
@@ -121,4 +135,44 @@ export function formatQuizDate(value: string): string {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString('zh-CN', {
     month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
   });
+}
+
+export function quizPercent(record: QuizRecord): number {
+  return record.questions.length
+    ? Math.round(scoreRecord(record) / record.questions.length * 100) : 0;
+}
+
+export function quizSummary(store: QuizStore): { attempts: number; averagePercent: number } {
+  if (!store.records.length) return { attempts: 0, averagePercent: 0 };
+  const total = store.records.reduce((sum, record) => sum + quizPercent(record), 0);
+  return {
+    attempts: store.records.length,
+    averagePercent: Math.round(total / store.records.length),
+  };
+}
+
+export function wrongAnswersMarkdown(record: QuizRecord, chapterTitle = ''): string {
+  const wrong = wrongAnswers(record);
+  const lines = [
+    `# ${chapterTitle || '章节'}自测错题`,
+    '',
+    `- 页码：第 ${record.slide} 页`,
+    `- 时间：${formatQuizDate(record.createdAt)}`,
+    `- 得分：${scoreRecord(record)} / ${record.questions.length}`,
+    '',
+  ];
+  wrong.forEach((item, index) => {
+    lines.push(
+      `## ${index + 1}. ${item.question.question}`,
+      '',
+      `- 你的答案：${item.question.options[item.answer] ?? '未作答'}`,
+      `- 正确答案：${item.question.options[item.question.correctIndex]}`,
+      `- 解析：${item.question.explanation}`,
+      `- 引用：${item.question.citations.map(
+        citation => `第 ${citation.slide} 页 · ${citation.title}`,
+      ).join('；')}`,
+      '',
+    );
+  });
+  return lines.join('\n');
 }
