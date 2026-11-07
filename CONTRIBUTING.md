@@ -79,7 +79,7 @@ npm --prefix web run test:e2e
 
 ## 交接状态记录
 
-复制 `docs/HANDOVER_TEMPLATE.md` 到 `docs/handover/`，只记录：
+更新 `docs/FEATURES_AND_INTERFACES.md` 的当前状态与接口；可选方向写入 `docs/FUTURE_DIRECTIONS.md`。只记录：
 
 - 当前 commit / 分支 / 日期
 - 已完成内容
