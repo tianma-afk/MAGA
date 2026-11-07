@@ -19,12 +19,25 @@ export const emptySession = (): Session => ({
   slide: 1, messages: [], pending: null, error: null,
 });
 const key = (id: string) => `chapter-tutor:v2:${id}`;
+function truncate(text: string, cut: number) {
+  // Never split a surrogate pair (e.g. emoji): a lone surrogate makes the
+  // outgoing history invalid unicode that the API rejects.
+  if (cut < text.length && text.charCodeAt(cut - 1) >= 0xd800
+    && text.charCodeAt(cut - 1) <= 0xdbff
+    && text.charCodeAt(cut) >= 0xdc00 && text.charCodeAt(cut) <= 0xdfff) {
+    return text.slice(0, cut - 1);
+  }
+  return text.slice(0, cut);
+}
 export function boundedHistory(messages: Message[]): Pick<Message, 'role' | 'content'>[] {
   const result: Pick<Message, 'role' | 'content'>[] = [];
   let remaining = 32000;
   for (const message of messages.slice(-30).reverse()) {
     if (remaining <= 0) break;
-    const content = message.content.slice(0, Math.min(8000, remaining));
+    const content = truncate(message.content, Math.min(8000, remaining));
+    // A one-unit budget cut onto a leading surrogate truncates to ""; pushing
+    // that empty entry would make the whole history request invalid, so stop.
+    if (!content) break;
     result.push({ role: message.role, content });
     remaining -= content.length;
   }

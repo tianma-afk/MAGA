@@ -62,7 +62,10 @@ def _build_context(chapter, request: QuizRequest):
 async def ai_quiz(chapter, request: QuizRequest, transport=None) -> QuizResponse:
     config = read_ai_config().require()
     current, node, sources, selected = _build_context(chapter, request)
-    if not any(_has_source_text(slide) for slide in selected.values()):
+    # The 422 contract covers the current page and its outline node only;
+    # keyword matches elsewhere in the chapter must not mask an empty node.
+    own_pages = node["slides"] if node else [request.slide]
+    if not any(_has_source_text(chapter.slides[number - 1]) for number in own_pages):
         raise HTTPException(
             422,
             "本页可提取文字不足，无法生成可靠自测；请切换到有文字内容的页面或查看原稿。",

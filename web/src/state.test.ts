@@ -119,4 +119,43 @@ describe('outgoing context limits', () => {
     expect(boundedHistory(messages).map(m => m.content.length)).toEqual([4000, 7000, 7000, 7000, 7000]);
     expect(boundedHistory([])).toEqual([]);
   });
+
+  it('never splits a surrogate pair when truncating a message', () => {
+    const messages = [
+      { id: '0', role: 'user' as const, content: 'x'.repeat(3999) + '🙂' + 'x'.repeat(3999) },
+      ...Array.from({ length: 4 }, (_, i) => ({
+        id: String(i + 1), role: 'assistant' as const, content: 'y'.repeat(7000),
+      })),
+    ];
+    const result = boundedHistory(messages);
+    expect(result.map(m => m.content.length)).toEqual([3999, 7000, 7000, 7000, 7000]);
+    expect(result[0].content.endsWith('xx')).toBe(true);
+    for (const message of result) {
+      expect(message.content).not.toMatch(/[\ud800-\udbff](?![\udc00-\udfff])/);
+      expect(message.content).not.toMatch(/(?<![\ud800-\udbff])[\udc00-\udfff]/);
+    }
+  });
+
+  it('drops an astral character instead of cutting it at the message bound', () => {
+    const result = boundedHistory([
+      { id: '1', role: 'assistant' as const, content: 'x'.repeat(7999) + '🙂' },
+    ]);
+    expect(result[0].content).toBe('x'.repeat(7999));
+  });
+
+  it('never emits an empty entry when the leftover budget ends on a surrogate', () => {
+    const messages = [
+      { id: '0', role: 'user' as const, content: '😀你好，这是一条较早的提问' },
+      { id: '1', role: 'assistant' as const, content: 'x'.repeat(7999) + '🙂' },
+      ...Array.from({ length: 3 }, (_, i) => ({
+        id: String(i + 2), role: 'user' as const, content: 'a'.repeat(8000),
+      })),
+    ];
+    const result = boundedHistory(messages);
+    expect(result.map(m => m.content.length)).toEqual([7999, 8000, 8000, 8000]);
+    for (const message of result) {
+      expect(message.content.length).toBeGreaterThan(0);
+      expect(message.content).not.toMatch(/[\ud800-\udbff](?![\udc00-\udfff])/);
+    }
+  });
 });

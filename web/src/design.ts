@@ -1,4 +1,7 @@
-import type { DesignProject } from './types';
+import type {
+  DesignCitation, DesignFinding, DesignProject, DesignQualityAttribute,
+  DesignScenario, DesignTactic,
+} from './types';
 
 type StoragePort = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 const key = 'chapter-tutor:design:v1:current';
@@ -11,6 +14,43 @@ export function emptyDesignProject(): DesignProject {
   };
 }
 
+function isCitation(value: unknown): value is DesignCitation {
+  const citation = value as Partial<DesignCitation> | null;
+  return !!citation && typeof citation.chapterId === 'string' && !!citation.chapterId
+    && typeof citation.slide === 'number' && Number.isInteger(citation.slide)
+    && citation.slide >= 1
+    && typeof citation.title === 'string';
+}
+
+function isQualityAttribute(value: unknown): value is DesignQualityAttribute {
+  const item = value as Partial<DesignQualityAttribute> | null;
+  return !!item && typeof item.name === 'string'
+    && ['high', 'medium', 'low'].includes(item.priority ?? '')
+    && typeof item.reason === 'string';
+}
+
+function isScenario(value: unknown): value is DesignScenario {
+  const scenario = value as Partial<DesignScenario> | null;
+  const fields = ['stimulus', 'source', 'artifact', 'environment', 'response', 'measure'] as const;
+  return !!scenario && fields.every(field => typeof scenario[field] === 'string')
+    && Array.isArray(scenario.citations) && scenario.citations.every(isCitation);
+}
+
+function isTactic(value: unknown): value is DesignTactic {
+  const tactic = value as Partial<DesignTactic> | null;
+  return !!tactic && typeof tactic.name === 'string' && !!tactic.name
+    && typeof tactic.rationale === 'string' && typeof tactic.tradeoffs === 'string'
+    && Array.isArray(tactic.citations) && tactic.citations.every(isCitation);
+}
+
+function isFinding(value: unknown): value is DesignFinding {
+  const finding = value as Partial<DesignFinding> | null;
+  return !!finding && typeof finding.area === 'string' && typeof finding.finding === 'string'
+    && ['high', 'medium', 'low'].includes(finding.severity ?? '')
+    && typeof finding.suggestion === 'string'
+    && Array.isArray(finding.citations) && finding.citations.every(isCitation);
+}
+
 function isProject(value: unknown): value is DesignProject {
   if (!value || typeof value !== 'object') return false;
   const project = value as Partial<DesignProject>;
@@ -18,15 +58,23 @@ function isProject(value: unknown): value is DesignProject {
     && typeof project.scenario === 'string'
     && typeof project.requirements === 'string'
     && typeof project.updatedAt === 'string'
-    && Array.isArray(project.qualityAttributes)
-    && Array.isArray(project.scenarios)
-    && Array.isArray(project.tactics)
+    && Array.isArray(project.qualityAttributes) && project.qualityAttributes.every(isQualityAttribute)
+    && Array.isArray(project.scenarios) && project.scenarios.every(isScenario)
+    && Array.isArray(project.tactics) && project.tactics.every(isTactic)
     && Array.isArray(project.selectedTactics)
     && project.selectedTactics.every(name => typeof name === 'string')
     && (project.review === undefined || (!!project.review
       && typeof project.review.summary === 'string'
-      && Array.isArray(project.review.findings)
-      && Array.isArray(project.review.questions)));
+      && Array.isArray(project.review.findings) && project.review.findings.every(isFinding)
+      && Array.isArray(project.review.questions)
+      && project.review.questions.every(question => typeof question === 'string')));
+}
+
+export function uniqueTactics(tactics: DesignTactic[]): DesignTactic[] {
+  // AI output may repeat a tactic name while selection keys on the name, so
+  // keep one entry per name to keep choosing, rendering and exporting clear.
+  return tactics.filter((tactic, index) =>
+    tactics.findIndex(item => item.name === tactic.name) === index);
 }
 
 export function loadDesignProject(store: StoragePort): DesignProject {
@@ -34,7 +82,8 @@ export function loadDesignProject(store: StoragePort): DesignProject {
     const raw = store.getItem(key);
     if (!raw) return emptyDesignProject();
     const parsed = JSON.parse(raw) as unknown;
-    return isProject(parsed) ? parsed : emptyDesignProject();
+    return isProject(parsed)
+      ? { ...parsed, tactics: uniqueTactics(parsed.tactics) } : emptyDesignProject();
   } catch {
     return emptyDesignProject();
   }

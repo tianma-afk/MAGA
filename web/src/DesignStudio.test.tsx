@@ -71,3 +71,33 @@ it('disables generation when AI is unconfigured', () => {
   expect(screen.getByText(/AI 尚未配置/)).toBeTruthy();
   expect(scenarioApi).not.toHaveBeenCalled();
 });
+
+it('keeps AI tactics that share a name as one selectable tactic', async () => {
+  vi.spyOn(api, 'designScenarios').mockResolvedValue(scenarios);
+  vi.spyOn(api, 'designTactics').mockResolvedValue({
+    mode: 'ai',
+    tactics: [
+      { name: '心跳检测', rationale: '第一条理由', tradeoffs: '增加消息开销', citations: [citation] },
+      {
+        name: '心跳检测', rationale: '第二条理由', tradeoffs: '引入额外延迟',
+        citations: [{ ...citation, slide: 18 }],
+      },
+    ],
+  });
+  const view = render(<DesignStudio mode="ai" onOpenSource={vi.fn()} />);
+  fireEvent.change(screen.getByLabelText('设计标题'), { target: { value: '在线考试系统' } });
+  fireEvent.change(screen.getByLabelText('场景描述'), { target: { value: '考试期间持续提供服务' } });
+  fireEvent.click(screen.getByRole('button', { name: '生成质量属性与场景' }));
+  expect(await screen.findByText('可用性')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: '推荐架构战术' }));
+  expect(await screen.findByText('第一条理由')).toBeTruthy();
+  const checkboxes = screen.getAllByRole('checkbox');
+  expect(checkboxes).toHaveLength(1);
+  expect(screen.queryByText('第二条理由')).toBeNull();
+  expect(checkboxes[0]).toHaveProperty('checked', true);
+  fireEvent.click(checkboxes[0]);
+  expect(checkboxes[0]).toHaveProperty('checked', false);
+  const draft = JSON.parse(localStorage.getItem('chapter-tutor:design:v1:current') ?? '{}');
+  expect(draft.tactics).toHaveLength(1);
+  view.unmount();
+});

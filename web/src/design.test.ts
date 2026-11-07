@@ -66,6 +66,40 @@ describe('design draft persistence', () => {
     expect(saveDesignProject(unavailable, project)).toBe(false);
     expect(clearDesignProject(unavailable)).toBe(false);
   });
+
+  it('rejects drafts with malformed scenarios, tactics or review findings', () => {
+    const store = storage();
+    store.setItem('chapter-tutor:design:v1:current', JSON.stringify({ ...project, scenarios: [{}] }));
+    expect(loadDesignProject(store)).toEqual(emptyDesignProject());
+    store.setItem('chapter-tutor:design:v1:current', JSON.stringify({
+      ...project, tactics: [{ name: '心跳检测' }],
+    }));
+    expect(loadDesignProject(store)).toEqual(emptyDesignProject());
+    store.setItem('chapter-tutor:design:v1:current', JSON.stringify({
+      ...project, review: { summary: 's', findings: [null, 5], questions: [] },
+    }));
+    expect(loadDesignProject(store)).toEqual(emptyDesignProject());
+    store.setItem('chapter-tutor:design:v1:current', JSON.stringify({
+      ...project,
+      scenarios: [{ ...project.scenarios[0], citations: [{ ...citation, slide: 0 }] }],
+    }));
+    expect(loadDesignProject(store)).toEqual(emptyDesignProject());
+  });
+
+  it('collapses duplicated tactic names so one selection cannot toggle two tactics', () => {
+    const store = storage();
+    store.setItem('chapter-tutor:design:v1:current', JSON.stringify({
+      ...project,
+      tactics: [
+        project.tactics[0],
+        { ...project.tactics[0], citations: [{ ...citation, slide: 18 }] },
+      ],
+    }));
+    const loaded = loadDesignProject(store);
+    expect(loaded.tactics).toHaveLength(1);
+    expect(loaded.selectedTactics).toEqual(['心跳检测']);
+    expect(designMarkdown(loaded).match(/### 心跳检测/g)).toHaveLength(1);
+  });
 });
 
 describe('design markdown export', () => {

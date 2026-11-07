@@ -3,7 +3,7 @@ import { Compass, Download, LoaderCircle, RotateCcw } from 'lucide-react';
 import { api, errorText } from './api';
 import {
   clearDesignProject, designMarkdown, emptyDesignProject, loadDesignProject,
-  saveDesignProject,
+  saveDesignProject, uniqueTactics,
 } from './design';
 import type { DesignProject, Mode } from './types';
 import DesignCitations from './DesignCitations';
@@ -104,10 +104,11 @@ export default function DesignStudio({ mode, onOpenSource }: Props) {
         scenarios: project.scenarios,
       }, controller.signal);
       if (controller.signal.aborted || request.current !== controller) return;
+      const tactics = uniqueTactics(result.tactics);
       update({
         ...project,
-        tactics: result.tactics,
-        selectedTactics: result.tactics.map(tactic => tactic.name),
+        tactics,
+        selectedTactics: tactics.map(tactic => tactic.name),
         review: undefined,
         updatedAt: new Date().toISOString(),
       });

@@ -183,3 +183,32 @@ def test_sparse_sources_do_not_call_provider(tmp_path, monkeypatch):
     response = client.post("/api/quiz", json={"chapterId": "chapter-2", "slide": 1})
     assert response.status_code == 422
     assert "文字不足" in response.json()["detail"]
+
+
+def test_keyword_match_elsewhere_does_not_mask_empty_node(tmp_path, monkeypatch):
+    # The 422 contract covers the current page and its outline node only: a
+    # keyword-related page with text must not turn an empty node into a 200.
+    monkeypatch.setenv("LLM_API_KEY", "test-secret")
+    monkeypatch.setenv("LLM_BASE_URL", "https://llm.example/v1")
+    monkeypatch.setenv("LLM_MODEL", "test-model")
+    book = tmp_path / "book"
+    book.mkdir()
+    presentation = Presentation()
+    for heading in ("Architecture", "Architecture"):
+        slide = presentation.slides.add_slide(presentation.slide_layouts[5])
+        slide.shapes.title.text = heading
+    text_slide = presentation.slides.add_slide(presentation.slide_layouts[1])
+    text_slide.shapes.title.text = "Performance"
+    text_slide.placeholders[1].text = "Architecture is about quality."
+    presentation.save(book / "Chapter 2.pptx")
+    module = importlib.import_module("server.main")
+    app = module.create_app(book_dir=book, slides_dir=tmp_path / "slides")
+    client = TestClient(app)
+
+    def unexpected(request):
+        pytest.fail("An empty current page and node must not call the provider")
+
+    app.state.llm_transport = httpx.MockTransport(unexpected)
+    response = client.post("/api/quiz", json={"chapterId": "chapter-2", "slide": 1})
+    assert response.status_code == 422
+    assert "文字不足" in response.json()["detail"]

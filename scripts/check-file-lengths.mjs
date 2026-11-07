@@ -7,7 +7,7 @@ const extensions = new Set(['.py', '.ts', '.tsx', '.js', '.mjs', '.css', '.ps1']
 const excluded = new Set([
   '.git', 'node_modules', 'bower_components', 'vendor', 'deps',
   'build', 'dist', 'out', 'coverage', '.next', '.nuxt', '.output',
-  '.venv', 'venv', '__pycache__', 'data',
+  '.venv', 'venv', '__pycache__', 'data', '.zcode',
 ]);
 
 export function countLines(text) {
