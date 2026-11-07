@@ -46,7 +46,9 @@ class ChapterStore:
     def files(self):
         found = {}
         for path in sorted(self.book_dir.glob("*.pptx"), key=natural_key):
-            if path.name.startswith("~$") or not path.resolve().is_relative_to(self.book_dir):
+            if path.name.startswith("~$") or not path.is_file():
+                continue
+            if not path.resolve().is_relative_to(self.book_dir):
                 continue
             match = re.search(r"chapter[\s_-]*(\d+)", path.stem, re.I)
             chapter_id = ("chapter-" + str(int(match[1])) if match else
@@ -116,5 +118,13 @@ class ChapterStore:
         return result
 
     def list(self):
-        return [Chapter.model_validate(self.read(chapter_id).model_dump(exclude={"slides"}))
-                for chapter_id in self.files()]
+        # One broken entry must not take down the whole shelf, mirroring the
+        # "~$ lock file" tolerance in files().
+        chapters = []
+        for chapter_id in self.files():
+            try:
+                chapter = self.read(chapter_id)
+            except HTTPException:
+                continue
+            chapters.append(Chapter.model_validate(chapter.model_dump(exclude={"slides"})))
+        return chapters

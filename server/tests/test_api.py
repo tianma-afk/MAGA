@@ -108,6 +108,18 @@ def test_lone_surrogate_in_request_returns_422_not_500(setup):
     assert "\ud800" not in detail[0]["input"]
 
 
+def test_corrupt_book_entries_do_not_break_chapters_and_search(setup):
+    client, _, root = setup
+    (root / "book" / "Chapter 9.pptx").mkdir()
+    (root / "book" / "Chapter 8.pptx").write_bytes(b"")
+    response = client.get("/api/chapters")
+    assert response.status_code == 200
+    assert [chapter["id"] for chapter in response.json()] == ["chapter-2", "chapter-10"]
+    results = client.get("/api/search", params={"q": "availability"}).json()["results"]
+    assert {result["chapterId"] for result in results} == {"chapter-2", "chapter-10"}
+    assert client.get("/api/chapters/chapter-2").status_code == 200
+
+
 def test_unknown_chapter_and_cors(setup):
     client, _, _ = setup
     assert client.post("/api/chat", json={

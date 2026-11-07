@@ -22,17 +22,17 @@ def excerpt(slide):
         body = ""
     ocr = (slide.ocrText or "").strip()
     parts = []
-    if body:
-        parts.append("\u8bfe\u4ef6\u539f\u6587\u8282\u9009\uff1a\n" + body[:5000])
-    if ocr:
-        parts.append("\u8bfe\u4ef6\u56fe\u50cf OCR \u8bc6\u522b\u6587\u672c\uff08\u53ef\u80fd\u6709\u8bef\uff09\uff1a\n" + ocr[:5000])
-    if not parts:
+    if not body and not ocr:
         parts.append(
             "\u672c\u9875\u53ef\u63d0\u53d6\u6587\u5b57\u4e0d\u8db3\uff0c"
             "\u56fe\u50cf\u5185\u5bb9\u5c1a\u672a\u89e3\u6790\u3002"
             "\u8bf7\u67e5\u770b\u539f\u7a3f\u56fe\u7247\u6216 PPT\uff0c"
             "\u4e0d\u80fd\u4ec5\u51ed\u6807\u9898\u63a8\u65ad\u56fe\u4e2d\u5185\u5bb9\u3002"
         )
+    if body:
+        parts.append("\u8bfe\u4ef6\u539f\u6587\u8282\u9009\uff1a\n" + body[:5000])
     if slide.notes:
         parts.append("\u8bb2\u8005\u5907\u6ce8\uff1a\n" + slide.notes[:2500])
+    if ocr:
+        parts.append("\u8bfe\u4ef6\u56fe\u50cf OCR \u8bc6\u522b\u6587\u672c\uff08\u53ef\u80fd\u6709\u8bef\uff09\uff1a\n" + ocr[:5000])
     return "\n\n".join(parts)

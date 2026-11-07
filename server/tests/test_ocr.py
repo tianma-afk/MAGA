@@ -70,3 +70,20 @@ def test_non_utf8_ocr_file_degrades_to_none(tmp_path):
         book_dir=tmp_path / "book", slides_dir=tmp_path / "slides",
     ))
     assert client.get("/api/chapters").status_code == 200
+
+
+def test_excerpt_orders_body_notes_then_ocr(tmp_path):
+    book = tmp_path / "book"
+    book.mkdir()
+    presentation = Presentation()
+    slide = presentation.slides.add_slide(presentation.slide_layouts[1])
+    slide.shapes.title.text = "Checksum"
+    slide.placeholders[1].text = "正文第一行\n正文第二行"
+    slide.notes_slide.notes_text_frame.text = "备注内容"
+    presentation.save(book / "Chapter 5.pptx")
+    target = tmp_path / "ocr" / "chapter-5"
+    target.mkdir(parents=True)
+    (target / "1.txt").write_text("OCR 识别内容", encoding="utf-8")
+    chapter = ChapterStore(book, tmp_path / "slides").read("chapter-5")
+    text = excerpt(chapter.slides[0])
+    assert text.index("课件原文节选") < text.index("讲者备注") < text.index("OCR 识别文本")

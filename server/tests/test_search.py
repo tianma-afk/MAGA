@@ -3,6 +3,8 @@ import importlib
 from fastapi.testclient import TestClient
 from pptx import Presentation
 
+from server.search import _snippet
+
 from test_api import setup
 
 
@@ -61,3 +63,11 @@ def test_chinese_bigram_search(tmp_path):
     results = response.json()["results"]
     assert results and results[0]["slide"] == 1
     assert "心跳" in results[0]["snippet"]
+
+
+def test_snippet_positions_survive_length_changing_lowercase():
+    # "İ".lower() grows the string, so hit positions must come from the
+    # original text that the snippet is sliced from.
+    body = "İ" * 50 + " target term here " + "y" * 30
+    snippet = _snippet("t", body, "", "", ["term"])
+    assert "term" in snippet

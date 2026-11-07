@@ -1,5 +1,7 @@
 import re
 
+from fastapi import HTTPException
+
 from .chapters import meaningful_text
 from .models import SearchResponse, SearchResult
 
@@ -36,8 +38,10 @@ def _snippet(title: str, body: str, notes: str, ocr: str, terms) -> str:
     for source in (body, notes, ocr, title):
         if not source:
             continue
-        lowered = source.lower()
-        positions = [lowered.find(term) for term in terms if lowered.find(term) >= 0]
+        # lower() can change a string's length (e.g. "İ"), so locate the hit
+        # in the original string: slicing must use the same coordinates.
+        positions = [match.start() for term in terms
+                     for match in re.finditer(re.escape(term), source, re.IGNORECASE)]
         if not positions:
             continue
         position = min(positions)
@@ -58,7 +62,10 @@ def search_all(store, query: str, limit: int = 20) -> SearchResponse:
         return SearchResponse(query=query, results=[])
     results = []
     for chapter_id in store.files():
-        chapter = store.read(chapter_id)
+        try:
+            chapter = store.read(chapter_id)
+        except HTTPException:
+            continue
         for slide in chapter.slides:
             title = slide.title.lower()
             body = meaningful_text(slide.text).lower()
