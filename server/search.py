@@ -22,17 +22,18 @@ def _terms(query: str):
     return list(dict.fromkeys(term for term in terms if term))
 
 
-def _score(title: str, body: str, notes: str, terms) -> int:
+def _score(title: str, body: str, notes: str, ocr: str, terms) -> int:
     score = 0
     for term in terms:
         score += min(title.count(term), 3) * 3
         score += min(body.count(term), 3)
         score += min(notes.count(term), 3)
+        score += min(ocr.count(term), 3)
     return score
 
 
-def _snippet(title: str, body: str, notes: str, terms) -> str:
-    for source in (body, notes, title):
+def _snippet(title: str, body: str, notes: str, ocr: str, terms) -> str:
+    for source in (body, notes, ocr, title):
         if not source:
             continue
         lowered = source.lower()
@@ -62,7 +63,8 @@ def search_all(store, query: str, limit: int = 20) -> SearchResponse:
             title = slide.title.lower()
             body = meaningful_text(slide.text).lower()
             notes = slide.notes.lower()
-            score = _score(title, body, notes, terms)
+            ocr = (slide.ocrText or "").lower()
+            score = _score(title, body, notes, ocr, terms)
             if score <= 0:
                 continue
             results.append(SearchResult(
@@ -71,7 +73,7 @@ def search_all(store, query: str, limit: int = 20) -> SearchResponse:
                 slide=slide.number,
                 slideTitle=slide.title,
                 snippet=_snippet(slide.title, meaningful_text(slide.text),
-                                 slide.notes.strip(), terms),
+                                 slide.notes.strip(), slide.ocrText or "", terms),
                 score=score,
             ))
     results.sort(key=lambda item: (-item.score, item.chapterId, item.slide))

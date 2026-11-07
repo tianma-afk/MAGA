@@ -27,6 +27,7 @@ export default function StudyPane({
   const slide = chapter.slides.find(s => s.number === page);
   const [failedImage, setFailedImage] = useState<string>();
   const image = slide?.imageUrl && failedImage !== slide.imageUrl;
+  const ocr = slide?.ocrText?.trim();
   return <aside className="study-pane" aria-label="学习资料">
     <header className="pane-header">
       <div className="tabs" role="tablist" aria-label="资料视图">
@@ -40,16 +41,21 @@ export default function StudyPane({
     {pane === 'slides' ? <>
       <div className="slide-scroll">
         <div className="preview-label">
-          <span>{image ? '原始课件预览' : '文本预览'}</span><span>第 {page} 页</span>
+          <span>{image ? '原始课件预览' : '文本预览'}{ocr ? ' · 含 OCR 文本' : ''}</span>
+          <span>第 {page} 页</span>
         </div>
         {image ? <img className="slide-image" src={slide.imageUrl}
           alt={`第 ${page} 页：${slide.title}`} onError={() => setFailedImage(slide.imageUrl)} />
           : <section className="slide-text" aria-label="文本预览">
             <span className="slide-number">{String(page).padStart(2, '0')}</span>
             <h2>{slide?.title || `第 ${page} 页`}</h2>
-            <p>{slide?.text || '此页未提取到文字，请下载原始课件查看。'}</p>
+            <p>{slide?.text || (ocr ? '此页未提取到文字，请查看下方 OCR 文本。' : '此页未提取到文字，请下载原始课件查看。')}</p>
           </section>}
         {!image && <p className="preview-note">根据课件文字重建，不代表原始排版。</p>}
+        {ocr && <details className="notes">
+          <summary>OCR 识别文本（可能有误）</summary>
+          <p>{ocr}</p>
+        </details>}
         {slide?.notes && <details className="notes"><summary>课件备注</summary><p>{slide.notes}</p></details>}
         <a className="download" href={`/api/chapters/${encodeURIComponent(chapter.id)}/file`} download>
           <Download size={15} />下载原始课件

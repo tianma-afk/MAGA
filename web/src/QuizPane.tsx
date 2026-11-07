@@ -9,6 +9,7 @@ import type { ChapterDetail, Mode, QuizQuestion, QuizStore } from './types';
 import QuizQuestionCard from './QuizQuestionCard';
 import QuizReview from './QuizReview';
 import QuizWrongReview from './QuizWrongReview';
+import './quiz.css';
 
 interface Props {
   chapter: ChapterDetail;

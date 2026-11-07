@@ -13,6 +13,7 @@ class Slide(StrictModel):
     text: str
     notes: str
     imageUrl: str | None = None
+    ocrText: str | None = None
 
 
 class Chapter(StrictModel):

@@ -18,6 +18,7 @@ export interface Slide {
   text: string;
   notes: string;
   imageUrl?: string;
+  ocrText?: string;
 }
 export interface ChapterDetail extends Chapter { slides: Slide[] }
 export interface Diagram {

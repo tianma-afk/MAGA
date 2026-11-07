@@ -75,8 +75,21 @@ pwsh -NoProfile -STA -File scripts/render-slides.ps1 -Chapter 5 -Overwrite
 ```
 
 没有 PowerPoint 或未渲染时，前端显示明确标注的文本预览，并可下载
-原始 PPT。原稿图片展示不等于模型已识别图中内容；当前模型上下文
-主要来自可提取文本，图片型页面会提示信息不足。
+原始 PPT。原稿图片展示不等于模型已识别图中内容；文字、备注和可选的
+OCR 文本会进入模型上下文，但图中的箭头和结构仍不会被理解。
+
+### 可选 OCR
+
+图片型页面默认没有可提取文字。若要让 AI 读取图中的文字：
+
+```powershell
+.\.venv\Scripts\python -m pip install -r requirements-ocr.txt
+.\.venv\Scripts\python scripts/ocr-slides.py
+```
+
+脚本默认只处理正文/备注不足的页面，输出 `data/ocr/chapter-N/页码.txt`，
+该目录被 Git 忽略。后端会自动读取这些文本；运行应用本身不需要 OCR 包。
+OCR 结果可能有误，且不能理解箭头、布局和图形结构。
 
 ## 使用
 
@@ -109,7 +122,7 @@ pwsh -NoProfile -STA -File scripts/render-slides.ps1 -Chapter 5 -Overwrite
 | --- | --- |
 | `server/` | 课件解析、教学策略、自测、跨章搜索、模型调用、API 与测试 |
 | `web/src/` | 对话与状态、章节导航、课件、画布、自测、跨章搜索 |
-| `scripts/` | 原稿渲染、500 行限制检查 |
+| `scripts/` | 原稿渲染、可选 OCR 生成、500 行限制检查 |
 | `docs/spec/` | 产品范围与体系结构说明 |
 | `docs/plan/` | 实施与验收记录 |
 | `docs/EXTENSION_POINTS.md` | 当前 API/存储/组件契约与可复用扩展点 |

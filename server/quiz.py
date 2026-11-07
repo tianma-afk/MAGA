@@ -16,7 +16,7 @@ def _has_source_text(slide) -> bool:
     body = meaningful_text(slide.text)
     if body == slide.title.strip():
         body = ""
-    return bool(body or slide.notes.strip())
+    return bool(body or slide.notes.strip() or (slide.ocrText or "").strip())
 
 
 def _build_context(chapter, request: QuizRequest):

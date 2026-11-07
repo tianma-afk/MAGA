@@ -22,6 +22,13 @@ Copy-Item .env.example .env
 powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File scripts/render-slides.ps1
 ```
 
+图片型页面可选 OCR（应用运行本身不需要 OCR 包）：
+
+```powershell
+.\.venv\Scripts\python -m pip install -r requirements-ocr.txt
+.\.venv\Scripts\python scripts/ocr-slides.py
+```
+
 ## 本地验证
 
 提交前必须运行：
