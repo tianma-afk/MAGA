@@ -135,3 +135,13 @@ it('locks the draft inputs while a generation request is in flight', async () =>
   hold(scenarios);
   expect(await screen.findByText('可用性')).toBeTruthy();
 });
+
+it('renders design citations with their stylesheet class', async () => {
+  vi.spyOn(api, 'designScenarios').mockResolvedValue(scenarios);
+  render(<DesignStudio mode="ai" onOpenSource={vi.fn()} />);
+  fireEvent.change(screen.getByLabelText('设计标题'), { target: { value: '在线考试系统' } });
+  fireEvent.change(screen.getByLabelText('场景描述'), { target: { value: '考试期间持续提供服务' } });
+  fireEvent.click(screen.getByRole('button', { name: '生成质量属性与场景' }));
+  expect(await screen.findByText('可用性')).toBeTruthy();
+  expect(document.querySelector('.design-citations button')).toBeTruthy();
+});
