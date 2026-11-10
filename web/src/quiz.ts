@@ -8,7 +8,7 @@ export function emptyQuizStore(): QuizStore {
   return { records: [] };
 }
 
-function isQuestion(value: unknown): value is QuizQuestion {
+export function isQuizQuestion(value: unknown): value is QuizQuestion {
   if (!value || typeof value !== 'object') return false;
   const q = value as Partial<QuizQuestion>;
   if (typeof q.question !== 'string' || !q.question.trim()) return false;
@@ -30,7 +30,7 @@ function isRecord(value: unknown): value is QuizRecord {
   const questions = record.questions;
   const answers = record.answers;
   if (!Array.isArray(questions) || questions.length < 1 || questions.length > 5) return false;
-  if (!questions.every(isQuestion)) return false;
+  if (!questions.every(isQuizQuestion)) return false;
   if (!Array.isArray(answers) || answers.length !== questions.length) return false;
   return answers.every((answer, index) => typeof answer === 'number'
     && Number.isInteger(answer) && answer >= 0 && answer < questions[index].options.length);

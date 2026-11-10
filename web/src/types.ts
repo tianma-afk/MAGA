@@ -111,6 +111,13 @@ export interface DesignReview {
   findings: DesignFinding[];
   questions: string[];
 }
+
+/** Signatures of the inputs each stage was generated from. Absent on legacy drafts. */
+export interface DesignVersions {
+  analysis?: string;
+  tactics?: string;
+  review?: string;
+}
 export interface DesignScenarioResponse {
   qualityAttributes: DesignQualityAttribute[];
   scenarios: DesignScenario[];
@@ -132,5 +139,6 @@ export interface DesignProject {
   tactics: DesignTactic[];
   selectedTactics: string[];
   review?: DesignReview;
+  versions?: DesignVersions;
   updatedAt: string;
 }

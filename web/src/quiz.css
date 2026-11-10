@@ -35,6 +35,8 @@
 .quiz-citations { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
 .quiz-citations button { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; color: #627167; max-width: 100%; overflow-wrap: anywhere; }
 .quiz-empty { color: var(--muted); padding: 14px 0; }
+.quiz-replace, .quiz-resume { border: 1px solid #eee4cf; background: #fdfbf5; border-radius: 5px; padding: 9px 10px; margin: 0 0 12px; }
+.quiz-replace p, .quiz-resume p { margin: 0 0 6px; color: #7a6238; font-size: 11px; line-height: 1.6; }
 .quiz-empty-text { color: var(--muted); margin: 0; }
 .quiz-history, .quiz-wrong { margin-top: 24px; }
 .quiz-history h3, .quiz-wrong h3 { font-size: 12px; font-weight: 500; color: #68766c; margin: 0 0 10px; }

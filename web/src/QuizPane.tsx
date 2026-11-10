@@ -1,11 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { ClipboardCheck, LoaderCircle, RefreshCw } from 'lucide-react';
-import { api, ConfigurationError, errorText } from './api';
-import {
-  MAX_RECORDS, deleteQuizRecord, emptyQuizStore, formatQuizDate, loadQuizStore,
-  newQuizRecord, saveQuizRecord, scoreRecord, wrongAnswers, wrongAnswersMarkdown,
-} from './quiz';
-import type { ChapterDetail, Mode, QuizQuestion, QuizStore } from './types';
+import { formatQuizDate, scoreRecord, wrongAnswersMarkdown } from './quiz';
+import type { ChapterDetail, Mode } from './types';
+import { useQuizWorkspace } from './useQuizWorkspace';
 import QuizQuestionCard from './QuizQuestionCard';
 import QuizReview from './QuizReview';
 import QuizWrongReview from './QuizWrongReview';
@@ -16,117 +13,49 @@ interface Props {
   page: number;
   mode?: Mode;
   onMode: (mode: Mode) => void;
-  onPage: (page: number) => void;
+  onSource: (slide: number) => void;
   onQuizChange?: () => void;
 }
 
 export default function QuizPane({
-  chapter, page, mode, onMode, onPage, onQuizChange,
+  chapter, page, mode, onMode, onSource, onQuizChange,
 }: Props) {
-  const [store, setStore] = useState<QuizStore>(() => {
-    try { return loadQuizStore(localStorage, chapter.id); }
-    catch { return emptyQuizStore(); }
+  const task = useQuizWorkspace({
+    chapterId: chapter.id,
+    slideCount: chapter.slideCount,
+    page,
+    mode,
+    onMode,
+    onQuizChange,
   });
-  const [activeId, setActiveId] = useState<string>();
-  const [draft, setDraft] = useState<QuizQuestion[]>();
-  const [answers, setAnswers] = useState<number[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [storageFailed, setStorageFailed] = useState(false);
-  const request = useRef<AbortController | null>(null);
-  const unavailable = mode !== 'ai';
-  const active = store.records.find(record => record.id === activeId);
-  const currentRecord = store.records.find(record => record.slide === page);
-  const wrongCount = active ? wrongAnswers(active).length : 0;
-  const complete = !!draft && answers.length === draft.length && answers.every(answer => answer >= 0);
+  const [replaceAction, setReplaceAction] = useState<'generate' | 'retry' | null>(null);
+  const draft = task.draft;
 
-  useEffect(() => {
-    request.current?.abort();
-    request.current = null;
-    setLoading(false);
-    setError('');
-    setDraft(undefined);
-    setAnswers([]);
-    let latest = undefined;
-    try {
-      latest = loadQuizStore(localStorage, chapter.id).records.find(record => record.slide === page);
-    } catch { /* Storage is optional. */ }
-    setActiveId(latest?.id);
-    return () => {
-      request.current?.abort();
-      request.current = null;
-    };
-  }, [chapter.id, page]);
-
-  async function generate() {
-    if (unavailable || loading) return;
-    const controller = new AbortController();
-    request.current = controller;
-    setLoading(true);
-    setError('');
-    setDraft(undefined);
-    setAnswers([]);
-    setActiveId(undefined);
-    try {
-      const result = await api.quiz(chapter.id, page, controller.signal);
-      if (controller.signal.aborted || request.current !== controller) return;
-      setDraft(result.questions);
-      setAnswers(Array(result.questions.length).fill(-1));
-    } catch (caught) {
-      if (!controller.signal.aborted && request.current === controller) {
-        if (caught instanceof ConfigurationError) onMode('unconfigured');
-        setError(errorText(caught));
-      }
-    } finally {
-      if (request.current === controller) {
-        request.current = null;
-        setLoading(false);
-      }
-    }
-  }
-
-  function stop() {
-    request.current?.abort();
-    request.current = null;
-    setLoading(false);
-  }
-
-  function submit() {
-    if (!draft || !complete) return;
-    const record = newQuizRecord(page, draft, answers);
-    const saved = saveQuizRecord(localStorage, chapter.id, record);
-    setStorageFailed(!saved);
-    setStore(saved
-      ? loadQuizStore(localStorage, chapter.id)
-      : { records: [record, ...store.records].slice(0, MAX_RECORDS) });
-    setActiveId(record.id);
-    setDraft(undefined);
-    setAnswers([]);
-    onQuizChange?.();
-  }
-
-  function removeRecord(id: string) {
-    if (!deleteQuizRecord(localStorage, chapter.id, id)) {
-      setStorageFailed(true);
+  function beginGenerate() {
+    if (draft) {
+      setReplaceAction('generate');
       return;
     }
-    setStore(loadQuizStore(localStorage, chapter.id));
-    if (activeId === id) setActiveId(undefined);
-    setStorageFailed(false);
-    onQuizChange?.();
+    void task.generate();
   }
 
-  function retryWrong() {
-    if (!active) return;
-    const wrong = wrongAnswers(active);
-    if (!wrong.length) return;
-    setDraft(wrong.map(item => item.question));
-    setAnswers(Array(wrong.length).fill(-1));
-    setActiveId(undefined);
-    setStorageFailed(false);
+  function beginRetry() {
+    if (draft) {
+      setReplaceAction('retry');
+      return;
+    }
+    task.retryWrong();
+  }
+
+  function confirmReplace() {
+    const action = replaceAction;
+    setReplaceAction(null);
+    if (action === 'generate') void task.generate(true);
+    if (action === 'retry') task.retryWrong(true);
   }
 
   function exportWrong() {
+    const active = task.active;
     if (!active) return;
     const content = wrongAnswersMarkdown(active, chapter.title);
     const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
@@ -140,73 +69,92 @@ export default function QuizPane({
     URL.revokeObjectURL(url);
   }
 
-  return <div className="quiz-pane">
+  const sourceLabel = draft && draft.sourceSlide !== page
+    ? `正在练习第 ${draft.sourceSlide} 页内容 · 当前浏览第 ${page} 页`
+    : `第 ${page} 页 · AI 生成，请对照课件核对`;
+  const hiddenDraft = !!draft && !task.showDraft;
+
+  return <div className="quiz-pane" ref={task.paneRef} onScroll={task.handleScroll}>
     <div className="quiz-toolbar">
       <div>
         <h2>自测</h2>
-        <p>第 {page} 页 · AI 生成，请对照课件核对</p>
+        <p>{sourceLabel}</p>
       </div>
-      {loading
-        ? <button className="text-button" onClick={stop}>停止</button>
-        : <button className="quiz-generate" disabled={unavailable}
-          title={unavailable ? 'AI 尚未配置' : undefined} onClick={() => void generate()}>
-          <ClipboardCheck size={15} />{currentRecord || draft ? '重新生成本页自测' : '生成本页自测'}
+      {task.loading
+        ? <button className="text-button" onClick={task.stop}>停止</button>
+        : <button className="quiz-generate" disabled={task.unavailable}
+          title={task.unavailable ? 'AI 尚未配置' : undefined} onClick={beginGenerate}>
+          <ClipboardCheck size={15} />{draft || task.currentRecord ? '重新生成本页自测' : '生成本页自测'}
         </button>}
     </div>
-    {unavailable && <p className="quiz-disabled" role="status">
+    {task.unavailable && <p className="quiz-disabled" role="status">
       AI 尚未配置，完成 .env 配置并重新检查连接后可生成自测。已保存的历史仍可查看。
     </p>}
-    {loading && <p className="quiz-loading" role="status">
+    {task.loading && <p className="quiz-loading" role="status">
       <LoaderCircle size={15} className="spin" />正在根据本页课件生成题目…
     </p>}
-    {error && <div className="quiz-error" role="alert">
-      <span>{error}</span>
-      <button className="text-button" disabled={unavailable} onClick={() => void generate()}>
+    {task.error && <div className="quiz-error" role="alert">
+      <span>{task.error}</span>
+      <button className="text-button" disabled={task.unavailable} onClick={beginGenerate}>
         <RefreshCw size={14} />重试
       </button>
     </div>}
-    {storageFailed && <p className="quiz-warning" role="status">
-      无法保存到本地；关闭页面后本次结果可能丢失。
+    {task.storageFailed && <p className="quiz-warning" role="status">
+      无法保存到本地；关闭页面后本次练习可能丢失。
     </p>}
-    {draft ? <>
-      <p className="quiz-progress">已作答 {answers.filter(answer => answer >= 0).length} / {draft.length}</p>
+    {replaceAction && <div className="quiz-replace" role="alertdialog" aria-label="替换当前练习">
+      <p>当前还有未提交的练习（第 {draft?.sourceSlide} 页，已作答 {task.answered} / {draft?.questions.length}）。
+        继续将替换它。</p>
+      <div className="quiz-result-actions">
+        <button className="text-button" onClick={confirmReplace}>替换当前练习</button>
+        <button className="text-button" onClick={() => setReplaceAction(null)}>取消</button>
+      </div>
+    </div>}
+    {hiddenDraft && <div className="quiz-resume" role="status">
+      <p>有未提交的练习：第 {draft?.sourceSlide} 页，已作答 {task.answered} / {draft?.questions.length}。</p>
+      <button className="text-button" onClick={task.resumeDraft}>回到练习</button>
+    </div>}
+    {draft && task.showDraft ? <>
+      <p className="quiz-progress">题目来源：第 {draft.sourceSlide} 页 · 已作答 {task.answered} / {draft.questions.length}</p>
       <ol className="quiz-draft">
-        {draft.map((question, index) => <li key={index}>
-          <QuizQuestionCard question={question} index={index} selected={answers[index]}
-            disabled={loading} onChange={value => setAnswers(previous =>
-              previous.map((answer, answerIndex) => answerIndex === index ? value : answer))} />
+        {draft.questions.map((question, index) => <li key={index}>
+          <QuizQuestionCard question={question} index={index} selected={draft.answers[index]}
+            disabled={task.loading} onChange={value => task.setAnswer(index, value)} />
         </li>)}
       </ol>
-      <button className="quiz-submit" disabled={!complete} onClick={submit}>提交自测</button>
-    </> : active ? <>
-      <p className="quiz-review-meta">第 {active.slide} 页 · {formatQuizDate(active.createdAt)}</p>
-      <QuizReview record={active} onPage={onPage} />
-      {wrongCount > 0 && <div className="quiz-result-actions">
-        <button className="text-button" onClick={retryWrong}>只练错题（{wrongCount}）</button>
+      <button className="quiz-submit" disabled={!task.complete} onClick={task.submit}>提交自测</button>
+      <div className="quiz-result-actions">
+        <button className="text-button" onClick={task.discardDraft}>放弃当前练习</button>
+      </div>
+    </> : task.active ? <>
+      <p className="quiz-review-meta">第 {task.active.slide} 页 · {formatQuizDate(task.active.createdAt)}</p>
+      <QuizReview record={task.active} onSource={onSource} />
+      {task.wrongCount > 0 && <div className="quiz-result-actions">
+        <button className="text-button" onClick={beginRetry}>只练错题（{task.wrongCount}）</button>
         <button className="text-button" onClick={exportWrong}>导出错题</button>
       </div>}
     </> : <div className="quiz-empty">
       <p>还没有本次自测。</p>
-      {currentRecord && <button className="text-button"
-        onClick={() => setActiveId(currentRecord.id)}>查看本页上次自测</button>}
+      {task.currentRecord && <button className="text-button"
+        onClick={() => task.selectRecord(task.currentRecord!.id)}>查看本页上次自测</button>}
     </div>}
-    {store.records.length > 0 && <section className="quiz-history" aria-label="本章自测历史">
+    {task.store.records.length > 0 && <section className="quiz-history" aria-label="本章自测历史">
       <h3>本章自测历史</h3>
       <ul>
-        {store.records.map(record => <li key={record.id} className="quiz-history-row">
+        {task.store.records.map(record => <li key={record.id} className="quiz-history-row">
           <button className="quiz-history-open"
-            aria-current={record.id === activeId ? 'true' : undefined}
-            onClick={() => setActiveId(record.id)}>
+            aria-current={record.id === task.active?.id ? 'true' : undefined}
+            onClick={() => task.selectRecord(record.id)}>
             <span>第 {record.slide} 页</span>
             <span>{scoreRecord(record)} / {record.questions.length}</span>
             <span>{formatQuizDate(record.createdAt)}</span>
           </button>
           <button className="quiz-history-delete"
             aria-label={`删除第 ${record.slide} 页自测记录`}
-            onClick={() => removeRecord(record.id)}>×</button>
+            onClick={() => task.removeRecord(record.id)}>×</button>
         </li>)}
       </ul>
     </section>}
-    <QuizWrongReview store={store} onPage={onPage} />
+    <QuizWrongReview store={task.store} onSource={onSource} />
   </div>;
 }

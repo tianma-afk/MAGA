@@ -1,16 +1,15 @@
-import re
-
 from .chapters import meaningful_text
 from .models import ChapterDetail
+from .retrieval_terms import query_terms, term_matches
 
 
 def relevant_slides(chapter: ChapterDetail, message: str):
-    tokens = set(re.findall(r"[a-z0-9]{3,}|[\u4e00-\u9fff]{2,}", message.lower()))
-    tokens -= {"the", "this", "that", "what", "how", "explain", "please", "slide"}
+    tokens = query_terms(message)
     ranked = []
     for slide in chapter.slides:
-        source = f"{slide.title}\n{meaningful_text(slide.text)}\n{slide.notes}".lower()
-        score = sum(len(token) for token in tokens if token in source)
+        source = (f"{slide.title}\n{meaningful_text(slide.text)}\n"
+                  f"{slide.notes}\n{slide.ocrText or ''}").lower()
+        score = sum(len(token) for token in tokens if next(term_matches(token, source), None))
         if score:
             ranked.append((score, slide.number, slide))
     return [item[2] for item in sorted(ranked, key=lambda item: (-item[0], item[1]))[:4]]

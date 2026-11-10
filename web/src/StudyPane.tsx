@@ -1,9 +1,10 @@
-import { lazy, Suspense, useState } from 'react';
-import { ChevronLeft, ChevronRight, Download, X } from 'lucide-react';
+import { lazy, Suspense } from 'react';
+import { X } from 'lucide-react';
 import type { ChapterDetail, Diagram, Mode, QuizStore } from './types';
 import IconButton from './IconButton';
 import QuizPane from './QuizPane';
 import Roadmap, { type RoadmapProps } from './Roadmap';
+import SlideReader from './SlideReader';
 
 const DiagramCanvas = lazy(() => import('./DiagramCanvas'));
 
@@ -19,18 +20,16 @@ interface Props {
   busy: boolean;
   mode?: Mode;
   onMode: (mode: Mode) => void;
+  onSource: (slide: number) => void;
   roadmap: Pick<RoadmapProps, 'outline' | 'error' | 'onRetry'>;
   quizStore?: QuizStore;
   onQuizChange?: () => void;
 }
 export default function StudyPane({
   chapter, page, onPage, pane, onPane, onClose, diagram, busy, mode, onMode,
-  roadmap, quizStore, onQuizChange,
+  onSource, roadmap, quizStore, onQuizChange,
 }: Props) {
   const slide = chapter.slides.find(s => s.number === page);
-  const [failedImage, setFailedImage] = useState<string>();
-  const image = slide?.imageUrl && failedImage !== slide.imageUrl;
-  const ocr = slide?.ocrText?.trim();
   return <aside className="study-pane" aria-label="学习资料">
     <header className="pane-header">
       <div className="tabs" role="tablist" aria-label="资料视图">
@@ -41,45 +40,11 @@ export default function StudyPane({
       </div>
       <IconButton label="关闭资料" onClick={onClose}><X size={18} /></IconButton>
     </header>
-    {pane === 'slides' ? <>
-      <div className="slide-scroll">
-        <div className="preview-label">
-          <span>{image ? '原始课件预览' : '文本预览'}{ocr ? ' · 含 OCR 文本' : ''}</span>
-          <span>第 {page} 页</span>
-        </div>
-        {image ? <img className="slide-image" src={slide.imageUrl}
-          alt={`第 ${page} 页：${slide.title}`} onError={() => setFailedImage(slide.imageUrl)} />
-          : <section className="slide-text" aria-label="文本预览">
-            <span className="slide-number">{String(page).padStart(2, '0')}</span>
-            <h2>{slide?.title || `第 ${page} 页`}</h2>
-            <p>{slide?.text || (ocr ? '此页未提取到文字，请查看下方 OCR 文本。' : '此页未提取到文字，请下载原始课件查看。')}</p>
-          </section>}
-        {!image && <p className="preview-note">根据课件文字重建，不代表原始排版。</p>}
-        {ocr && <details className="notes">
-          <summary>OCR 识别文本（可能有误）</summary>
-          <p>{ocr}</p>
-        </details>}
-        {slide?.notes && <details className="notes"><summary>课件备注</summary><p>{slide.notes}</p></details>}
-        <a className="download" href={`/api/chapters/${encodeURIComponent(chapter.id)}/file`} download>
-          <Download size={15} />下载原始课件
-        </a>
-      </div>
-      <footer className="page-controls">
-        <IconButton label="上一页" disabled={page <= 1 || busy} onClick={() => onPage(page - 1)}>
-          <ChevronLeft size={18} />
-        </IconButton>
-        <label>第 <select aria-label="课件页码" value={page} disabled={busy}
-          onChange={event => onPage(Number(event.target.value))}>
-          {Array.from({ length: chapter.slideCount }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
-        </select> / {chapter.slideCount} 页</label>
-        <IconButton label="下一页" disabled={page >= chapter.slideCount || busy} onClick={() => onPage(page + 1)}>
-          <ChevronRight size={18} />
-        </IconButton>
-      </footer>
-    </> : pane === 'outline' ? <div className="outline-scroll">
+    {pane === 'slides' ? <SlideReader chapter={chapter} page={page} onPage={onPage}
+      disabled={busy} /> : pane === 'outline' ? <div className="outline-scroll">
       <Roadmap {...roadmap} page={page} onPage={onPage} busy={busy} quizStore={quizStore} />
     </div> : pane === 'quiz' ? <QuizPane chapter={chapter} page={page} mode={mode}
-      onMode={onMode} onPage={onPage} onQuizChange={onQuizChange} /> : <>
+      onMode={onMode} onSource={onSource} onQuizChange={onQuizChange} /> : <>
       <div className="canvas-heading"><h2>{diagram?.title || '章节画布'}</h2></div>
       {diagram ? <Suspense fallback={<div className="pane-empty" role="status">正在打开画布…</div>}>
         <DiagramCanvas key={JSON.stringify(diagram)} diagram={diagram} />

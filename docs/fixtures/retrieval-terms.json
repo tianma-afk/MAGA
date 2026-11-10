@@ -1,0 +1,15 @@
+{
+  "description": "10个课程概念、20个中英查询；期望页按PPT内容核对，不按搜索排序选择。命中指Top-5包含至少一张期望核心页。",
+  "cases": [
+    {"queries": ["heartbeat", "心跳"], "expectedSources": [{"chapterId": "chapter-5", "slide": 17}]},
+    {"queries": ["availability", "可用性"], "expectedSources": [{"chapterId": "chapter-5", "slide": 6}, {"chapterId": "chapter-5", "slide": 12}]},
+    {"queries": ["interoperability", "互操作性"], "expectedSources": [{"chapterId": "chapter-6", "slide": 2}, {"chapterId": "chapter-6", "slide": 3}]},
+    {"queries": ["modifiability", "可修改性"], "expectedSources": [{"chapterId": "chapter-7", "slide": 8}, {"chapterId": "chapter-7", "slide": 24}]},
+    {"queries": ["performance", "性能"], "expectedSources": [{"chapterId": "chapter-8", "slide": 2}, {"chapterId": "chapter-8", "slide": 18}]},
+    {"queries": ["tactic", "战术"], "expectedSources": [{"chapterId": "chapter-4", "slide": 14}, {"chapterId": "chapter-4", "slide": 15}]},
+    {"queries": ["fault", "故障"], "expectedSources": [{"chapterId": "chapter-5", "slide": 11}, {"chapterId": "chapter-5", "slide": 9}]},
+    {"queries": ["redundancy", "冗余"], "expectedSources": [{"chapterId": "chapter-5", "slide": 24}, {"chapterId": "chapter-5", "slide": 25}]},
+    {"queries": ["recovery", "恢复"], "expectedSources": [{"chapterId": "chapter-5", "slide": 27}, {"chapterId": "chapter-5", "slide": 29}, {"chapterId": "chapter-5", "slide": 32}]},
+    {"queries": ["security", "安全性"], "note": "现有课件无安全性专章，本项仅评价概述提及页。", "expectedSources": [{"chapterId": "chapter-2", "slide": 5}]}
+  ]
+}

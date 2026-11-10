@@ -17,7 +17,7 @@ afterEach(cleanup);
 it('shows OCR text honestly when present', () => {
   render(<StudyPane chapter={chapter} page={1} onPage={vi.fn()} pane="slides"
     onPane={vi.fn()} onClose={vi.fn()} busy={false} mode="ai" onMode={vi.fn()}
-    roadmap={{ outline: undefined, error: '', onRetry: vi.fn() }} />);
+    onSource={vi.fn()} roadmap={{ outline: undefined, error: '', onRetry: vi.fn() }} />);
   expect(screen.getByText('OCR 识别文本（可能有误）')).toBeTruthy();
   expect(screen.getByText(/Checksum 示例/)).toBeTruthy();
   expect(screen.getByText(/含 OCR 文本/)).toBeTruthy();

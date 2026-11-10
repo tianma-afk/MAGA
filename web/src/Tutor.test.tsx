@@ -49,6 +49,48 @@ it('sends a question, renders its answer and restores chapter history', async ()
   expect(screen.getByText(response.content)).toBeTruthy();
 });
 
+it('ignores Escape while a modal is open instead of cancelling the quiz underneath', () => {
+  let signal: AbortSignal | undefined;
+  vi.spyOn(api, 'quiz').mockImplementation((_id, _slide, supplied) => {
+    signal = supplied;
+    return new Promise(() => {});
+  });
+  mount();
+  fireEvent.click(screen.getByRole('button', { name: '打开自测' }));
+  fireEvent.click(screen.getByRole('button', { name: '生成本页自测' }));
+  const modal = document.createElement('dialog');
+  modal.setAttribute('open', '');
+  document.body.appendChild(modal);
+  try {
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.getByRole('tab', { name: '自测' })).toBeTruthy();
+    expect(signal?.aborted).toBe(false);
+  } finally { modal.remove(); }
+  fireEvent.keyDown(window, { key: 'Escape' });
+  expect(screen.queryByRole('tab', { name: '自测' })).toBeNull();
+  expect(signal?.aborted).toBe(true);
+});
+
+it('renders GFM comparison tables inside a scrollable wrapper', async () => {
+  vi.spyOn(api, 'chat').mockResolvedValue({
+    ...response,
+    content: [
+      '关键差异对照',
+      '',
+      '| 维度 | Ping/Echo | Heartbeat |',
+      '| --- | --- | --- |',
+      '| 目的 | 可达性 | 持续确认存活 |',
+    ].join('\n'),
+  });
+  mount();
+  submit();
+  expect(await screen.findByRole('columnheader', { name: '维度' })).toBeTruthy();
+  const table = document.querySelector('.table-scroll table');
+  expect(table).toBeTruthy();
+  expect(table!.querySelectorAll('tbody td')).toHaveLength(3);
+  expect(document.querySelector('.message-body p')?.textContent).not.toContain('| --- |');
+});
+
 it('keeps failed input and retries without duplicating the exchange', async () => {
   vi.spyOn(api, 'chat').mockRejectedValueOnce(new Error('网络中断')).mockResolvedValue(response);
   mount();

@@ -8,9 +8,10 @@ import Home from './Home';
 import GlobalSearch from './GlobalSearch';
 import DesignStudio from './DesignStudio';
 import ConnectionBanner from './ConnectionBanner';
+import SourcePreviewDialog from './SourcePreviewDialog';
 
 function routeChapter() {
-  try { return decodeURIComponent(window.location.hash.match(/^#\/chapter\/([^/]+)$/)?.[1] ?? ''); }
+  try { return decodeURIComponent(window.location.hash.match(/^#\/chapter\/([^/?]+)(?:\?view=quiz)?$/)?.[1] ?? ''); }
   catch { return ''; }
 }
 function routeStudio() {
@@ -19,8 +20,10 @@ function routeStudio() {
 export default function App() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [selected, setSelected] = useState(routeChapter);
+  const [quizView, setQuizView] = useState(() => window.location.hash.endsWith('?view=quiz'));
   const [studio, setStudio] = useState(routeStudio);
   const [jump, setJump] = useState<{ chapterId: string; slide: number; token: number }>();
+  const [source, setSource] = useState<{ chapterId: string; slide: number }>();
   const jumpToken = useRef(0);
   const [chapter, setChapter] = useState<ChapterDetail>();
   const [health, setHealth] = useState<Health>();
@@ -64,7 +67,9 @@ export default function App() {
   useEffect(() => {
     const changed = () => {
       setSelected(routeChapter());
+      setQuizView(window.location.hash.endsWith('?view=quiz'));
       setStudio(routeStudio());
+      setSource(undefined);
       if (window.innerWidth <= 760) setSidebar(false);
     };
     window.addEventListener('hashchange', changed);
@@ -85,7 +90,9 @@ export default function App() {
 
   useEffect(() => {
     const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && window.innerWidth <= 760) setSidebar(false);
+      if (event.key !== 'Escape' || event.defaultPrevented
+        || document.querySelector('dialog[open]')) return;
+      if (window.innerWidth <= 760) setSidebar(false);
     };
     window.addEventListener('keydown', escape);
     return () => window.removeEventListener('keydown', escape);
@@ -154,14 +161,19 @@ export default function App() {
       {loading ? <div className="center-state" role="status">正在读取章节…</div>
         : error ? <div className="center-state" role="alert"><p>{error}</p>
           <button className="text-button" onClick={() => setReload(v => v + 1)}><RefreshCw size={16} />重新连接</button></div>
-          : studio ? <DesignStudio mode={mode} onOpenSource={openSearchResult} />
+          : studio ? <DesignStudio mode={mode} onMode={setMode}
+            onOpenSource={(chapterId, slide) => setSource({ chapterId, slide })} />
             : !selected ? <Home chapters={chapters} />
               : chapterError ? <div className="center-state" role="alert"><p>{chapterError}</p>
                 <button className="text-button" onClick={() => setRetry(v => v + 1)}><RefreshCw size={16} />重试加载</button></div>
                 : chapter && chapter.id === selected ? <Tutor key={chapter.id} chapter={chapter} mode={mode}
-                  onMode={setMode} jump={jump?.chapterId === chapter.id ? jump : undefined}
+                  resumeQuiz={quizView}
+                  onMode={setMode} onOpenSource={(chapterId, slide) => setSource({ chapterId, slide })}
+                  jump={jump?.chapterId === chapter.id ? jump : undefined}
                   onJumpHandled={() => setJump(undefined)} />
                   : <div className="center-state" role="status">正在打开课件…</div>}
     </div>
+    {source && <SourcePreviewDialog chapterId={source.chapterId} slide={source.slide}
+      onClose={() => setSource(undefined)} />}
   </div>;
 }

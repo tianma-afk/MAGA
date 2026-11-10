@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import App from './App';
 import { api } from './api';
+import { newQuizDraft, saveQuizWorkspace } from './quizWorkspace';
 
 const chapters = Array.from({ length: 7 }, (_, i) => ({
   id: `chapter-${i + 1}`, title: `第${i + 1}章 计算机组成`, filename: 'a.pptx', slideCount: 3,
@@ -33,6 +34,27 @@ it('root always opens the seven-chapter home and preserves resume pages', async 
   expect(window.location.hash).toBe('#/chapter/chapter-5');
   fireEvent.click(screen.getByRole('button', { name: '返回学习空间' }));
   expect(await screen.findByRole('heading', { name: '学习空间' })).toBeTruthy();
+});
+
+it('continues the saved practice task directly without a new model request', async () => {
+  const question = { question: '保存的练习题', options: ['选项甲', '选项乙'], correctIndex: 0,
+    explanation: '解析', citations: [{ slide: 2, title: '概述' }] };
+  const draft = { ...newQuizDraft(2, [question]), createdAt: '2026-01-01T00:00:00.000Z', answers: [1] };
+  saveQuizWorkspace(localStorage, 'chapter-5', {
+    version: 1, draft, scrollTop: 0, updatedAt: '2026-01-01T00:00:00.000Z',
+  });
+  vi.mocked(api.health).mockResolvedValue({ status: 'ok', mode: 'unconfigured', missing: [] });
+  const generate = vi.spyOn(api, 'quiz');
+  const view = render(<App />);
+  fireEvent.click(await screen.findByRole('link', { name: /继续练习/ }));
+  expect(await screen.findByText('保存的练习题')).toBeTruthy();
+  expect(screen.getByRole('radio', { name: '选项乙' })).toHaveProperty('checked', true);
+  expect(window.location.hash).toBe('#/chapter/chapter-5?view=quiz');
+  expect(generate).not.toHaveBeenCalled();
+  view.unmount();
+  render(<App />);
+  expect(await screen.findByText('保存的练习题')).toBeTruthy();
+  expect(generate).not.toHaveBeenCalled();
 });
 
 it('shows missing configuration and rechecks after restart', async () => {

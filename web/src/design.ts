@@ -2,6 +2,7 @@ import type {
   DesignCitation, DesignFinding, DesignProject, DesignQualityAttribute,
   DesignScenario, DesignTactic,
 } from './types';
+import { analysisStatus, reviewStatus, statusNote, tacticsStatus } from './designValidity';
 
 type StoragePort = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 const key = 'chapter-tutor:design:v1:current';
@@ -51,6 +52,13 @@ function isFinding(value: unknown): value is DesignFinding {
     && Array.isArray(finding.citations) && finding.citations.every(isCitation);
 }
 
+function isVersions(value: unknown): value is DesignProject['versions'] {
+  if (!value || typeof value !== 'object') return false;
+  const versions = value as Record<string, unknown>;
+  return ['analysis', 'tactics', 'review'].every(key =>
+    versions[key] === undefined || typeof versions[key] === 'string');
+}
+
 function isProject(value: unknown): value is DesignProject {
   if (!value || typeof value !== 'object') return false;
   const project = value as Partial<DesignProject>;
@@ -58,6 +66,7 @@ function isProject(value: unknown): value is DesignProject {
     && typeof project.scenario === 'string'
     && typeof project.requirements === 'string'
     && typeof project.updatedAt === 'string'
+    && (project.versions === undefined || isVersions(project.versions))
     && Array.isArray(project.qualityAttributes) && project.qualityAttributes.every(isQualityAttribute)
     && Array.isArray(project.scenarios) && project.scenarios.every(isScenario)
     && Array.isArray(project.tactics) && project.tactics.every(isTactic)
@@ -113,6 +122,9 @@ function citationsText(citations: { chapterId: string; slide: number; title: str
 
 export function designMarkdown(project: DesignProject): string {
   const selected = project.tactics.filter(tactic => project.selectedTactics.includes(tactic.name));
+  const analysisNote = statusNote(analysisStatus(project), 'analysis');
+  const tacticsNote = statusNote(tacticsStatus(project), 'tactics');
+  const reviewNote = statusNote(reviewStatus(project), 'review');
   const lines = [
     `# ${project.title || '架构设计草案'}`,
     '',
@@ -122,8 +134,9 @@ export function designMarkdown(project: DesignProject): string {
     '## 需求',
     project.requirements || '（未填写）',
     '',
-    '## 质量属性',
   ];
+  if (analysisNote) lines.push(`> ${analysisNote}`, '');
+  lines.push('## 质量属性');
   project.qualityAttributes.forEach(item => {
     lines.push(`- **${item.name}**（${item.priority}）：${item.reason}`);
   });
@@ -142,6 +155,7 @@ export function designMarkdown(project: DesignProject): string {
     );
   });
   lines.push('## 选择的战术');
+  if (tacticsNote) lines.push(`> ${tacticsNote}`, '');
   if (!selected.length) {
     lines.push('（尚未选择战术）');
   } else {
@@ -157,6 +171,7 @@ export function designMarkdown(project: DesignProject): string {
     });
   }
   lines.push('## AI 评审');
+  if (reviewNote) lines.push(`> ${reviewNote}`, '');
   if (!project.review) {
     lines.push('（尚未生成评审）');
   } else {

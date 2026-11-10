@@ -67,18 +67,24 @@ test('chapter history, StrictMode graph visibility, citations, image and confirm
   await page.getByRole('button', { name: `章节：${chapters[0].title}` }).click();
   await expect(page.getByText(answer.content)).toBeVisible();
   await page.getByRole('button', { name: '第 2 页 · 指令的组成' }).click();
-  await expect(page.getByLabel('课件页码')).toHaveValue('2');
-  await page.getByLabel('课件页码').selectOption('3');
-  const slideImage = page.getByRole('img', { name: '第 3 页：计算机组成与体系结构' });
+  const source = page.locator('.source-dialog');
+  await expect(source.getByRole('heading', { name: /第 2 页/ })).toBeVisible();
+  await source.getByLabel('课件页码').selectOption('3');
+  const slideImage = source.getByRole('img', { name: '第 3 页：计算机组成与体系结构' });
   await expect(slideImage).toBeVisible();
   await expect.poll(() => slideImage.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+  await source.getByRole('button', { name: '关闭来源' }).click();
+  await expect(source).toHaveCount(0);
   await page.getByRole('button', { name: '重置本章' }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('dialog')).toContainText('未提交的练习及其答案');
+  await expect(page.getByRole('dialog')).toContainText('自测历史、错题回顾与大纲掌握度');
   await page.getByRole('button', { name: '保留记录' }).click();
   await expect(page.getByText(answer.content)).toBeVisible();
   await page.getByRole('button', { name: '重置本章' }).click();
   await page.getByRole('button', { name: '清空本章' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await page.getByRole('button', { name: '打开课件' }).click();
   await expect(page.getByLabel('课件页码')).toHaveValue('1');
   await page.reload();
   await expect(page.getByText(answer.content)).toHaveCount(0);
@@ -112,7 +118,7 @@ test('loading failures retry and switching chapters cancels in-flight work', asy
   await page.route('**/api/chapters', route => listFailing
     ? route.fulfill({ status: 503 }) : route.fulfill({ json: chapters }));
   await page.goto('/');
-  await expect(page.getByRole('alert')).toContainText('503');
+  await expect(page.getByRole('alert')).toContainText('服务暂时不可用');
   listFailing = false;
   await page.getByRole('button', { name: '重新连接' }).click();
   await expect(page.getByRole('heading', { name: '学习空间' })).toBeVisible();
@@ -127,7 +133,7 @@ test('loading failures retry and switching chapters cancels in-flight work', asy
     await route.fulfill({ json: { ...answer, content: '不应串入下一章的回复' } }).catch(() => {});
   });
   await send(page, '重试问题');
-  await expect(page.getByRole('alert')).toContainText('503');
+  await expect(page.getByRole('alert')).toContainText('服务暂时不可用');
   await page.getByRole('button', { name: '重试回复' }).click();
   await expect(page.getByText(answer.content)).toBeVisible();
   await send(page, '慢速问题');
@@ -171,7 +177,8 @@ test('home root, browser back, roadmap page links and unconfigured recovery', as
   await page.getByRole('button', { name: '关闭资料', exact: true }).click();
   await page.goBack();
   await expect(page.getByRole('heading', { name: '学习空间' })).toBeVisible();
-  await expect(page.getByText('上次读到第 3 页')).toBeVisible();
+  await expect(page.getByRole('link', { name: `继续学习：${chapters[0].title}` }))
+    .toContainText('上次读到第 3 页');
   await page.goto('/');
   await expect(page.getByRole('heading', { name: '学习空间' })).toBeVisible();
   configured = true;

@@ -2,9 +2,9 @@ import { BookOpen } from 'lucide-react';
 import { chapterWrongAnswers } from './quiz';
 import type { QuizStore } from './types';
 
-export default function QuizWrongReview({ store, onPage }: {
+export default function QuizWrongReview({ store, onSource }: {
   store: QuizStore;
-  onPage: (page: number) => void;
+  onSource: (page: number) => void;
 }) {
   const wrong = chapterWrongAnswers(store);
   return <section className="quiz-wrong" aria-label="本章错题回顾">
@@ -17,7 +17,7 @@ export default function QuizWrongReview({ store, onPage }: {
         <p>{item.question.explanation}</p>
         <div className="quiz-citations">
           {item.question.citations.map((citation, citationIndex) => <button
-            key={`${citation.slide}-${citationIndex}`} onClick={() => onPage(citation.slide)}>
+            key={`${citation.slide}-${citationIndex}`} onClick={() => onSource(citation.slide)}>
             <BookOpen size={12} />第 {citation.slide} 页 · {citation.title}
           </button>)}
         </div>

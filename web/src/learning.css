@@ -8,6 +8,21 @@
 .home-studio strong { display: block; font-size: 14px; font-weight: 600; margin-bottom: 3px; }
 .home-studio small { display: block; color: var(--muted); font-size: 11px; line-height: 1.6; }
 .home-studio > svg:last-child { color: #7a857e; }
+.home-intro { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.home-resume { margin: 0 0 32px; }
+.home-resume h2, .home-start h2 { font-size: 16px; font-weight: 600; margin: 0 0 14px; }
+.home-task-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 14px; }
+.home-task { display: flex; flex-direction: column; min-width: 0; border: 1px solid #d8e5dd; border-radius: 8px; padding: 18px; color: inherit; background: #f9fbfa; }
+.home-task.learning { background: #f1f7f3; }
+.home-task:hover { border-color: #8db39b; background: #eef7f0; }
+.home-task-label { display: flex; align-items: center; gap: 8px; color: var(--green); font-size: 13px; margin-bottom: 12px; }
+.home-task strong { font-size: 15px; line-height: 1.6; overflow-wrap: anywhere; }
+.home-task-detail { font-size: 12px; color: var(--muted); line-height: 1.7; margin-top: 8px; overflow-wrap: anywhere; }
+.home-task-action { display: flex; align-items: center; gap: 5px; margin-top: auto; padding-top: 18px; font-size: 12px; color: var(--green); }
+.home-task:focus-visible, .home-start a:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+.home-start { border: 1px solid #d8e5dd; border-radius: 8px; padding: 20px; margin-bottom: 24px; background: #f4f9f5; }
+.home-start p { font-size: 13px; color: var(--muted); margin: 0 0 14px; line-height: 1.7; }
+.home-start a { display: inline-flex; align-items: center; gap: 8px; color: var(--green); min-height: 44px; font-size: 14px; }
 .home-list-label { display: flex; justify-content: space-between; align-items: center; color: var(--muted); }
 .home-list-label h2 { font-size: 12px; font-weight: 500; margin: 0; }
 .home-list-label > span { font-size: 11px; }

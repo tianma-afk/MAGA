@@ -22,6 +22,7 @@ const details = {
 };
 
 async function fixtures(page: Page) {
+  await page.route('**/api/**', route => route.abort());
   await page.route('**/api/health', route => route.fulfill({
     json: { status: 'ok', mode: 'unconfigured', missing: ['LLM_API_KEY', 'LLM_MODEL'] },
   }));
@@ -43,7 +44,10 @@ async function fixtures(page: Page) {
     const results = query === 'heartbeat' ? [{
       chapterId: 'chapter5', chapterTitle: '第5章 可用性', slide: 2,
       slideTitle: '心跳检测', snippet: '心跳检测用于发现组件故障。', score: 8,
-    }] : [];
+    }] : query === 'wide' ? Array.from({ length: 20 }, (_, index) => ({
+      chapterId: 'chapter5', chapterTitle: 'Architecture'.repeat(20), slide: index + 1,
+      slideTitle: 'Availability'.repeat(20), snippet: 'Heartbeat'.repeat(30), score: 8,
+    })) : [];
     return route.fulfill({ json: { query, results } });
   });
 }
@@ -51,13 +55,16 @@ async function fixtures(page: Page) {
 test('searches across chapters without AI and jumps to the target slide', async ({ page }) => {
   await fixtures(page);
   await page.goto('/');
+  await page.getByRole('button', { name: '搜索课件' }).click();
   const input = page.getByRole('searchbox', { name: '跨章搜索' });
   await input.fill('none');
   await input.press('Enter');
   await expect(page.getByText('没有找到相关内容。')).toBeVisible();
 
   await input.fill('heartbeat');
-  await input.press('Enter');
+  await expect(page.getByText(/关键词已修改/)).toBeVisible();
+  await expect(page.getByText('没有找到相关内容。')).toHaveCount(0);
+  await page.getByRole('button', { name: '搜索', exact: true }).click();
   const result = page.getByRole('button', { name: /第5章 可用性.*第 2 页/ });
   await expect(result).toBeVisible();
   await result.click();
@@ -66,3 +73,45 @@ test('searches across chapters without AI and jumps to the target slide', async 
   await expect(page.getByRole('heading', { name: '第5章 可用性' })).toBeVisible();
   await expect(page.getByLabel('课件页码')).toHaveValue('2');
 });
+
+for (const width of [320, 390]) {
+  test(`fits the search panel and scrolls long results at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 640 });
+    await fixtures(page);
+    await page.goto('/#/chapter/chapter5');
+    const trigger = page.getByRole('button', { name: '搜索课件' });
+    await trigger.click();
+    const panel = page.getByRole('dialog', { name: '跨章搜索' });
+    const input = panel.getByRole('searchbox');
+    await expect(input).toBeFocused();
+    await input.fill('wide');
+    await panel.getByRole('button', { name: '搜索', exact: true }).click();
+    await expect(panel.getByText('显示 20 条结果')).toBeVisible();
+    for (const control of [trigger, panel, input, panel.getByRole('button', { name: '关闭' }),
+      panel.getByRole('button', { name: '清空' })]) {
+      const box = (await control.boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(width);
+    }
+    expect(await panel.evaluate(element => {
+      const fits = document.documentElement.scrollWidth <= innerWidth
+        && element.scrollWidth <= element.clientWidth;
+      element.scrollTop = element.scrollHeight;
+      return fits && element.scrollTop > 0;
+    })).toBe(true);
+    await expect(panel.getByRole('listitem').last()).toBeInViewport();
+    await panel.getByRole('button', { name: '清空' }).click();
+    await expect(input).toHaveValue('');
+    await expect(input).toBeFocused();
+    await expect(panel.getByRole('listitem')).toHaveCount(0);
+    await input.fill('未提交');
+    await input.press('Escape');
+    await expect(panel).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+    await trigger.click();
+    await expect(input).toHaveValue('');
+    await panel.getByRole('button', { name: '关闭' }).click();
+    await expect(panel).toHaveCount(0);
+    await expect(page).toHaveURL(/#\/chapter\/chapter5/);
+  });
+}

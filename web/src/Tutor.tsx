@@ -1,9 +1,11 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { ArrowUp, BookOpen, ChevronRight, ClipboardCheck, GitBranch, ListTree, LoaderCircle, RefreshCw, RotateCcw, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { api, ConfigurationError, errorText } from './api';
 import { clampPage, emptySession, loadSession, saveSession, sessionReducer } from './state';
 import { clearQuizStore, emptyQuizStore, loadQuizStore } from './quiz';
+import { clearQuizWorkspace } from './quizWorkspace';
 import { clearProgress, markVisited } from './progress';
 import type { ChapterDetail, Diagram, Mode, QuizStore } from './types';
 import IconButton from './IconButton';
@@ -16,11 +18,15 @@ interface Props {
   chapter: ChapterDetail;
   mode?: Mode;
   onMode: (mode: Mode) => void;
+  onOpenSource?: (chapterId: string, slide: number) => void;
+  resumeQuiz?: boolean;
   jump?: { slide: number; token: number };
   onJumpHandled?: () => void;
 }
 
-export default function Tutor({ chapter, mode, onMode, jump, onJumpHandled }: Props) {
+export default function Tutor({
+  chapter, mode, onMode, onOpenSource, resumeQuiz = false, jump, onJumpHandled,
+}: Props) {
   const roadmap = useOutline(chapter.id);
   const [session, dispatch] = useReducer(sessionReducer, undefined, () => {
     try { return loadSession(localStorage, chapter.id, chapter.slideCount); }
@@ -32,8 +38,8 @@ export default function Tutor({ chapter, mode, onMode, jump, onJumpHandled }: Pr
   });
   const [draft, setDraft] = useState('');
   const [attempt, setAttempt] = useState<{ text: string; slide: number }>();
-  const [pane, setPane] = useState<Pane>('slides');
-  const [paneOpen, setPaneOpen] = useState(false);
+  const [pane, setPane] = useState<Pane>(resumeQuiz ? 'quiz' : 'slides');
+  const [paneOpen, setPaneOpen] = useState(resumeQuiz);
   const [chosenDiagram, setChosenDiagram] = useState<Diagram>();
   const [confirmReset, setConfirmReset] = useState(false);
   const [storageFailed, setStorageFailed] = useState(false);
@@ -47,6 +53,12 @@ export default function Tutor({ chapter, mode, onMode, jump, onJumpHandled }: Pr
   const diagram = chosenDiagram ?? [...session.messages].reverse().find(m => m.diagram)?.diagram;
 
   useEffect(() => () => { request.current?.abort(); }, []);
+  useEffect(() => {
+    if (resumeQuiz) {
+      setPane('quiz');
+      setPaneOpen(true);
+    }
+  }, [resumeQuiz]);
   useEffect(() => {
     try { setStorageFailed(!saveSession(localStorage, chapter.id, session)); }
     catch { setStorageFailed(true); }
@@ -73,7 +85,9 @@ export default function Tutor({ chapter, mode, onMode, jump, onJumpHandled }: Pr
   }, [draft]);
   useEffect(() => {
     const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !confirmReset) setPaneOpen(false);
+      if (event.key !== 'Escape' || event.defaultPrevented
+        || document.querySelector('dialog[open]')) return;
+      if (!confirmReset) setPaneOpen(false);
     };
     window.addEventListener('keydown', escape);
     return () => window.removeEventListener('keydown', escape);
@@ -126,6 +140,7 @@ export default function Tutor({ chapter, mode, onMode, jump, onJumpHandled }: Pr
     stop();
     try {
       clearQuizStore(localStorage, chapter.id);
+      clearQuizWorkspace(localStorage, chapter.id);
       clearProgress(localStorage, chapter.id);
     } catch { /* Storage is optional. */ }
     setQuizStore(emptyQuizStore());
@@ -177,11 +192,16 @@ export default function Tutor({ chapter, mode, onMode, jump, onJumpHandled }: Pr
             </div>
             <div className="message-body">
               {message.role === 'user' ? message.content : <ReactMarkdown
-                components={{ img: ({ alt }) => <span>{alt}</span> }}>{message.content}</ReactMarkdown>}
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  img: ({ alt }) => <span>{alt}</span>,
+                  table: ({ children }) => <div className="table-scroll"><table>{children}</table></div>,
+                }}>{message.content}</ReactMarkdown>}
             </div>
             {!!message.citations?.length && <div className="citations">
               {message.citations.map((citation, i) => <button key={`${citation.slide}-${i}`}
-                disabled={busy} title={citation.title} onClick={() => goToPage(citation.slide)}>
+                disabled={busy} title={citation.title}
+                onClick={() => onOpenSource?.(chapter.id, citation.slide)}>
                 <BookOpen size={13} />第 {citation.slide} 页 · {citation.title}
               </button>)}
             </div>}
@@ -240,7 +260,7 @@ export default function Tutor({ chapter, mode, onMode, jump, onJumpHandled }: Pr
       <StudyPane chapter={chapter} page={session.slide} onPage={goToPage} pane={pane}
         onPane={setPane} onClose={() => setPaneOpen(false)} diagram={diagram} busy={busy}
         mode={mode} onMode={onMode} roadmap={roadmap} quizStore={quizStore}
-        onQuizChange={refreshQuizStore} />
+        onSource={slide => onOpenSource?.(chapter.id, slide)} onQuizChange={refreshQuizStore} />
     </>}
     {confirmReset && <ResetDialog onCancel={() => setConfirmReset(false)} onConfirm={reset} />}
   </main>;

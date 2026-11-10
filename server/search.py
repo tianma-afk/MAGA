@@ -1,36 +1,17 @@
-import re
-
 from fastapi import HTTPException
 
 from .chapters import meaningful_text
 from .models import SearchResponse, SearchResult
-
-ENGLISH = re.compile(r"[a-z0-9]{2,}")
-CJK_RUN = re.compile(r"[一-鿿]+")
-STOPWORDS = {
-    "the", "and", "for", "with", "what", "how", "why", "this", "that",
-    "from", "are", "was", "were", "is", "of", "to", "in", "on", "a", "an",
-}
-
-
-def _terms(query: str):
-    lowered = query.lower().strip()
-    terms = [word for word in ENGLISH.findall(lowered) if word not in STOPWORDS]
-    for run in CJK_RUN.findall(lowered):
-        terms.append(run)
-        if len(run) == 1:
-            continue
-        terms.extend(run[index:index + 2] for index in range(len(run) - 1))
-    return list(dict.fromkeys(term for term in terms if term))
+from .retrieval_terms import query_terms, term_count, term_matches
 
 
 def _score(title: str, body: str, notes: str, ocr: str, terms) -> int:
     score = 0
     for term in terms:
-        score += min(title.count(term), 3) * 3
-        score += min(body.count(term), 3)
-        score += min(notes.count(term), 3)
-        score += min(ocr.count(term), 3)
+        score += term_count(term, title) * 3
+        score += term_count(term, body)
+        score += term_count(term, notes)
+        score += term_count(term, ocr)
     return score
 
 
@@ -41,7 +22,7 @@ def _snippet(title: str, body: str, notes: str, ocr: str, terms) -> str:
         # lower() can change a string's length (e.g. "İ"), so locate the hit
         # in the original string: slicing must use the same coordinates.
         positions = [match.start() for term in terms
-                     for match in re.finditer(re.escape(term), source, re.IGNORECASE)]
+                     for match in term_matches(term, source)]
         if not positions:
             continue
         position = min(positions)
@@ -57,7 +38,7 @@ def _snippet(title: str, body: str, notes: str, ocr: str, terms) -> str:
 
 
 def search_all(store, query: str, limit: int = 20) -> SearchResponse:
-    terms = _terms(query)
+    terms = query_terms(query)
     if not terms:
         return SearchResponse(query=query, results=[])
     results = []

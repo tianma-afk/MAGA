@@ -7,17 +7,61 @@ import type {
 import { boundedHistory, validDiagram } from './state';
 
 async function json<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, init);
+  let response: Response;
+  try {
+    response = await fetch(path, init);
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') throw error;
+    throw new Error('无法连接后端服务，请确认服务已启动后重试。');
+  }
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    if (response.status === 503 && body?.detail?.code === 'AI_NOT_CONFIGURED') {
-      throw new ConfigurationError(typeof body.detail.message === 'string'
-        ? body.detail.message : '请配置后端 .env 并重启服务。');
+    const payload = await response.json().catch(() => null) as { detail?: unknown } | null;
+    const detail = payload?.detail;
+    if (response.status === 503 && !!detail && typeof detail === 'object'
+      && (detail as { code?: unknown }).code === 'AI_NOT_CONFIGURED') {
+      throw new ConfigurationError();
     }
-    throw new Error(`请求失败（${response.status}），请稍后重试。`);
+    throw new Error(failureMessage(response.status, detail));
   }
   try { return await response.json(); }
   catch { throw new Error('服务返回了无效数据，请重试。'); }
+}
+
+/** Only exact, known business messages are translated; anything else stays local
+ *  so raw upstream text and validation echoes never reach the page. */
+const KNOWN_FAILURES: { status: number; text: string; message: string }[] = [
+  {
+    status: 422,
+    text: '本页可提取文字不足，无法生成可靠自测；请切换到有文字内容的页面或查看原稿。',
+    message: '本页可提取文字不足：请切换到有文字内容的页面，或先查看原稿。',
+  },
+  {
+    status: 422,
+    text: 'Slide number is outside this chapter',
+    message: '页码超出本章范围，请重新选择页面。',
+  },
+  {
+    status: 422,
+    text: 'Search query must not be blank',
+    message: '请输入搜索关键词。',
+  },
+  {
+    status: 422,
+    text: '没有在课件中找到足够的相关依据；请换一个更具体的场景，或先在章节中学习相关内容。',
+    message: '课件中没有足够依据：请换一个更具体的场景，或先学习相关章节。',
+  },
+];
+
+function failureMessage(status: number, detail: unknown): string {
+  const text = typeof detail === 'string' ? detail.trim() : '';
+  const known = KNOWN_FAILURES.find(item => item.status === status && item.text === text);
+  if (known) return known.message;
+  if (status === 502) return 'AI 服务暂时不可用或返回了无法识别的内容，请稍后重试。';
+  if (status === 503) return 'AI 服务暂时不可用，请稍后重试。';
+  if (status === 404) return '请求的内容不存在，请返回后重试。';
+  if (status === 422) return '请求内容不符合要求，请检查输入后重试。';
+  if (status >= 500) return `服务暂时不可用（HTTP ${status}），请稍后重试。`;
+  return `请求未被接受（HTTP ${status}），请检查后重试。`;
 }
 function quizQuestion(value: unknown): QuizQuestion {
   const q = value as Partial<QuizQuestion> | null;
@@ -223,6 +267,10 @@ export const api = {
 };
 export class ConfigurationError extends Error {
   readonly code = 'AI_NOT_CONFIGURED';
+  constructor(message = 'AI 尚未配置：请在后端 .env 中填写 LLM_API_KEY 和 LLM_MODEL，'
+    + '按服务商设置 LLM_BASE_URL，重启后端后重新检查连接。') {
+    super(message);
+  }
 }
 export function errorText(error: unknown) {
   return error instanceof TypeError ? '无法连接服务，请检查后端是否已启动。'

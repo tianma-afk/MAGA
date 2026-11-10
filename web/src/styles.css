@@ -83,6 +83,10 @@ h1, h2, p { margin-top: 0; }
 .message-body pre { overflow: auto; background: #f5f6f5; border: 1px solid var(--line); border-radius: 5px; padding: 15px; font-size: 12px; }
 .message-body code { font-family: Consolas, monospace; }
 .message-body blockquote { margin: 12px 0; border-left: 3px solid #bdcec2; padding-left: 16px; color: #67746b; }
+.table-scroll { overflow-x: auto; margin: 12px 0; }
+.message-body table { border-collapse: collapse; font-size: 13px; line-height: 1.6; min-width: 100%; }
+.message-body th, .message-body td { border: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+.message-body th { background: #f3f7f4; font-weight: 600; color: #3c4a41; white-space: nowrap; }
 .citations { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
 .citations button { display: flex; align-items: center; gap: 5px; font-size: 11px; padding: 4px 7px; text-align: left; border: 1px solid var(--line); border-radius: 4px; color: #627167; max-width: 100%; overflow-wrap: anywhere; }
 .text-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border-radius: 5px; padding: 7px 10px; font-size: 12px; }
@@ -137,6 +141,10 @@ h1, h2, p { margin-top: 0; }
 .dialog-content > svg { color: var(--green); }
 .dialog-content h2 { font-size: 18px; margin: 16px 0 10px; }
 .dialog-content p { color: var(--muted); font-size: 13px; }
+.dialog-scope { color: var(--muted); font-size: 13px; }
+.dialog-scope p { margin: 10px 0 8px; }
+.dialog-scope ul { margin: 0 0 8px; padding-left: 20px; }
+.dialog-scope li { margin: 3px 0; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
 .danger-button { background: #a34b41; color: white; padding: 7px 12px; border-radius: 5px; font-size: 12px; }
 .danger-button:hover:not(:disabled) { background: #8b3e36; }

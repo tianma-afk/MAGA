@@ -2,9 +2,9 @@ import { BookOpen, Check, X } from 'lucide-react';
 import { scoreRecord } from './quiz';
 import type { QuizRecord } from './types';
 
-export default function QuizReview({ record, onPage }: {
+export default function QuizReview({ record, onSource }: {
   record: QuizRecord;
-  onPage: (page: number) => void;
+  onSource: (page: number) => void;
 }) {
   const score = scoreRecord(record);
   return <section className="quiz-review" aria-label={`第 ${record.slide} 页自测结果`}>
@@ -26,7 +26,7 @@ export default function QuizReview({ record, onPage }: {
           <p>{question.explanation}</p>
           <div className="quiz-citations">
             {question.citations.map((citation, citationIndex) => <button
-              key={`${citation.slide}-${citationIndex}`} onClick={() => onPage(citation.slide)}>
+              key={`${citation.slide}-${citationIndex}`} onClick={() => onSource(citation.slide)}>
               <BookOpen size={12} />第 {citation.slide} 页 · {citation.title}
             </button>)}
           </div>
