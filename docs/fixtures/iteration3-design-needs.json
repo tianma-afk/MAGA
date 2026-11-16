@@ -1,0 +1,355 @@
+{
+  "version": 1,
+  "k": 8,
+  "annotationStatus": "Codex初标，人工待审",
+  "topics": {
+    "availability": {
+      "pages": {
+        "chapter-5": [
+          6,
+          9,
+          11,
+          12
+        ]
+      },
+      "basis": "定义明确涉及掩蔽/修复故障、停机时间；第9页给检测与恢复响应。"
+    },
+    "detection": {
+      "pages": {
+        "chapter-5": [
+          15,
+          16,
+          17,
+          18
+        ]
+      },
+      "basis": "ping/echo、monitor、heartbeat的可提取正文。"
+    },
+    "recovery": {
+      "pages": {
+        "chapter-5": [
+          24,
+          25,
+          27,
+          29,
+          31,
+          32
+        ]
+      },
+      "basis": "热/温备、回滚、重试、降级和重配置的可提取正文。"
+    },
+    "performance": {
+      "pages": {
+        "chapter-8": [
+          2,
+          5,
+          7,
+          10,
+          18,
+          22,
+          23,
+          24,
+          25,
+          27,
+          28,
+          29,
+          30,
+          32,
+          33
+        ]
+      },
+      "basis": "时间需求、测量、需求控制与资源管理；各页正文可检查。"
+    },
+    "modifiability": {
+      "pages": {
+        "chapter-7": [
+          8,
+          20,
+          22,
+          24,
+          26,
+          27,
+          28,
+          29,
+          31,
+          32,
+          33,
+          34,
+          41,
+          42
+        ],
+        "chapter-2": [
+          6,
+          7
+        ]
+      },
+      "basis": "变化成本、局部变化、内聚/耦合、封装、依赖限制与延迟绑定。"
+    },
+    "security": {
+      "pages": {
+        "chapter-2": [
+          5
+        ]
+      },
+      "basis": "正文明确保护通信、控制信息访问、授权边界；仅概述，不足以支持算法级安全设计。"
+    },
+    "interoperability": {
+      "pages": {
+        "chapter-6": [
+          2,
+          3,
+          6,
+          22,
+          40
+        ]
+      },
+      "basis": "接口交换及解释信息、服务发现、编排和接口适配。"
+    }
+  },
+  "cases": [
+    {
+      "id": "N01",
+      "split": "dev",
+      "request": {
+        "title": "在线考试系统",
+        "scenario": "学生在网上答题并提交试卷",
+        "requirements": "峰值1万人，考试期间不能中断"
+      },
+      "knowledge": [
+        "availability",
+        "detection",
+        "recovery"
+      ],
+      "control": "可用性 故障恢复",
+      "status": "provisional",
+      "note": "课程核对后由Codex初标，待人工审核；诊断指标非正式验收。"
+    },
+    {
+      "id": "N02",
+      "split": "dev",
+      "request": {
+        "title": "在线考试系统",
+        "scenario": "如何提高在线考试系统的可用性",
+        "requirements": "峰值1万人，考试期间不能中断"
+      },
+      "knowledge": [
+        "availability",
+        "detection",
+        "recovery"
+      ],
+      "control": "可用性 故障恢复",
+      "status": "provisional",
+      "note": "课程核对后由Codex初标，待人工审核；诊断指标非正式验收。"
+    },
+    {
+      "id": "N03",
+      "split": "dev",
+      "request": {
+        "title": "订单服务",
+        "scenario": "某台机器突然停止工作时，买家仍应能下单",
+        "requirements": "发现异常后换到另一台，尽量不丢已处理状态"
+      },
+      "knowledge": [
+        "detection",
+        "recovery"
+      ],
+      "control": "心跳 冗余 恢复",
+      "status": "provisional",
+      "note": "课程核对后由Codex初标，待人工审核；诊断指标非正式验收。"
+    },
+    {
+      "id": "N04",
+      "split": "dev",
+      "request": {
+        "title": "远程缴费",
+        "scenario": "银行接口偶尔连接不上，用户稍后再试就成功",
+        "requirements": "不能无限等待，重复尝试要有次数上限"
+      },
+      "knowledge": [
+        "recovery"
+      ],
+      "control": "故障 恢复 retry",
+      "status": "provisional",
+      "note": "课程核对后由Codex初标，待人工审核；诊断指标非正式验收。"
+    },
+    {
+      "id": "N05",
+      "split": "dev",
+      "request": {
+        "title": "购物活动",
+        "scenario": "大量顾客同时浏览商品并结算",
+        "requirements": "响应尽量快，不要让请求一直排队"
+      },
+      "knowledge": [
+        "performance"
+      ],
+      "control": "性能 performance",
+      "status": "provisional",
+      "note": "课程核对后由Codex初标，待人工审核；诊断指标非正式验收。"
+    },
+    {
+      "id": "N06",
+      "split": "dev",
+      "request": {
+        "title": "办公报表",
+        "scenario": "同一张统计报表被反复读取，每次都从慢磁盘重新计算",
+        "requirements": "减少等待，同时说明副本更新的代价"
+      },
+      "knowledge": [
+        "performance"
+      ],
+      "control": "performance caching",
+      "status": "provisional",
+      "note": "课程核对后由Codex初标，待人工审核；诊断指标非正式验收。"
+    },
+    {
+      "id": "N07",
+      "split": "dev",
+      "request": {
+        "title": "校园告警",
+        "scenario": "火灾告警和普通温度提示会同时到达",
+        "requirements": "机器忙不过来时先处理危及生命的告警"
+      },
+      "knowledge": [
+        "performance"
+      ],
+      "control": "performance prioritize events",
+      "status": "provisional",
+      "note": "课程核对后由Codex初标，待人工审核；诊断指标非正式验收。"
+    },
+    {
+      "id": "N08",
+      "split": "dev",
+      "request": {
+        "title": "财务办公",
+        "scenario": "下个月要替换发票供应商的接口",
+        "requirements": "不要让一次替换迫使许多业务模块一起修改"
+      },
+      "knowledge": [
+        "modifiability"
+      ],
+      "control": "可修改性 封装",
+      "status": "provisional",
+      "note": "课程核对后由Codex初标，待人工审核；诊断指标非正式验收。"
+    },
+    {
+      "id": "N09",
+      "split": "dev",
+      "request": {
+        "title": "订单后台",
+        "scenario": "促销规则经常改，相关代码散落在多个地方",
+        "requirements": "希望修改集中在少数模块，减少连带影响"
+      },
+      "knowledge": [
+        "modifiability"
+      ],
+      "control": "可修改性 内聚 耦合",
+      "status": "provisional",
+      "note": "课程核对后由Codex初标，待人工审核；诊断指标非正式验收。"
+    },
+    {
+      "id": "N10",
+      "split": "dev",
+      "request": {
+        "title": "人事档案",
+        "scenario": "不同部门只能读取各自被允许查看的员工资料",
+        "requirements": "保护组件通信，设置访问边界"
+      },
+      "knowledge": [
+        "security"
+      ],
+      "control": "安全性 security",
+      "status": "provisional",
+      "note": "课程核对后由Codex初标，待人工审核；诊断指标非正式验收。"
+    },
+    {
+      "id": "N11",
+      "split": "dev",
+      "request": {
+        "title": "校园平台",
+        "scenario": "教务系统和财务系统使用不同的字段格式",
+        "requirements": "让两边交换数据后能够理解含义，必要时转换接口"
+      },
+      "knowledge": [
+        "interoperability"
+      ],
+      "control": "互操作性 接口",
+      "status": "provisional",
+      "note": "课程核对后由Codex初标，待人工审核；诊断指标非正式验收。"
+    },
+    {
+      "id": "N12",
+      "split": "dev",
+      "request": {
+        "title": "金融服务",
+        "scenario": "为交易签名设计一种全新的抗量子密码算法",
+        "requirements": "给出具体算法参数及数学安全证明"
+      },
+      "knowledge": [
+        "security"
+      ],
+      "control": "安全性",
+      "status": "unscorable",
+      "note": "课程只有安全概述，不能支持算法证明；不评分。"
+    },
+    {
+      "id": "N13",
+      "split": "holdout",
+      "request": {
+        "title": "远程诊疗",
+        "scenario": "服务节点失联时患者仍需继续使用",
+        "requirements": "自动发现失联并恢复服务"
+      },
+      "knowledge": [
+        "detection",
+        "recovery"
+      ],
+      "control": "心跳 故障恢复",
+      "status": "provisional",
+      "note": "课程核对后由Codex初标，待人工审核；诊断指标非正式验收。"
+    },
+    {
+      "id": "N14",
+      "split": "holdout",
+      "request": {
+        "title": "预约平台",
+        "scenario": "开放预约时大量用户同时提交请求",
+        "requirements": "缩短等待并增加同时处理的能力"
+      },
+      "knowledge": [
+        "performance"
+      ],
+      "control": "performance concurrency",
+      "status": "provisional",
+      "note": "课程核对后由Codex初标，待人工审核；诊断指标非正式验收。"
+    },
+    {
+      "id": "N15",
+      "split": "holdout",
+      "request": {
+        "title": "企业软件",
+        "scenario": "客户经常要求替换数据库或外部服务",
+        "requirements": "降低替换引起的修改成本"
+      },
+      "knowledge": [
+        "modifiability"
+      ],
+      "control": "modifiability",
+      "status": "provisional",
+      "note": "课程核对后由Codex初标，待人工审核；诊断指标非正式验收。"
+    },
+    {
+      "id": "N16",
+      "split": "holdout",
+      "request": {
+        "title": "办公工具",
+        "scenario": "希望系统更好用",
+        "requirements": "目前没有具体任务、环境和可测目标"
+      },
+      "knowledge": [],
+      "control": "",
+      "status": "unscorable",
+      "note": "需求歧义，待澄清；不评分。"
+    }
+  ]
+}
