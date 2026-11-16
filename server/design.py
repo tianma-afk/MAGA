@@ -3,7 +3,6 @@ import json
 import httpx
 from fastapi import HTTPException
 from pydantic import ValidationError
-from starlette.concurrency import run_in_threadpool
 
 from .chapters import ChapterStore
 from .config import read_ai_config
@@ -13,31 +12,13 @@ from .models import (
     DesignScenarioResponse, DesignTacticAnswer, DesignTacticRequest,
     DesignTacticResponse,
 )
-from .search import search_all
-from .tutor import excerpt
+from .design_sources import MAX_SOURCES, legacy_sources, select_sources
 
-MAX_SOURCES = 8
 NO_SOURCES = "没有在课件中找到足够的相关依据；请换一个更具体的场景，或先在章节中学习相关内容。"
 
 
 def _sources(store: ChapterStore, query: str):
-    results = search_all(store, " ".join(query.split())[:2000], MAX_SOURCES).results
-    sources = []
-    seen = set()
-    for result in results:
-        key = (result.chapterId, result.slide)
-        if key in seen:
-            continue
-        seen.add(key)
-        chapter = store.read(result.chapterId)
-        slide = chapter.slides[result.slide - 1]
-        sources.append({
-            "chapterId": chapter.id,
-            "slide": slide.number,
-            "title": slide.title,
-            "source": excerpt(slide),
-        })
-    return sources
+    return legacy_sources(store, query)
 
 
 def _canonical_citations(items, sources):
@@ -129,8 +110,8 @@ def _review_prompt():
 
 async def design_scenarios(store, request: DesignScenarioRequest, transport=None):
     config = read_ai_config().require()
-    query = " ".join((request.title, request.scenario, request.requirements))
-    sources = await run_in_threadpool(_sources, store, query)
+    selection = await select_sources(store, request, stage='scenarios', transport=transport)
+    sources = [source.model_dump() for source in selection.sources]
     if not sources:
         raise HTTPException(422, NO_SOURCES)
     user = json.dumps({
@@ -150,12 +131,8 @@ async def design_scenarios(store, request: DesignScenarioRequest, transport=None
 
 async def design_tactics(store, request: DesignTacticRequest, transport=None):
     config = read_ai_config().require()
-    query = " ".join((
-        request.scenario, request.requirements,
-        " ".join(item.name for item in request.qualityAttributes),
-        " ".join(item.stimulus + " " + item.response for item in request.scenarios),
-    ))
-    sources = await run_in_threadpool(_sources, store, query)
+    selection = await select_sources(store, request, stage='tactics', transport=transport)
+    sources = [source.model_dump() for source in selection.sources]
     if not sources:
         raise HTTPException(422, NO_SOURCES)
     user = json.dumps({
@@ -176,12 +153,8 @@ async def design_tactics(store, request: DesignTacticRequest, transport=None):
 
 async def design_review(store, request: DesignReviewRequest, transport=None):
     config = read_ai_config().require()
-    query = " ".join((
-        request.title, request.scenario, request.requirements,
-        " ".join(item.name for item in request.qualityAttributes),
-        " ".join(item.name for item in request.tactics),
-    ))
-    sources = await run_in_threadpool(_sources, store, query)
+    selection = await select_sources(store, request, stage='review', transport=transport)
+    sources = [source.model_dump() for source in selection.sources]
     if not sources:
         raise HTTPException(422, NO_SOURCES)
     user = json.dumps({
