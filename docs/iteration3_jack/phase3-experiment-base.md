@@ -5,8 +5,8 @@
 ## 1. 基点和提交顺序
 
 - MATERIAL_BASE：`2c4c834341d9d8319a0822760b6c19df415555f1`。
-- EXPERIMENT_BASE：**待公共验证完成后提交填入**；三个分支将继承此提交，而不是后续记录hash的文档提交。
-- 后续文档提交：待记录。主仓库始终在`iteration/jack`，不推远端。
+- EXPERIMENT_BASE：`c6fc1857928468030e6a030b13a146300bf93304`，提交信息`test: establish iteration3 experiment base`；三个分支共同继承此提交，不跟随后续记录hash的文档提交。
+- 后续文档提交信息：`docs: record iteration3 experiment environments`，用于补齐本文实际环境记录；其hash可由主分支git log定位，不作为EXPERIMENT_BASE。主仓库始终在`iteration/jack`，不推远端。
 
 ## 2. 公共实现（无候选优化）
 
@@ -50,15 +50,21 @@ python scripts/run-design-experiment.py --output data/verification/<全新run-id
 
 默认split=dev；保留需要同时显式`--split holdout --allow-holdout`，仅在未来正式获准且口径冻结后使用。`--case-id N10 --repeats 1`可做独立环境冒烟，不能当完整评估。输出目录已存在就拒绝，不能覆盖历史。新结果复用旧scoring.metrics/aggregate，规则签名和fixture/生产源码/语料manifest入summary；无自动调用最终生成。
 
-## 5. 三个实验目录（创建验证后填实况）
+## 5. 三个实验目录（实际创建与验证）
 
 | 方案 | 分支 | 相对主目录路径 | HEAD/状态 |
 | --- | --- | --- | --- |
-| A | experiment/iteration3-a | ../MAGA-exp-a | 待创建/核验 |
-| B | experiment/iteration3-b | ../MAGA-exp-b | 待创建/核验 |
-| C | experiment/iteration3-c | ../MAGA-exp-c | 待创建/核验 |
+| A | experiment/iteration3-a | ../MAGA-exp-a | c6fc1857928468030e6a030b13a146300bf93304，干净，19项针对性测试通过，N10来源冒烟通过 |
+| B | experiment/iteration3-b | ../MAGA-exp-b | c6fc1857928468030e6a030b13a146300bf93304，干净，19项针对性测试通过，N10来源冒烟通过 |
+| C | experiment/iteration3-c | ../MAGA-exp-c | c6fc1857928468030e6a030b13a146300bf93304，干净，19项针对性测试通过，N10来源冒烟通过 |
 
 PPT随Git检出；OCR复制到各自data/ocr，不入Git；纯来源实验不复制70MB页图，因此imageUrl展示可与主目录不同，不影响检索来源/摘录。三个独立输出目录位于各自data/verification，Python解释器共用只读maga，不并发改依赖。
+
+三个目录均位于原MAGA父目录，即`D:/Jack_s_file/learning/课内学习/大三上课内/软件体系结构/体系结构大作业/`，名称为MAGA-exp-a/b/c；创建时路径/分支均不存在，没有覆盖旧目录。每目录89项PPT/OCR签名与冻结manifest相同，公共代码/工具/fixture文本一致。Windows core.autocrlf=true会使部分文本的原始字节hash与主目录LF工作副本不同，比较Git提交和规范化换行后的文本；PPT/OCR使用原始字节hash不放宽。
+
+环境清单在主目录`data/verification/p3t1-worktree-inventory.json`；每worktree的独立结果位于`data/verification/p3t1-worktree-smoke/{summary,dev}.json`。冒烟每目录只跑N10一次，零模型调用且与原提交来源一致；不是A/B/C优化评测，也不是正式性能比较。三个目录均使用现成Python3.11.18，未安装包或复制Key；测试保留一条相同Starlette/httpx弃用警告。
+
+实验基点中的本文保留“待创建”快照，后续实际状态补充只提交主分支，不更新三个分支的HEAD，避免混淆共同起点。P3T2读取主目录此最新交接以及各目录已有开发契约即可。
 
 ## 6. P3T2边界与限制
 
