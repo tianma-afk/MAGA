@@ -3,6 +3,8 @@
 审计日期：2026-11-17。现场基线：`iteration/jack` / `f58b6c9caa88a24643886f1fc4e1f1e26e4e20c3`，开始时工作区干净。
 当前事实：**Phase 3 已完成；最终 Gate PASS（人工裁定与复验后）；ADR Accepted；Baseline 默认＋原始 B 显式可选。**
 
+P4T2增补（2026-11-17）：[架构设计与视图](./phase4-architecture-design-and-views.md)已整理6个Drivers、6个六要素QAS、Module/C&C及机制映射；本次仅文档静态核对，不增加运行证据。下文保留P4T1盘点基线，当前正式文档导航为原34份＋本次主文档1份。
+
 ## 1. 用途、范围与阅读规则
 
 这是P4T2–P4T5共用的证据入口，不是最终报告、PPT或新一轮研究。定向盘点 **34份文档**：本目录已有P1–P3文档24份、实验Worktree独有原型说明5份、背景/交接文档5份；另核对7份自然需求fixture的结构与样本数、关键源码/测试入口、Git历史及本地原始结果摘要。计数不包含本文，不把同一文件重复链接算作新增材料。
@@ -14,10 +16,11 @@
 表中“可证明”均有边界：文件存在/静态符合≠运行通过；Mock通过≠真实模型成功；真实单次成功≠总体可靠性；来源真实≠结论语义充分。
 路径相对本文目录。标为“本地证据”的data文件被忽略，不随clone；标为“Worktree”的链接依赖同级实验目录，移机使用第4节Git命令取回，不当成主线文件。
 
-## 2. 核心必读材料（11份）
+## 2. 核心必读材料（原11份＋P4T2主说明）
 
 |阅读主题|核心入口|优先提取|
 |---|---|---|
+|理论表达与架构视图（P4T2）|[架构设计与视图](./phase4-architecture-design-and-views.md)|Drivers/约束、6个QAS、实际文件与运行时边界、战术代价；区分I/M/E|
 |Problem & Requirements|[任务定义](./phase1-task-definition.md)、[根因与候选分析](./phase2-analysis.md)|唯一主任务、召回不足与Top8截断两种机制；Drivers/QAS草稿|
 |Architecture Design|[实施契约](./phase2-implementation-contract.md)|共同接口、机制隔离、依赖与预算、来源校验要求|
 |Architecture Experiments|[正式协议](./phase3-evaluation-protocol.md)、[统一结果](./phase3-evaluation-results.md)|公平条件、v4口径、成对升降及延迟边界|
@@ -90,6 +93,12 @@
 |[HANDOFF.md](../hgj交接文档/HANDOFF.md)|前轮功能和迁机交接|Evolution / 历史交接|11-10的main、无OCR等是历史；10/20→18/20不能替代本轮8/20→16/20|
 |[architecture.md](../archive/spec/architecture.md)|基础架构和ADR-001–004：模块化单体、轻检索、结构化教学动作、真实课件|Patterns、历史ADR / 原架构|archive快照；章节内检索描述不是当前全部能力|
 |[architecture-evidence-audit.md](../architecture-evidence-audit.md)|11-14前三轮回顾性审计、历史证据成熟度|Evidence Audit / 演进背景|“未见第三轮证据”仅当时成立；不替代本索引|
+
+### P4T2新增规范材料（1份）
+
+|文件|内容与可证明事项|架构知识点 / PPT用途|局限|
+|---|---|---|---|
+|[phase4-architecture-design-and-views.md](./phase4-architecture-design-and-views.md)|以真实代码规范6个Drivers、约束/目标、6个QAS、Module uses与运行时两模式及回退、8项战术/机制|Drivers、QAS、Module/C&C、Tactics；作为理论与架构图主入口|是总结性表达与静态核对，不是新增实验，也未完成P4T3 ATAM复盘|
 
 ## 4. Git、数据、代码与测试证据入口
 
@@ -167,15 +176,16 @@ Commit不是普通文件链接。原B选择性移植不等于整体Merge；A/C/B
 ## 5. 架构知识点反向索引与成熟度
 
 Ready=已可引用的限定证据；Needs Refinement=信息已有但需规范化/汇总；Missing=缺少所需证据，不能凭图或测试补称已有。
+P4T2将Drivers、QAS、视图及战术标为Ready，指本轮范围内的**素材/表达已规范**，不等于所有质量属性收益都已实测达标；每个QAS仍附限制。ATAM及综合Sensitivity/Tradeoff分析继续留给P4T3。
 
 |架构知识点|已有材料|成熟度|后续最小补充|
 |---|---|---|---|
-|Architectural Drivers|[P1范围](./phase1-task-definition.md)、[P2优先级](./phase2-analysis.md)、[ADR驱动](./phase3-final-architecture-decision.md)|Needs Refinement|合成按优先级排列的需求/约束表，不添加新需求|
-|Quality Attribute Scenarios|[P2 Q1–Q3六要素](./phase2-analysis.md)、[最终验收场景](./phase3-final-acceptance.md)|Needs Refinement|保留已有六要素，补运行时可靠性/修改场景；区分测量值与目标|
-|Module Structure / Module View|[集成静态图](./phase3-dual-strategy-integration.md)、[来源模块](../../server/design_sources.py)|Needs Refinement|依照静态职责重绘，明确函数/模块/依赖，避免把运行时参与者当独立服务|
-|Component-and-Connector Structure|[集成时序](./phase3-dual-strategy-integration.md)、[真实阶段记录](./phase3-final-acceptance.md)|Needs Refinement|标明浏览器/后端进程/外部模型、HTTP与进程内调用、失败返回|
-|Architectural Patterns|[历史ADR-001–004](../archive/spec/architecture.md)、[主线集成](./phase3-dual-strategy-integration.md)|Needs Refinement|限定模块化单体/浏览器–服务端；函数分派不冒称完整GoF Strategy框架|
-|Architectural Tactics|[开发契约故障表](./phase2-implementation-contract.md)、[Planner](../../server/design_planner.py)、[验收](./phase3-final-acceptance.md)|Needs Refinement|把超时、严格校验、有界回退、状态保护分别映射Driver/QAS；不声称已有断路器/自动重试|
+|Architectural Drivers|[P4T2 §2–3](./phase4-architecture-design-and-views.md)、[P1范围](./phase1-task-definition.md)、[ADR驱动](./phase3-final-architecture-decision.md)|Ready|6个Driver及优先级依据；总结性归纳与历史批准区分，转为汇报表|
+|Quality Attribute Scenarios|[P4T2 §4](./phase4-architecture-design-and-views.md)、[P2 Q1–Q3](./phase2-analysis.md)、[验收](./phase3-final-acceptance.md)|Ready|6个完整六要素，附Driver/机制/测试/实测/限制；提炼场景卡，不虚构SLA|
+|Module Structure / Module View|[P4T2 §5](./phase4-architecture-design-and-views.md)、[来源模块](../../server/design_sources.py)|Ready|按实际文件表达import/uses；回调与同文件职责已说明，可用于制图|
+|Component-and-Connector Structure|[P4T2 §6](./phase4-architecture-design-and-views.md)、[真实阶段记录](./phase3-final-acceptance.md)|Ready|运行时组件/资源、两模式时序及回退齐备；制图保留HTTP/进程内边界|
+|Architectural Patterns|[P4T2概念及Strategy讨论](./phase4-architecture-design-and-views.md)、[历史ADR](../archive/spec/architecture.md)|Ready|限定模块化单体与策略式函数分派，不冒称完整GoF框架或新架构模式|
+|Architectural Tactics|[P4T2 §8映射](./phase4-architecture-design-and-views.md)、[Planner](../../server/design_planner.py)|Ready|8项机制关联属性/实现/验证/代价；P4T3再综合权衡，不新增战术|
 |ATAM|[阶段权衡](./phase3-architecture-tradeoffs.md)、[最终ADR](./phase3-final-architecture-decision.md)、[验收ATAM](./phase3-final-acceptance.md)|Needs Refinement|汇总为轻量ATAM表；无独立多方workshop，不包装成完整正式ATAM|
 |Sensitivity Points|[P2分析](./phase2-analysis.md)、[B-v2](./phase3-b-v2-experiment.md)、[Coverage](./phase3-b-coverage-experiment.md)|Needs Refinement|统一Top8、Prompt/词法落点、1024Token、15秒及概念目录；另列标签口径的评价敏感性，不把它冒充架构参数|
 |Tradeoff Points|[权衡报告](./phase3-architecture-tradeoffs.md)、[ADR](./phase3-final-architecture-decision.md)|Needs Refinement|将质量/延迟/成本/维护代价按同一场景陈述，不跨批比较wall|
@@ -192,13 +202,13 @@ Ready=已可引用的限定证据；Needs Refinement=信息已有但需规范化
 |汇报主题|推荐材料|可提取关键事实|页面类型|避免的表述|
 |---|---|---|---|---|
 |1 产品问题及原架构|[P1基线](./phase1-baseline.md)、[根因](./phase2-analysis.md)|N01零召回与N02第12名截断是不同机制|前后查询对照＋原架构图|“所有自然需求都失败”“模型必然答错”|
-|2 质量属性与目标|[任务定义](./phase1-task-definition.md)、[Q1–Q3](./phase2-analysis.md)|适用性优先、溯源必保留、延迟/成本权衡|Drivers表＋六要素场景卡|虚构提升目标、把历史延迟当SLA|
+|2 质量属性与目标|[P4T2 Drivers与QAS](./phase4-architecture-design-and-views.md)、[任务定义](./phase1-task-definition.md)|6个Driver/6个QAS，适用性优先、溯源必保留、延迟/成本权衡|Drivers表＋六要素场景卡|虚构提升目标、把历史延迟当SLA|
 |3 A/B/C候选|[实验设计](./phase2-experiment-design.md)、[实施契约](./phase2-implementation-contract.md)、第3节原型说明|A词法；B规划；C原query宽池重排，机制隔离|三列结构/流程图|把A规则/C重排说成原B生产能力|
 |4 统一实验和结果|[P3协议](./phase3-evaluation-protocol.md)、[结果](./phase3-evaluation-results.md)|KC开发50/31.82/63.64/50%；保留33.33/16.67/50/16.67%（Baseline/A/B/C）|按集分表＋成对升降|P8下界=完整Precision；N10=全开发集|
 |5 补充发现|[B-v2](./phase3-b-v2-experiment.md)、[Coverage](./phase3-b-coverage-experiment.md)|新测试KC原B66.67% vs B-v2 55.56%；Coverage固定池0升2降40平|负面实验表＋代理指标案例|B-v2总体更好、Coverage有稳定净收益、T集仍未观察|
 |6 ATAM权衡|[阶段权衡](./phase3-architecture-tradeoffs.md)、[审核](./phase3-decision-evidence-review.md)|质量提升局部、依赖/延迟增加；标注解释会改变保留结论|质量属性矩阵＋风险表|只按均值排名或声称正式完整ATAM|
 |7 B2最终决策|[Accepted ADR](./phase3-final-architecture-decision.md)|Baseline默认＋用户主动原B，不全面替换|决策卡＋备选排除依据|“证明B无效”或“B全面胜出”|
-|8 双策略实现|[集成Module/C&C](./phase3-dual-strategy-integration.md)、[分派代码](../../server/design_sources.py)|显式枚举、默认兼容、统一真实来源出口、原生成流程|静态图＋运行时序|整个实验分支Merge、Planner直接认证页码|
+|8 双策略实现|[P4T2规范Module/C&C及机制](./phase4-architecture-design-and-views.md)、[集成](./phase3-dual-strategy-integration.md)、[分派代码](../../server/design_sources.py)|实际文件依赖、同进程职责、显式枚举、共同出口及共享最终生成|静态图＋运行时序＋战术映射|整个实验分支Merge、Planner直接认证页码、函数画成独立服务|
 |9 故障与验收|[报告第11节](./phase3-final-acceptance.md)、[原FAIL](../../data/verification/p3t6-acceptance-20261117-v1/chrome-real/results.json)、[裁定结果](../../data/verification/p3t6-adjudication-20261117-v1/adjudication.json)|原FAIL未删；2增强/1降级/0失败，最终PASS，裁定无新增真实调用|失败→裁定→复验时间线＋演示|三阶段都增强成功、Mock冒充真实、Abort保证上游停止|
 |10 反思与局限|[Coverage 6:15更正](./phase3-b-coverage-experiment.md)、[验收风险](./phase3-final-acceptance.md)|代理与知识不同；冻结标签可能漏页；费用未知与有限样本|证据边界/反思页|隐去负例、AI标注冒充独立人工、引用存在=语义充分|
 
@@ -225,7 +235,7 @@ Ready=已可引用的限定证据；Needs Refinement=信息已有但需规范化
 
 - 本机原型说明与data产物可访问，但不都在主线Git树；迁机须另有Worktree/commit对象和脱敏产物包。仅有索引不能恢复被忽略的日志。
 - 完整页级相关性、争议页独立人工裁决及学习效果金标准缺失；尤其6:15、8:20等不要以Codex审核冒充人工认证。
-- P2已有QAS六要素，不是“完全缺少QAS”；但可靠性/修改性运行场景及测量边界仍需统一表达。现有图也不是“完全没有架构图”，需要规范视图层级。
+- P4T1时P2已有QAS六要素，仍需补可靠性/修改性场景和规范视图层级；P4T2已完成这一表达性缺口，见主说明。各QAS的长期效果/性能等验证限制仍在，Ready不代表全部质量收益达标。
 - 上游长期稳定性、浏览器断连后的远端取消/计费、生产负载与吞吐、可靠单价/总费用未证明。P4只披露，不扩大成新实验任务。
 - 原型/集成/验收中的测试数量对应不同提交和范围；本轮不把178、197、207、226、259、68等相加当产品测试总数，也不声称当前远端CI通过。
 
@@ -233,14 +243,15 @@ Ready=已可引用的限定证据；Needs Refinement=信息已有但需规范化
 
 |后续任务|有依据的优先工作|输入与完成边界|
 |---|---|---|
-|P4T2|先规范Drivers优先级；沿已有Q1–Q3整理六要素，并补增强选择/合法降级/生成失败/旧成果保护的场景表达；核对静态Module和运行时C&C；映射超时/校验/有界回退等战术|用第5节Needs Refinement和[集成图](./phase3-dual-strategy-integration.md)，不新增策略、SLA或生产改动|
-|P4T3|统一轻量ATAM；关联Top8/Prompt/Token预算等Sensitivity，质量—延迟—外部依赖等Tradeoff；分批总结候选负面结果；提炼Accepted ADR|用[结果](./phase3-evaluation-results.md)、[B-v2](./phase3-b-v2-experiment.md)、[Coverage](./phase3-b-coverage-experiment.md)、[ADR](./phase3-final-architecture-decision.md)，不重跑优化或伪造正式ATAM workshop|
+|P4T2（已完成）|Drivers/边界、6个QAS、Module/C&C、8项机制及理论—实现—证据映射已整理|[P4T2主说明](./phase4-architecture-design-and-views.md)；只静态核对，无新增实验；保留质量收益验证限制|
+|P4T3|统一轻量ATAM；关联Top8/Prompt/Token预算等Sensitivity，质量—延迟—外部依赖等Tradeoff；分批总结候选负面结果；提炼Accepted ADR|先读[P4T2 §11输入](./phase4-architecture-design-and-views.md)，再用[结果](./phase3-evaluation-results.md)、[B-v2](./phase3-b-v2-experiment.md)、[Coverage](./phase3-b-coverage-experiment.md)、[ADR](./phase3-final-architecture-decision.md)；不重跑优化或伪造正式ATAM workshop|
 |P4T4|按第6节故事线组织报告/PPT；准备默认、增强、可控回退、引用预览与恢复演示；整理“为什么不全用B”“回退为何算成功”“标注为何有版本”等答辩问题|制作时标清Mock/真实和局限；演示优先保存素材/Mock，不把本文当成新真实调用授权|
 |P4T5|重验最终文档链接、代码/数据/commit一致性；修正仍滞后的入口措辞；确认脱敏证据和Worktree迁机可用性；检查最终Git/团队交接及合并准备|当前任务不Merge或Push；是否团队合并另按授权；不得删除实验分支/历史FAIL|
 
 ## 9. 本轮交付与文档验证
 
-唯一新增交付为本文；未发现同范围Phase 4现成索引，历史architecture-evidence-audit仅作背景关联，不复制成第二套审计报告。
+P4T1唯一新增交付为本文；P4T2另新增一份主说明并更新本文，不重复建立导航。历史architecture-evidence-audit仅作背景关联。
 验证对象是本文全部Markdown文件链接：以本文目录解析、核对存在及真实文件名大小写、禁止本机绝对路径、Git hash保留为代码和只读命令；Worktree/data链接明确标注迁机限制。
-实际验证：**173条相对文件链接、88个去重目标，全部存在且大小写匹配；无本机绝对路径，无失效链接**。这是本文的链接检查，不声称修复或验证所有历史文档内部链接。
-本轮不改生产、测试、fixture或历史结果，不新增模型调用，不执行P4T2。完成后的本地提交可由 `git log -1 --format=%H -- docs/iteration3_jack/phase4-evidence-index.md` 取得；最终链接计数及工作区状态见交付记录。
+P4T1历史验证：173条相对文件链接、88个去重目标全部有效。P4T2再次核对本文及新主说明的全部链接，当前计数见交付记录；不声称修复或验证所有历史文档内部链接。
+P4T2当前验证：索引178条链接/89个去重目标、主说明146条链接/43个去重目标均有效且大小写匹配，无本机绝对路径；主说明6个QAS六要素和4个Mermaid块静态结构检查通过，未作图形渲染。
+P4T2不改生产、测试、fixture或历史结果，不新增模型调用，完成后不执行P4T3。提交可由 `git log -1 --format=%H -- docs/iteration3_jack/phase4-evidence-index.md` 取得；工作区状态见交付记录。
