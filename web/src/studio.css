@@ -61,3 +61,5 @@
   .studio-section-head { align-items: flex-start; }
   .studio-primary { width: 100%; }
 }
+.studio-retrieval select { margin-left: 10px; max-width: 100%; padding: 4px; }
+.studio-retrieval p { margin: 6px 0 0; line-height: 1.6; }

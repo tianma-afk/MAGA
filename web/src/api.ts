@@ -2,7 +2,7 @@ import type {
   Chapter, ChapterDetail, ChatResponse, DesignCitation, DesignFinding,
   DesignQualityAttribute, DesignReview, DesignReviewResponse, DesignScenario,
   DesignScenarioResponse, DesignTactic, DesignTacticResponse, Health, Message,
-  Outline, QuizQuestion, QuizResponse, SearchResponse, SearchResult,
+  Outline, QuizQuestion, QuizResponse, SearchResponse, SearchResult, RetrievalStrategy,
 } from './types';
 import { boundedHistory, validDiagram } from './state';
 
@@ -96,6 +96,12 @@ function searchResult(value: unknown): SearchResult {
   return result as SearchResult;
 }
 const DESIGN_ERROR = '设计接口返回格式不完整，请重试。';
+
+function retrievalMetadata(result: { retrievalFallback?: unknown }): { retrievalFallback?: boolean } {
+  if (result.retrievalFallback === undefined) return {};
+  if (typeof result.retrievalFallback !== 'boolean') throw new Error(DESIGN_ERROR);
+  return { retrievalFallback: result.retrievalFallback };
+}
 
 function designCitation(value: unknown): DesignCitation {
   const citation = value as Partial<DesignCitation> | null;
@@ -211,11 +217,11 @@ export const api = {
     return { query: result.query, results: result.results.map(searchResult) };
   },
   async designScenarios(
-    input: { title: string; scenario: string; requirements: string },
+    input: { title: string; scenario: string; requirements: string; retrievalStrategy?: RetrievalStrategy },
     signal: AbortSignal,
   ): Promise<DesignScenarioResponse> {
     const result = await json<{
-      mode?: string; qualityAttributes?: unknown; scenarios?: unknown;
+      mode?: string; qualityAttributes?: unknown; scenarios?: unknown; retrievalFallback?: unknown;
     }>('/api/design/scenarios', {
       method: 'POST', signal, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
@@ -228,6 +234,7 @@ export const api = {
     }
     return {
       mode: 'ai',
+      ...retrievalMetadata(result),
       qualityAttributes: result.qualityAttributes.map(designQualityAttribute),
       scenarios: result.scenarios.map(designScenario),
     };
@@ -235,11 +242,12 @@ export const api = {
   async designTactics(
     input: {
       scenario: string; requirements: string;
+      retrievalStrategy?: RetrievalStrategy;
       qualityAttributes: DesignQualityAttribute[]; scenarios: DesignScenario[];
     },
     signal: AbortSignal,
   ): Promise<DesignTacticResponse> {
-    const result = await json<{ mode?: string; tactics?: unknown }>('/api/design/tactics', {
+    const result = await json<{ mode?: string; tactics?: unknown; retrievalFallback?: unknown }>('/api/design/tactics', {
       method: 'POST', signal, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
@@ -247,11 +255,12 @@ export const api = {
       || result.tactics.length < 1 || result.tactics.length > 8) {
       throw new Error(DESIGN_ERROR);
     }
-    return { mode: 'ai', tactics: result.tactics.map(designTactic) };
+    return { mode: 'ai', ...retrievalMetadata(result), tactics: result.tactics.map(designTactic) };
   },
   async designReview(
     input: {
       title: string; scenario: string; requirements: string;
+      retrievalStrategy?: RetrievalStrategy;
       qualityAttributes: DesignQualityAttribute[]; scenarios: DesignScenario[];
       tactics: DesignTactic[];
     },
@@ -262,7 +271,7 @@ export const api = {
       body: JSON.stringify(input),
     });
     if (result.mode !== 'ai') throw new Error(DESIGN_ERROR);
-    return { ...designReview(result), mode: 'ai' };
+    return { ...designReview(result), ...retrievalMetadata(result), mode: 'ai' };
   },
 };
 export class ConfigurationError extends Error {

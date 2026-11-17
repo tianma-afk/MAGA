@@ -1,5 +1,7 @@
 # 当前功能与接口
 
+> 2026-11-17 P3T5增补：实践三阶段支持默认Baseline及显式原B增强；下方2026-11-10快照保留历史范围。当前行为与条件验收见[双策略集成](iteration3_jack/phase3-dual-strategy-integration.md)，P3T6尚未完成。
+
 > 状态快照：2026-11-10
 >
 > 分支：`feat/learning-continuity-v1`

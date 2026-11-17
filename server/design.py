@@ -124,7 +124,9 @@ async def design_scenarios(store, request: DesignScenarioRequest, transport=None
     try:
         answer = DesignScenarioAnswer.model_validate_json(raw)
         _canonical_citations(answer.scenarios, sources)
-        return DesignScenarioResponse(**answer.model_dump(), mode="ai")
+        return DesignScenarioResponse(**answer.model_dump(), mode="ai",
+                                      retrievalFallback=(selection.diagnostics.mode == 'fallback'
+                                          if request.retrievalStrategy == 'llm_assisted' else None))
     except (ValidationError, ValueError) as exc:
         raise HTTPException(502, "AI upstream failed or returned invalid structured output") from exc
 
@@ -146,7 +148,9 @@ async def design_tactics(store, request: DesignTacticRequest, transport=None):
     try:
         answer = DesignTacticAnswer.model_validate_json(raw)
         _canonical_citations(answer.tactics, sources)
-        return DesignTacticResponse(**answer.model_dump(), mode="ai")
+        return DesignTacticResponse(**answer.model_dump(), mode="ai",
+                                    retrievalFallback=(selection.diagnostics.mode == 'fallback'
+                                        if request.retrievalStrategy == 'llm_assisted' else None))
     except (ValidationError, ValueError) as exc:
         raise HTTPException(502, "AI upstream failed or returned invalid structured output") from exc
 
@@ -170,6 +174,8 @@ async def design_review(store, request: DesignReviewRequest, transport=None):
     try:
         answer = DesignReviewAnswer.model_validate_json(raw)
         _canonical_citations(answer.findings, sources)
-        return DesignReviewResponse(**answer.model_dump(), mode="ai")
+        return DesignReviewResponse(**answer.model_dump(), mode="ai",
+                                    retrievalFallback=(selection.diagnostics.mode == 'fallback'
+                                        if request.retrievalStrategy == 'llm_assisted' else None))
     except (ValidationError, ValueError) as exc:
         raise HTTPException(502, "AI upstream failed or returned invalid structured output") from exc

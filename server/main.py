@@ -116,15 +116,15 @@ def create_app(book_dir: Path | None = None, slides_dir: Path | None = None):
             raise HTTPException(422, "Slide number is outside this chapter")
         return await ai_quiz(chapter, request, app.state.llm_transport)
 
-    @app.post("/api/design/scenarios", response_model=DesignScenarioResponse)
+    @app.post("/api/design/scenarios", response_model=DesignScenarioResponse, response_model_exclude_none=True)
     async def scenarios(request: DesignScenarioRequest):
         return await design_scenarios(store, request, app.state.llm_transport)
 
-    @app.post("/api/design/tactics", response_model=DesignTacticResponse)
+    @app.post("/api/design/tactics", response_model=DesignTacticResponse, response_model_exclude_none=True)
     async def tactics(request: DesignTacticRequest):
         return await design_tactics(store, request, app.state.llm_transport)
 
-    @app.post("/api/design/review", response_model=DesignReviewResponse)
+    @app.post("/api/design/review", response_model=DesignReviewResponse, response_model_exclude_none=True)
     async def review(request: DesignReviewRequest):
         return await design_review(store, request, app.state.llm_transport)
 

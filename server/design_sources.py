@@ -1,9 +1,10 @@
-"""Behavior-preserving baseline. Candidate branches replace select_sources only."""
+"""Practice-only dispatch: baseline by default, original B explicitly selected."""
 from time import perf_counter
 
 from starlette.concurrency import run_in_threadpool
 
 from .design_source_contracts import SourceDiagnostics, SourceSelection
+from .design_planner import plan_sources
 from .models import DesignReviewRequest, DesignScenarioRequest, DesignTacticRequest
 from .search import search_all
 from .tutor import excerpt
@@ -67,8 +68,12 @@ def validate_selection(store, selection):
 
 
 async def select_sources(store, request, *, stage, transport=None):
-    # transport is deliberately unused: the shared baseline never calls a model.
     query = build_query(request, stage)
+    if request.retrievalStrategy == 'llm_assisted':
+        sources, info = await plan_sources(store, request, query, legacy_sources, transport)
+        selection = SourceSelection(sources=sources, diagnostics=SourceDiagnostics(
+            stage=stage, status='ok' if sources else 'empty', **info))
+        return await run_in_threadpool(validate_selection, store, selection)
     start = perf_counter()
     sources = await run_in_threadpool(legacy_sources, store, query)
     elapsed = (perf_counter() - start) * 1000

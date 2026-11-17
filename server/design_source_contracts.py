@@ -28,6 +28,9 @@ class SourceDiagnostics(BaseModel):
     prompt_version: str | None = None
     usage: dict[str, int | None] = Field(default_factory=dict)
     cost: float | None = None
+    requested_model: str | None = None
+    prompt_hash: str | None = None
+    plan: dict | None = None
 
 
 class SourceSelection(BaseModel):
