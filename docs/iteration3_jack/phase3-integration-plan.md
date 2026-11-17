@@ -2,6 +2,8 @@
 
 日期2026-11-17。人工B2未批准，不执行Merge/Cherry-pick，不改变生产默认。
 
+本轮更新：B-v2受控实验已完成，建议不集成本版；最新候选与后续条件见文末。既有B步骤仍仅为获得B2授权后的计划，不是本轮已执行动作。
+
 ## 现场提交图与文件边界
 
 主分支执行前68d3f4f，B为4f878dc，共同祖先c6fc185。主线含f240ab7/68d3f4f，B在共同祖先另行提交，双方分叉，不能fast-forward。当前均干净；后续以当时现场为准。
@@ -59,3 +61,11 @@ run-decision-supplement.py是本次首次写fixture并执行的一次性冻结�
 ```
 
 父输出目录先创建；上述路径以主仓库cwd执行，worker使用绝对导入目标worktree；B需该子进程允许dotenv（清除PYTHON_DOTENV_DISABLED或置0），不复制凭据。Baseline/A/C不需模型。耗时不保证逐值相同，Bfresh计划不保证再现。
+
+## B-v2分支与集成范围增补
+
+B-v2为experiment/iteration3-b-v2 / cf5ba925，从原B4f878dc派生。相对原B只新增实现记录/test_design_planner_v2.py并修改design_planner.py Prompt；若未来获准合入B-v2，会同时带入原B的六文件变更（合计八个不同路径），不能只复制一个Prompt文件到Baseline冒充完整B-v2。
+
+主线本轮只添加评估数据/脚本/报告并更新本ADR和计划，与候选生产路径无交集。静态预测不冲突仍不等于完成merge验证；当时需重新核对实际提交图与用户修改。B-v2目前新测试更差，建议保留实验worktree而不合入，不执行任何候选Git集成命令。
+
+本轮主线206后端及工具测试通过，B-v2独立228通过；这些验证没有替代未来集成后的前端/build/Chrome、真实最终生成和人工来源充分性验收。最终B2若选择Baseline，则直接保持当前生产代码，更新Accepted记录只在用户明确批准之后执行。
