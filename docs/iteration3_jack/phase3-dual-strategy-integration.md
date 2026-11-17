@@ -1,6 +1,6 @@
 # P3T5 双策略集成记录
 
-2026-11-17。用户已批准Baseline默认＋原始B显式可选；[ADR](phase3-final-architecture-decision.md)状态为Accepted — Conditional on Integration Validation。**P3T6独立验收待执行**，不是再次优化检索或证明B整体更优。
+2026-11-17。用户已批准Baseline默认＋原始B显式可选；[ADR](phase3-final-architecture-decision.md)状态为Accepted — Conditional on Integration Validation。P3T5历史实施记录如下；**P3T6已执行，保守Gate FAIL**，详见[独立验收](phase3-final-acceptance.md)。真实三阶段成功但评审Planner回退，全阶段normal强断言失败；条件不解除，不再优化。
 
 ## 1. 版本与选择性移植
 

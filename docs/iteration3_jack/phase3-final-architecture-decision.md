@@ -2,6 +2,8 @@
 
 状态：**Accepted — Conditional on Integration Validation**
 
+P3T6（2026-11-17）更新：独立验收保守 Gate FAIL，条件不解除。[验收报告](phase3-final-acceptance.md)记录259项后端、152项前端、25项Chrome API替身回归通过；真实增强三阶段业务均完成，但评审Planner触及1024 Token上限返回空内容并回退，“三阶段全部normal”额外强断言失败。前两阶段正常增强成功，回退符合业务契约；失败断言保留，未放宽Prompt/算法/预算。待人工明确该额外条件的验收地位，本次不宣布Phase 3完成，不追加优化。
+
 决策日期：2026-11-17。决策人角色：用户／项目架构决策人；依据本轮P3T5明确授权。批准范围为架构实践三阶段双策略集成，P3T6集成验收尚未完成。不是宣称原B整体优于Baseline。
 
 ## 1. Context 与证据
