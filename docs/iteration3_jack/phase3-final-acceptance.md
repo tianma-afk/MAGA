@@ -1,7 +1,8 @@
 # P3T6：双策略独立集成验收
 
-日期：2026-11-17。**最终 Gate：FAIL（真实模型验收脚本存在未通过断言）**。
-ADR 保留 **Accepted — Conditional on Integration Validation**，本次不宣布 Phase 3 完成。
+日期：2026-11-17。**原始 Gate：FAIL（9b6b1ea，历史记录保留）**。
+**当前最终 Gate：PASS（人工裁定及针对性复验后）；ADR：Accepted；Phase 3 完成。**
+本文第1–10节保留原始验收经过与当时结论；当前裁定和复验见第11节，不追溯改写历史结果。
 本轮没有修改生产代码、Planner Prompt、来源算法、历史实验或评估标注。
 
 ## 1. 范围与基线
@@ -220,3 +221,91 @@ Phase 4材料索引：
 |实验/评价|P3T3及B-v2/Coverage报告、本文三类验收证据；非独立人工金标准|
 |产品演示|默认/增强截图、Mock回退截图和真实回退trace可用于演示，须注明Mock/真实区别|
 |答辩收尾|先明确Gate裁定，不能在演示中声称已无条件完成Phase 3或B整体更优|
+
+## 11. P3T6 Acceptance Adjudication / 人工验收裁定
+
+### 11.1 人工决定与契约核对
+
+2026-11-17，项目架构决策人（用户）明确裁定：允许 Planner 失败后正确回退 Baseline 并完成业务；“三阶段 Planner 全部成功”不属于业务连续性必要条件。降级成功不得计入增强成功率。
+
+原始断言位于9b6b1ea的 `scripts/acceptance-browser.mjs`：每个真实selection均必须 `mode === 'normal'`。其余业务响应、引用预览、刷新恢复、预算和来源数量检查均独立存在；该断言没有承担其他独立约束。
+`phase2-implementation-contract.md`的B失败矩阵明确规定：JSON/结构校验失败整体回原query，原query无来源沿用422，最终生成失败沿用502，仓储/策略违约不能伪装回退。
+最终ADR亦保留规划失败回退。没有发现要求三个阶段必须全部增强成功的独立契约；本次裁定适用。
+
+原始FAIL及空输出/length/1024 Token记录不删除。旧产物目录 `data/verification/p3t6-acceptance-20261117-v1/` 完全不写入；旧manifest仍为FAIL。
+旧manifest SHA256：`63e8456f9de43bae2f644e6caa523f1ddbf1588761b0e2871d7d8b8d11741b8c`。离线重放逐一验证其列出的29个证据文件哈希。
+
+### 11.2 修订判定与实现边界
+
+|结果|必要条件|
+|---|---|
+|Enhanced Success|业务200、合法最终结果、normal且ready/1–3意图、一次Planner、retrievalFallback=false、真实唯一Top8来源、引用属于来源、旧成果保护|
+|Degraded Success|业务200、fallback且明确原因、一次Planner、retrievalFallback=true、Baseline回退成功，其余来源/引用/旧成果条件不变|
+|Failure|业务/回退/最终生成失败、来源或引用不可信、预算违约、破坏旧成果或诊断与公开回退标记矛盾|
+
+工作流必须三阶段业务都成功、至少一次实际增强成功，Failure=0。全部降级的记录仍不能单独满足真实增强验收条件。
+每阶段分别分类，不能以normal来源选择掩盖随后最终生成失败，也不能以HTTP200忽略伪造来源或隐藏的回退。
+
+改动仅在验收设施：
+
+- `acceptance-verdict.mjs`集中分类和工作流判定，`acceptance-verdict.test.mjs`验证正反例。
+- `acceptance-browser.mjs`仅替换全阶段normal强断言，其他原断言保留，新增公开回退标记、逐请求调用数和引用归属一致性检查。
+- `replay-acceptance.mjs`读取原始真实记录、验证历史哈希、调用真实课件复验，输出到全新目录；没有模型或HTTP客户端调用。
+- `acceptance-conformance.py`仅增加可选 `--output`，将复验结果写到新目录，仍拒绝覆盖已有文件。
+- `test_acceptance_adjudication.py`通过真实API与明确Mock上游注入五类结果，不修改生产实现。
+
+这是用户明确批准的验收标准修正，保留负面事件并分层统计；没有将真实失败的Planner重新标为成功。
+
+### 11.3 针对性复验及可复现命令
+
+本次起始主线 HEAD `9b6b1ea6f6ef14729def6475a55f4626aad2d053`，工作区干净。
+新产物目录 `data/verification/p3t6-adjudication-20261117-v1/`，与原验收目录分离。
+
+```powershell
+# 离线读取历史真实证据，复验真实PPT/OCR；NEW_OUTPUT必须尚不存在。
+node scripts/replay-acceptance.mjs data/verification/p3t6-acceptance-20261117-v1 data/verification/<全新裁定目录>
+node --test scripts/acceptance-verdict.test.mjs
+$env:PYTHON_DOTENV_DISABLED='1'
+$env:PYTHONIOENCODING='utf-8'
+Remove-Item Env:LLM_API_KEY,Env:LLM_MODEL,Env:LLM_BASE_URL -ErrorAction SilentlyContinue
+& 'D:/app_install/miniconda/envs/maga/python.exe' -m pytest server/tests/test_acceptance_adjudication.py server/tests/test_design_strategy.py server/tests/test_design_sources.py server/tests/test_design_planner.py -q --basetemp data/verification/<全新pytest目录>
+node --test scripts/check-file-lengths.test.mjs
+node scripts/check-file-lengths.mjs
+git diff --check
+```
+
+结果：判定规则9项通过；后端针对性68项通过（含新增5类API故障/成功测试），1条既有Starlette/httpx警告。
+离线重放输出 `adjudication.json`：PASS；架构复验 `conformance.json`：17项检查、26次真实来源校验、15次Baseline/回退完整字典对照均通过。
+五类API测试中：增强成功1、降级成功1、预期Failure3（回退仓储异常500、最终生成502、伪造来源被校验阻止500）；失败用例均未被误判为成功，仓储/来源失败没有继续生成。
+Node反例还覆盖全降级、阶段不全、隐藏回退、重复规划、旧成果丢失、越界/重复/空来源及伪造引用。
+
+修订后的浏览器脚本另在5186→8016上运行，模型为Mock、后端和课件真实；启动方式沿用第9节，输出改到新裁定目录的 `mock-server/` 和 `chrome-mock/`。
+本轮Chrome 157.0.8103.51结果：17组全部通过，包括默认/增强三阶段、模式切换、五类最终生成故障、取消/重复/迟到、六类规划故障、回退UI及非法输入。原先的来源/预算/旧成果断言均执行；增强流程新增逐阶段分类也通过。
+不将本轮Mock调用当作新增真实模型验证；历史Chrome＋真实模型、历史完整259/152/25回归和构建证据继续引用原记录，不声称本轮重新执行这些全量门禁。
+
+### 11.4 真实样本重新分类
+
+|历史真实业务阶段|Planner|业务|裁定结果|
+|---|---|---|---|
+|场景分析|normal，3意图|200，8个真实来源|Enhanced Success|
+|战术推荐|normal，3意图|200，8个真实来源|Enhanced Success|
+|AI评审|空输出，invalid_plan，回退|200，8个真实来源|Degraded Success|
+|合计|增强2、降级1|3/3成功|Enhanced Success 2；Degraded Success 1；Failure 0|
+
+增强成功2/3（66.67%），降级成功1/3（33.33%），业务连续性3/3（100%），仅描述同一个历史工作流的3个阶段，不能外推总体稳定性。
+本轮新增真实调用 **0**，历史仍为6次HTTP请求、25,853 Token，费用null。评审Planner失败和其消耗Token仍保留，不计为增强成功。
+
+### 11.5 剩余风险与Phase 4边界
+
+仍保留：推理Token耗尽导致无合法规划；增强额外延迟、未知费用和外部服务依赖；浏览器Abort后后台任务可能继续；少量样本不证明长期可靠性；来源存在不代表结论语义充分；评估标注不是独立人工金标准。
+本次裁定仅关闭“不允许合法回退”的额外验收门槛，不消除这些风险，不证明B整体优于Baseline。
+Baseline默认、原始B显式可选的生产行为完全不变。不重跑优化、不改变Prompt/算法、不增加真实调用、不Merge/Push或删除Worktree。
+Phase 4只整理Drivers、质量属性场景、Module/C&C图、ATAM、最终ADR、分层实验/验收证据及产品演示答辩材料，不新增检索优化。
+
+### 11.6 最终Gate、ADR与Git收尾
+
+**最终Gate：PASS（裁定与复验后的当前结果）**；原始Gate FAIL保持历史原貌。没有其他阻塞性验收缺陷。ADR更新为Accepted，Phase 3标记完成。
+用户关于合法降级的裁定是依据，历史真实证据重验及本轮确定性故障注入是复验；不是新增真实模型成功，也不是删除失败样本。
+本轮9项Node判定测试、68项相关后端测试、17组Chrome真实后端Mock模型验收均通过；行数器自身2项通过，130个手写文件无超限，语法与diff检查通过。
+生产代码未变；本地提交仅验收脚本、测试与三份状态文档。新提交hash用 `git log -1 --format=%H -- docs/iteration3_jack/phase3-final-acceptance.md` 获取，9b6b1ea及旧产物完整保留。
+不Merge、Push、Reset/Clean或删除Worktree。全量前后端和API替身E2E沿用第9节历史记录；本轮重新运行范围如实限定于以上复验。

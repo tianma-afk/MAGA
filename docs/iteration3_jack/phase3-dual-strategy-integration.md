@@ -1,6 +1,6 @@
 # P3T5 双策略集成记录
 
-2026-11-17。用户已批准Baseline默认＋原始B显式可选；[ADR](phase3-final-architecture-decision.md)状态为Accepted — Conditional on Integration Validation。P3T5历史实施记录如下；**P3T6已执行，保守Gate FAIL**，详见[独立验收](phase3-final-acceptance.md)。真实三阶段成功但评审Planner回退，全阶段normal强断言失败；条件不解除，不再优化。
+2026-11-17。用户已批准Baseline默认＋原始B显式可选；[ADR](phase3-final-architecture-decision.md)当前状态为**Accepted**。P3T6首次保守FAIL保留；本次经用户明确裁定与针对性复验，**最终Gate PASS，Phase 3完成**，详见[独立验收第11节](phase3-final-acceptance.md#11-p3t6-acceptance-adjudication--人工验收裁定)。历史真实结果为增强成功2、降级成功1、业务失败0，不将降级计入增强成功。本轮新增真实调用0，生产策略不变，不再优化。下文为P3T5历史实施记录及当时验收计划。
 
 ## 1. 版本与选择性移植
 
@@ -114,7 +114,7 @@ git diff --check
 
 提交范围仅本轮生产接线、测试、决策及架构说明，以包含本文的主线提交为交付索引。接口/UI/文档相互依赖，可作一个完整原子提交；无实验分支Merge或Push，旧历史及原始数据保留。
 
-## 8. P3T6独立验收待办
+## 8. P3T6独立验收计划（历史，当前已执行并裁定）
 
 1. Chrome核验默认/增强的分析→战术→评审流程、回退提示、loading/停止/迟到/失败/旧成果/保存失败，先确认Vite和后端服务身份。
 2. 在明确新调用预算后验证实际模型规划与最终生成，引用充分性和Token/费用分别记录，不以Mock代替真实教学效果。

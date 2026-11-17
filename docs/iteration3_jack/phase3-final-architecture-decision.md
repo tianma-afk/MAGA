@@ -1,10 +1,12 @@
 # ADR：Baseline 默认，原始 B 显式可选
 
-状态：**Accepted — Conditional on Integration Validation**
+状态：**Accepted**
 
-P3T6（2026-11-17）更新：独立验收保守 Gate FAIL，条件不解除。[验收报告](phase3-final-acceptance.md)记录259项后端、152项前端、25项Chrome API替身回归通过；真实增强三阶段业务均完成，但评审Planner触及1024 Token上限返回空内容并回退，“三阶段全部normal”额外强断言失败。前两阶段正常增强成功，回退符合业务契约；失败断言保留，未放宽Prompt/算法/预算。待人工明确该额外条件的验收地位，本次不宣布Phase 3完成，不追加优化。
+2026-11-17人工验收裁定与复验：用户确认合法规划回退可构成Degraded Success，不要求三阶段Planner全部成功。历史真实记录重新分类为Enhanced Success 2、Degraded Success 1、Failure 0；29个历史文件哈希及真实来源重新核验通过。本轮9项判定规则、68项相关后端、17组Chrome真实后端Mock模型验收通过，新增真实调用0。**当前Gate PASS，Phase 3完成**。增强成功不包含降级成功；原始FAIL、Token耗尽和后台任务可能继续等限制仍保留。详见[人工验收裁定与复验](phase3-final-acceptance.md#11-p3t6-acceptance-adjudication--人工验收裁定)。
 
-决策日期：2026-11-17。决策人角色：用户／项目架构决策人；依据本轮P3T5明确授权。批准范围为架构实践三阶段双策略集成，P3T6集成验收尚未完成。不是宣称原B整体优于Baseline。
+P3T6首次验收（2026-11-17，历史）：独立验收保守 Gate FAIL，条件当时不解除。[验收报告](phase3-final-acceptance.md)记录259项后端、152项前端、25项Chrome API替身回归通过；真实增强三阶段业务均完成，但评审Planner触及1024 Token上限返回空内容并回退，“三阶段全部normal”额外强断言失败。前两阶段正常增强成功，回退符合业务契约；当时未放宽Prompt/算法/预算，等待人工裁定。该历史FAIL及其原始证据保留；当前结论见上文裁定。
+
+决策日期：2026-11-17。决策人角色：用户／项目架构决策人；依据P3T5明确授权及本次P3T6人工裁定。批准范围为架构实践三阶段双策略集成，P3T6裁定与复验已完成。不是宣称原B整体优于Baseline。
 
 ## 1. Context 与证据
 
@@ -48,11 +50,11 @@ P3T6（2026-11-17）更新：独立验收保守 Gate FAIL，条件不解除。[�
 
 API只接受baseline/llm_assisted；未知识别422，不暴露任意模型参数。增强成功响应提供安全retrievalFallback布尔，基线响应不增加该字段。内部queries/plan/usage/异常不送前端。所有模式仍需最终生成配置，缺配置503不伪造回答。
 
-## 7. Validation Conditions — P3T6仍待完成
+## 7. Validation Conditions — P3T6裁定与复验完成
 
 独立核对默认无额外规划、原B Prompt/hash与轮转一致、真实PPT/OCR/来源标题摘录/Top8与引用；真实模型增强→分析→战术→评审及回退；Chrome全业务流程、加载/停止/迟到/失败/旧成果/保存失败保护；未配置503、无来源422、最终生成502；旧固定关键词、普通问答/自测/搜索不污染；端到端耗时/真实取消与费用记录；前后端全量门禁、构建与必要CI。
 
-P3T5实际测试和范围见[集成记录](phase3-dual-strategy-integration.md)。P3T5测试通过不代表P3T6或远端CI通过。只有P3T6证据可用于关闭条件，不能自动把当前状态写成无条件验收。
+P3T5实际测试和范围见[集成记录](phase3-dual-strategy-integration.md)。P3T5测试通过本身不能关闭条件；本次以独立P3T6证据、人工裁定及针对性复验关闭条件。真实取消的后台生命周期、费用未知及有限样本等限制见[验收报告](phase3-final-acceptance.md)。不声称远端CI通过或真实增强长期可靠性已证实。
 
 ## 8. Human Approval Record
 
@@ -62,7 +64,7 @@ P3T5实际测试和范围见[集成记录](phase3-dual-strategy-integration.md)�
 |延迟/费用/依赖|仅用户主动增强时承担，仍有模型/服务风险|
 |范围|只在架构实践工作台三阶段；不引入A/C及B变体|
 |集成方式|主线选择性移植必要实现，禁止直接Merge实验分支|
-|验收|以P3T6集成验证为条件，尚未验收|
+|验收|原P3T5附条件；本次用户裁定允许合法降级，P3T6复验PASS，条件关闭|
 
 没有独立人工金标准标注批准；本次批准架构取舍不等于确认所有争议页标签，也不等于证明B整体更优。
 
@@ -77,5 +79,7 @@ P3T5实际测试和范围见[集成记录](phase3-dual-strategy-integration.md)�
 |B-v2|e09517d：Prompt优化未获新测试净收益|
 |Coverage|2de30e1：最后探索结束，0升2降40平；6:15标签解释更正|
 |P3T5|2026-11-17用户批准默认Baseline＋可选原B，条件验收|
+|P3T6首次|9b6b1ea：保守FAIL，额外全阶段normal断言失败，证据保留|
+|P3T6裁定与复验|2026-11-17用户确认Enhanced/Degraded Success均满足业务连续性；复验PASS，ADR Accepted，Phase 3完成|
 
 旧Proposed ADR完整文本仍在Git历史，可用`git show 2de30e1:docs/iteration3_jack/phase3-final-architecture-decision.md`复核；旧报告、标注、候选分支及原始数据不删除。[旧集成准备](phase3-integration-plan.md)是批准前历史计划，当前实施以本ADR和P3T5记录为准。

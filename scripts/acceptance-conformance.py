@@ -26,6 +26,7 @@ def functions(text):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--evidence', type=Path, required=True)
+    parser.add_argument('--output', type=Path, help='New result path; never overwrite historical evidence')
     args = parser.parse_args()
     result = dict(checks=[], source_counts=[], legacy_comparisons=0)
     base = 'c6fc185'
@@ -69,7 +70,7 @@ def main():
     for path, digest in result['corpus_hashes'].items():
         assert hashlib.sha256((ROOT / path).read_bytes()).hexdigest() == digest
     result['checks'].append('PPT/OCR bytes unchanged since acceptance start')
-    output = args.evidence / 'conformance.json'
+    output = args.output or args.evidence / 'conformance.json'
     if output.exists():
         raise FileExistsError(output)
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')

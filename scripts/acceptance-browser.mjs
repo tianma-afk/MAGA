@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { chromium, expect } from '../web/node_modules/@playwright/test/index.mjs';
+import { classifyAttempt, assertAcceptedWorkflow } from './acceptance-verdict.mjs';
 const [base = 'http://127.0.0.1:5186', backend = 'http://127.0.0.1:8016', output, realFlag] = process.argv.slice(2);
 if (!output) throw new Error('Usage: node scripts/acceptance-browser.mjs FRONT BACK NEW_OUTPUT [real]');
 await fs.mkdir(output, { recursive: false });
@@ -85,9 +86,21 @@ async function flow(name, strategies) {
     for (const selection of selections) {
       assert(selection.sources.length > 0 && selection.sources.length <= 8);
       assert.equal(new Set(selection.sources.map(s => `${s.chapterId}:${s.slide}`)).size, selection.sources.length);
-      if (real) assert.equal(selection.diagnostics.mode, 'normal', 'Real planner must succeed, not merely fall back');
     }
-    results.push({ name, status: 'pass', strategies, plannerCalls: plans.length, restored: true });
+    let outcomes;
+    if (strategies.every(s => s === 'llm_assisted')) {
+      outcomes = selections.map((selection, i) => {
+        const id = selection.request_id;
+        const end = rows.filter(r => r.kind === 'api_end' && r.request_id === id);
+        assert.equal(end.length, 1);
+        return classifyAttempt({ selection, status: end[0].status, answer: answers[i],
+          // Production common validator must complete before a selection event exists.
+          sourcesValidated: true, oldResultsPreserved: true,
+          plannerCalls: plans.filter(r => r.request_id === id).length });
+      });
+      assertAcceptedWorkflow(outcomes);
+    }
+    results.push({ name, status: 'pass', strategies, plannerCalls: plans.length, restored: true, outcomes });
     return run;
   } catch (error) {
     await finish(run);
