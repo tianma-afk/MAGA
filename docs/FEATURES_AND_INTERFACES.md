@@ -1,5 +1,7 @@
 # 当前功能与接口
 
+> 2026-11-18 P4T5状态更新：实践三阶段支持默认Baseline及显式原B增强，已选择性集成；[最终ADR](iteration3_jack/phase3-final-architecture-decision.md)为Accepted，[P3T6第11节](iteration3_jack/phase3-final-acceptance.md)经人工裁定与复验最终Gate PASS。原始FAIL保留，历史真实业务为2增强成功、1降级成功、0失败，不代表三次Planner全部成功。下方2026-11-10快照保留历史范围；[双策略集成](iteration3_jack/phase3-dual-strategy-integration.md)说明新增行为，[最终交接](iteration3_jack/phase4-final-handoff.md)说明当前技术核查和待人工确认事项。
+
 > 状态快照：2026-11-10
 >
 > 分支：`feat/learning-continuity-v1`

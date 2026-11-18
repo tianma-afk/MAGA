@@ -16,11 +16,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 获取包含历史测试基准的分支
+      - name: Fetch historical test baseline
+        run: git fetch origin iteration/jack
+
+      # 验证历史版本可访问
+      - name: Verify historical test baseline
+        run: git cat-file -t 2c4c834
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
+
       - run: python -m pip install -r requirements.txt
+
       - run: python -m pytest server/tests -q
 
   frontend:
@@ -45,6 +58,8 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: "22"

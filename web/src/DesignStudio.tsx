@@ -10,7 +10,8 @@ import {
   initialDesignStep, selectedTacticsOf, statusNote, tacticsKey, tacticsStatus,
   type DesignStep,
 } from './designValidity';
-import type { DesignProject, Mode } from './types';
+import type { DesignProject, Mode, RetrievalStrategy } from './types';
+import DesignRetrievalMode from './DesignRetrievalMode';
 import DesignCitations from './DesignCitations';
 import ConfirmDialog from './ConfirmDialog';
 import './studio.css';
@@ -48,6 +49,9 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
   });
   const [step, setStep] = useState<DesignStep>(() => initialDesignStep(project));
   const [loading, setLoading] = useState(false);
+  const [retrievalStrategy, setRetrievalStrategy] = useState<RetrievalStrategy>('baseline');
+  const [retrievalFallback, setRetrievalFallback] = useState(false);
+  const retrievalInput = retrievalStrategy === 'llm_assisted' ? { retrievalStrategy } : {};
   const [error, setError] = useState('');
   const [storageFailed, setStorageFailed] = useState(false);
   const [savedAt, setSavedAt] = useState(() => stamp(project.updatedAt));
@@ -119,15 +123,18 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
       title: current.title.trim(),
       scenario: current.scenario.trim(),
       requirements: current.requirements.trim(),
+      ...retrievalInput,
     };
     const key = analysisKey(inputs);
     const controller = new AbortController();
     request.current = controller;
     setLoading(true);
     setError('');
+    setRetrievalFallback(false);
     try {
       const result = await api.designScenarios(inputs, controller.signal);
       if (controller.signal.aborted || request.current !== controller) return;
+      setRetrievalFallback(result.retrievalFallback === true);
       if (!commit({
         ...projectRef.current,
         qualityAttributes: result.qualityAttributes,
@@ -161,14 +168,17 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
     request.current = controller;
     setLoading(true);
     setError('');
+    setRetrievalFallback(false);
     try {
       const result = await api.designTactics({
+        ...retrievalInput,
         scenario: current.scenario.trim(),
         requirements: current.requirements.trim(),
         qualityAttributes: current.qualityAttributes,
         scenarios: current.scenarios,
       }, controller.signal);
       if (controller.signal.aborted || request.current !== controller) return;
+      setRetrievalFallback(result.retrievalFallback === true);
       const tactics = uniqueTactics(result.tactics);
       if (!commit({
         ...projectRef.current,
@@ -204,8 +214,10 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
     request.current = controller;
     setLoading(true);
     setError('');
+    setRetrievalFallback(false);
     try {
       const result = await api.designReview({
+        ...retrievalInput,
         title: current.title.trim(),
         scenario: current.scenario.trim(),
         requirements: current.requirements.trim(),
@@ -214,10 +226,11 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
         tactics: chosen,
       }, controller.signal);
       if (controller.signal.aborted || request.current !== controller) return;
+      setRetrievalFallback(result.retrievalFallback === true);
       if (!commit({
         ...projectRef.current,
         selectedTactics: chosen.map(tactic => tactic.name),
-        review: result,
+        review: { summary: result.summary, findings: result.findings, questions: result.questions },
         versions: { ...current.versions, review: key },
         updatedAt: new Date().toISOString(),
       }, true)) return;
@@ -262,6 +275,8 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
     setStorageFailed(false);
     setSavedAt('');
     setConfirmReset(false);
+    setRetrievalStrategy('baseline');
+    setRetrievalFallback(false);
   }
 
   function exportDesign() {
@@ -284,6 +299,8 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
         <p>把课程中的质量属性、场景和战术用到真实系统设计中。</p>
       </div>
     </header>
+    <DesignRetrievalMode value={retrievalStrategy} disabled={loading} fallback={retrievalFallback}
+      onChange={value => { setRetrievalStrategy(value); setRetrievalFallback(false); }} />
     <ol className="studio-steps" aria-label="设计步骤">
       {STEPS.map((item, index) => {
         const current = item.id === step;

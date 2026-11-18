@@ -118,16 +118,20 @@ export interface DesignVersions {
   tactics?: string;
   review?: string;
 }
+export type RetrievalStrategy = 'baseline' | 'llm_assisted';
 export interface DesignScenarioResponse {
+  retrievalFallback?: boolean;
   qualityAttributes: DesignQualityAttribute[];
   scenarios: DesignScenario[];
   mode: 'ai';
 }
 export interface DesignTacticResponse {
+  retrievalFallback?: boolean;
   tactics: DesignTactic[];
   mode: 'ai';
 }
 export interface DesignReviewResponse extends DesignReview {
+  retrievalFallback?: boolean;
   mode: 'ai';
 }
 export interface DesignProject {

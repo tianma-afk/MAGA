@@ -167,7 +167,11 @@ class DesignTactic(StrictModel):
     citations: list[DesignCitation] = Field(min_length=1, max_length=4)
 
 
+RetrievalStrategy = Literal["baseline", "llm_assisted"]
+
+
 class DesignScenarioRequest(StrictModel):
+    retrievalStrategy: RetrievalStrategy = "baseline"
     title: str = Field(min_length=1, max_length=200)
     scenario: str = Field(min_length=1, max_length=3000)
     requirements: str = Field(default="", max_length=6000)
@@ -180,9 +184,11 @@ class DesignScenarioAnswer(StrictModel):
 
 class DesignScenarioResponse(DesignScenarioAnswer):
     mode: Literal["ai"]
+    retrievalFallback: bool | None = None
 
 
 class DesignTacticRequest(StrictModel):
+    retrievalStrategy: RetrievalStrategy = "baseline"
     scenario: str = Field(min_length=1, max_length=3000)
     requirements: str = Field(default="", max_length=6000)
     qualityAttributes: list[DesignQualityAttribute] = Field(default_factory=list, max_length=6)
@@ -195,9 +201,11 @@ class DesignTacticAnswer(StrictModel):
 
 class DesignTacticResponse(DesignTacticAnswer):
     mode: Literal["ai"]
+    retrievalFallback: bool | None = None
 
 
 class DesignReviewRequest(StrictModel):
+    retrievalStrategy: RetrievalStrategy = "baseline"
     title: str = Field(min_length=1, max_length=200)
     scenario: str = Field(min_length=1, max_length=3000)
     requirements: str = Field(default="", max_length=6000)
@@ -222,3 +230,4 @@ class DesignReviewAnswer(StrictModel):
 
 class DesignReviewResponse(DesignReviewAnswer):
     mode: Literal["ai"]
+    retrievalFallback: bool | None = None

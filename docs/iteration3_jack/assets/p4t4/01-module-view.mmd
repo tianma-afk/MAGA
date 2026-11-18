@@ -1,0 +1,49 @@
+flowchart TB
+  subgraph W[前端源码模块]
+    Studio["web/src/DesignStudio.tsx"]
+    Mode["web/src/DesignRetrievalMode.tsx"]
+    Client["web/src/api.ts"]
+    Saved["web/src/design.ts"]
+    Keys["web/src/designValidity.ts"]
+    Types["web/src/types.ts"]
+    Studio --> Mode
+    Studio --> Client
+    Studio --> Saved
+    Studio --> Keys
+    Studio --> Types
+    Mode --> Types
+    Client --> Types
+    Saved --> Keys
+  end
+  subgraph B[后端源码模块]
+    Main["server/main.py"]
+    Models["server/models.py"]
+    Design["server/design.py"]
+    Select["server/design_sources.py"]
+    Plan["server/design_planner.py"]
+    Contract["server/design_source_contracts.py"]
+    Search["server/search.py"]
+    Terms["server/retrieval_terms.py"]
+    Store["server/chapters.py"]
+    Excerpt["server/tutor.py"]
+    Config["server/config.py"]
+    Httpx["httpx 第三方库"]
+    Main --> Design
+    Main --> Models
+    Main --> Store
+    Design --> Select
+    Design --> Models
+    Design --> Store
+    Design --> Config
+    Design --> Httpx
+    Select --> Plan
+    Select --> Contract
+    Select --> Models
+    Select --> Search
+    Select --> Excerpt
+    Select -. 传入store实例 .-> Store
+    Plan --> Config
+    Plan --> Httpx
+    Search --> Terms
+    Search --> Store
+  end

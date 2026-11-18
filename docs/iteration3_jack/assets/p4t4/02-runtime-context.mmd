@@ -1,0 +1,8 @@
+flowchart LR
+  U[用户] --> W[浏览器工作台运行实例]
+  W -->|HTTP POST /api/design/...| B[FastAPI应用进程]
+  B -->|JSON响应或错误| W
+  W <-->|浏览器Storage API| L[(localStorage)]
+  B -->|本地文件读取| F[(PPT / OCR)]
+  B -->|HTTP：原最终生成；显式增强时另有规划| M[外部模型服务]
+  M -->|JSON或上游失败| B

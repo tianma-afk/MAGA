@@ -1,0 +1,21 @@
+sequenceDiagram
+  actor U as 用户
+  participant W as 浏览器工作台
+  participant B as FastAPI应用进程
+  participant M as 外部模型服务
+  U->>W: 默认标准或选择baseline
+  W->>B: HTTP POST 阶段请求（省略字段或baseline）
+  B->>B: 解析模型及配置require
+  Note over B: 未配置503；非法枚举422，停止该路径
+  B->>B: select_sources / build_query / legacy_sources
+  B->>B: threadpool内search_all Top8及真实PPT/OCR摘录
+  B->>B: validate_selection真实内容/唯一/预算
+  alt 合法非空来源
+    B->>M: HTTP 原最终生成（原需求及sources）
+    M-->>B: JSON结果或HTTP/超时失败
+    B->>B: Pydantic及本次引用范围检查、规范化标题
+    B-->>W: HTTP 200旧形状结果或502错误
+    W->>W: 运行时校验与当前请求检查；成功保存/展示
+  else 合法空来源
+    B-->>W: HTTP 422，不调用最终生成
+  end
