@@ -9,6 +9,8 @@ P4T3增补（2026-11-17）：[回顾性ATAM与决策复盘](./phase4-atam-and-de
 
 ## 1. 用途、范围与阅读规则
 
+P4T5最终入口（2026-11-18）：[最终交付核查与团队交接](./phase4-final-handoff.md)汇总本轮工程回归、真实浏览器/Mock模型彩排、历史证据保留、main差异与迁移限制，供用户和组员接收前审核。技术结论为 **READY WITH LIMITATIONS**；用户最终交付/合并批准仍待完成。当前本地main是iteration/jack祖先，未Fetch，远端跟踪可能陈旧；原B已选择性集成，不需要再Merge实验分支。
+
 P4T4增补（2026-11-18）：以下交付把历史证据整理为可独立阅读、制作汇报和演示的材料；未新增算法实验或真实模型调用，不代表现场彩排已完成。
 
 |入口|内容简介与使用场景|
@@ -248,7 +250,7 @@ P4T3现已完成上述回顾性分析；相应Ready只指课程项目材料成�
 |旧N13“没检测” vs Coverage发现6:15含检测机制|冻结fault_detection漏列6:15，原B和Coverage都已选它；旧0.5只表示未命中冻结标签|[Coverage第4节](./phase3-b-coverage-experiment.md)是最新课件审核限定；未获独立人工确认，未重标旧结果|
 |旧N14 8:20算容量 vs 新测试只接受8:28/29/30|方向概览与机制充分性口径不同|[敏感性审核](./phase3-decision-evidence-review.md)；引用各批标签，不追改旧v4|
 |B-v2/Coverage文首ADR Proposed、集成计划B2未批准|均为当时状态，不代表当前|[最终ADR](./phase3-final-architecture-decision.md) Accepted及P3T5选择性集成|
-|README“待验收”、FEATURES首部“P3T6尚未完成”|外部导航措辞滞后；本文标记，不静默改写旧快照|[最终验收第11节](./phase3-final-acceptance.md)为当前状态；P4T5必要时轻量修正文档入口|
+|README“待验收”、FEATURES首部“P3T6尚未完成”（此前发现）|P4T5已修正当前导航为Accepted/裁定PASS，功能历史快照与原FAIL保留|[最终验收第11节](./phase3-final-acceptance.md)为验收依据；[交接修正范围](./phase4-final-handoff.md)说明本轮仅文档变更|
 |验收第1–10节FAIL vs 第11节PASS|有明确用户裁定与新复验，不是删除失败|9b6b1ea原FAIL；f58b6c9当前PASS；旧29文件哈希保留|
 |真实3阶段成功 vs 只有2次Enhanced Success|第三次Planner耗尽Token后Degraded Success；业务成功与增强成功分母不同|[adjudication.json](../../data/verification/p3t6-adjudication-20261117-v1/adjudication.json)：2/1/0|
 |Chrome25项、17组、真实流程混用风险|25项是API替身；17组是真后端Mock模型；真实模型为历史一工作流|[验收三类证据](./phase3-final-acceptance.md)，不得混算验证真实性|
@@ -269,7 +271,7 @@ P4T3现已完成上述回顾性分析；相应Ready只指课程项目材料成�
 |P4T2（已完成）|Drivers/边界、6个QAS、Module/C&C、8项机制及理论—实现—证据映射已整理|[P4T2主说明](./phase4-architecture-design-and-views.md)；只静态核对，无新增实验；保留质量收益验证限制|
 |P4T3（已完成）|回顾性Drivers/QAS映射、同批指标核对、6敏感点/5Tradeoff、Risk/Non-risk/Themes、B2复盘及5条课堂结论|[P4T3主文档](./phase4-atam-and-decision-review.md)；保留候选SP置信度及评价限制，不新增实验、不改ADR|
 |P4T4（已完成）|已形成独立报告、12页PPT规划、可操作演示脚本、20题答辩，以及4图实际渲染预览|见第1节新增入口；不制作PPTX、不重跑产品/模型；现场彩排与Office图片导入保留给后续核查|
-|P4T5|重验最终文档链接、代码/数据/commit一致性；修正仍滞后的入口措辞；确认脱敏证据和Worktree迁机可用性；检查最终Git/团队交接及合并准备|当前任务不Merge或Push；是否团队合并另按授权；不得删除实验分支/历史FAIL|
+|P4T5（技术核查已完成）|回归、链接/资产、当前Mock彩排、历史哈希重验及Git风险分析已完成；更新导航并提供交接清单|[最终交接](./phase4-final-handoff.md)：READY WITH LIMITATIONS；真实服务未新增采样、迁机和正式PPT导入未验证；人工确认均未勾选，无Merge/Push|
 
 ## 9. 本轮交付与文档验证
 
@@ -280,3 +282,5 @@ P4T2当前验证：索引178条链接/89个去重目标、主说明146条链接/
 P4T3当前验证：索引181条链接/90个去重目标、ATAM复盘109条链接/39个去重目标均有效且大小写匹配，无本机绝对路径。本轮只修改本文及ATAM复盘文档，不改生产/测试/fixture/历史结果或既有ADR，不新增模型调用，不执行P4T4。提交可由 `git log -1 --format=%H -- docs/iteration3_jack/phase4-evidence-index.md` 取得；工作区状态见交付记录。
 
 P4T4当前验证（2026-11-18）：7份Phase4主文档及图表README合计587条相对文件链接均存在、路径大小写匹配，无本机绝对导航链接；其中索引185条/95目标。新报告41条、PPT规划34条、演示13条、答辩40条、图表README19条，P4T2/P4T3原链接也一并复验；不声称验证所有P1–P3历史文档的内部链接。12页逐页字段与20题数量已核对。4份mmd与P4T2源块规范换行后完全相同，4图实际渲染并打开PNG检查；随附渲染脚本语法检查通过。行数器自身2项通过，131个手写文件无超限，diff检查通过。本轮未执行产品回归或真实模型，未修改生产/Prompt/fixture/历史结果；新增图形只服务文档。P4T5待最终团队核查，本轮停止于P4T4。
+
+P4T5最终技术核查（2026-11-18）：本目录32份主文档及README、FEATURES、图表README共35份，734条相对文件链接/135个去重目标均存在且大小写匹配，无绝对导航链接；本文当前188条/96目标。区别于P4T4的587条，本次也检查P1–P3内部文件链接，但不声称全部标题锚点跨渲染器一致。4图源/资产和视觉复核通过；12页合计640秒、20题、8项人工确认仍未勾选。当前后端/工具264项、前端152项、构建、Chrome API替身25项、Chrome真后端Mock模型17组、Node裁定9项/行数器2项及131文件行数检查通过；历史29文件哈希、原FAIL/裁定PASS和本轮23次来源校验均通过。真实调用0，费用仍未知。新产物仅写全新 `data/verification/p4t5-readiness-20261118-v1/`，25个既有本地/Worktree证据目标哈希未变。仅文档修正和交接提交，不修改生产/Prompt/测试/fixture或历史数据；无Fetch/Merge/Push。本轮自建服务已停止，保留产物；技术就绪READY WITH LIMITATIONS，用户及团队人工交付批准待办保持未勾选。

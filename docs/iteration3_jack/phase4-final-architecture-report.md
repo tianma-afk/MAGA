@@ -149,3 +149,5 @@ B-v2、Coverage的退化和无稳定净收益不支持纳入；A/C同样仅留�
 |[最终验收](./phase3-final-acceptance.md)|历史FAIL、裁定PASS、分层成功和剩余风险|
 
 展示制作见 [逐页规划](./phase4-presentation-outline.md)、[演示脚本](./phase4-demo-script.md)、[答辩Q&A](./phase4-defense-qa.md)；完整导航及迁机限制见 [Evidence Index](./phase4-evidence-index.md)。
+
+P4T5交付核查（2026-11-18）见[最终团队交接](./phase4-final-handoff.md)：本轮仅更新README与功能接口文档的过时验收入口措辞，并增补交接导航；上述历史实验、ADR与原始FAIL不变。新的工程回归及Mock演示彩排单独记录，不改写本报告中的历史计数，不代表用户已经批准最终交付。
