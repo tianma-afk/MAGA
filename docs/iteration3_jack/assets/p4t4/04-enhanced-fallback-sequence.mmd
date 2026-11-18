@@ -1,0 +1,37 @@
+sequenceDiagram
+  actor U as 用户
+  participant W as 浏览器工作台
+  participant B as FastAPI应用进程
+  participant M as 外部模型服务
+  U->>W: 显式选择AI增强
+  W->>B: HTTP POST retrievalStrategy=llm_assisted
+  B->>B: 解析模型、配置require、build_query
+  Note over B: 配置不满足仍503；不伪装成可离线生成
+  B->>M: HTTP 一次Planner（原字段，排除策略字段）
+  Note over B,M: temperature=0；max_tokens=1024；整体规划deadline15秒；无重试
+  M-->>B: 规划JSON或错误/超时
+  B->>B: 严格校验ready/intents/evidence/目录
+  B->>B: 进程内legacy回调，原query Top8池
+  alt 合法ready
+    B->>B: threadpool内最多3意图各原检索Top8
+    alt 至少一路意图有来源
+      B->>B: 轮转意图池与原query池，去重最多8页
+      Note over B: mode=normal
+    else 所有意图池为空
+      B->>B: 使用原query池，记录no_planned_sources
+      Note over B: mode=fallback
+    end
+  else 已知规划失败或uncertain
+    B->>B: 使用原query Baseline池，记录原因
+    Note over B: mode=fallback
+  end
+  B->>B: 共同validate_selection；业务要求非空
+  alt 合法非空来源
+    B->>M: HTTP 原最终生成（不因回退而伪造成功）
+    M-->>B: JSON结果或生成失败
+    B->>B: 结构/引用校验及真实标题规范化
+    B-->>W: HTTP 200 + retrievalFallback布尔，或502
+    W->>W: 校验、旧成果/迟到保护、结果或回退提示
+  else 合法空来源
+    B-->>W: HTTP 422，无最终生成
+  end
