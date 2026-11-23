@@ -6,6 +6,7 @@ import sqlite3
 import httpx
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field
+from starlette.concurrency import run_in_threadpool
 
 from .design import _complete_json
 from .design_sources import legacy_sources, validate_selection
@@ -33,6 +34,21 @@ def _parse_queries(raw):
     return queries
 
 
+def _hybrid_sources(store, query):
+    """Read trusted source pages using the synchronous index in a worker thread."""
+    from .tutor import excerpt
+    result = hybrid_search(query, TOP_K)
+    sources = []
+    for hit in result.results:
+        chapter = store.read(hit.chapterId)
+        if not 1 <= hit.slide <= chapter.slideCount:
+            raise ValueError("Untrusted hybrid search page")
+        slide = chapter.slides[hit.slide - 1]
+        sources.append({"chapterId": chapter.id, "slide": slide.number,
+                        "title": slide.title, "source": excerpt(slide)})
+    return sources
+
+
 async def select_practice_knowledge(store, config, phase, context, strategy: RetrievalStrategy, transport=None):
     system = (
         "Generate 1-3 concise ENGLISH-ONLY course retrieval queries for the phase "
@@ -50,23 +66,11 @@ async def select_practice_knowledge(store, config, phase, context, strategy: Ret
         raise HTTPException(502, "Invalid course query plan") from exc
     try:
         if strategy == "baseline":
-            pools = [legacy_sources(store, queries[0])]
+            pools = [await run_in_threadpool(legacy_sources, store, queries[0])]
         elif strategy == "llm_assisted":
-            pools = [legacy_sources(store, q) for q in queries]
+            pools = [await run_in_threadpool(legacy_sources, store, q) for q in queries]
         else:
-            pools = []
-            for query in queries:
-                result = hybrid_search(query, TOP_K)
-                sources = []
-                for hit in result.results:
-                    chapter = store.read(hit.chapterId)
-                    if not 1 <= hit.slide <= chapter.slideCount:
-                        raise ValueError("Untrusted hybrid search page")
-                    slide = chapter.slides[hit.slide - 1]
-                    from .tutor import excerpt
-                    sources.append({"chapterId": chapter.id, "slide": slide.number,
-                                    "title": slide.title, "source": excerpt(slide)})
-                pools.append(sources)
+            pools = [await run_in_threadpool(_hybrid_sources, store, query) for query in queries]
         chosen, seen = [], set()
         for offset in range(max(map(len, pools), default=0)):
             for pool in pools:
@@ -83,7 +87,7 @@ async def select_practice_knowledge(store, config, phase, context, strategy: Ret
                 break
         selection = SourceSelection(sources=chosen, diagnostics=SourceDiagnostics(
             stage="scenarios", status="ok" if chosen else "empty", queries=queries))
-        validate_selection(store, selection)
+        await run_in_threadpool(validate_selection, store, selection)
     except (ValueError, OSError, KeyError, TypeError, sqlite3.Error, httpx.HTTPError) as exc:
         if strategy == "hybrid":
             raise HTTPException(503, {"code": "RAG_UNAVAILABLE",
