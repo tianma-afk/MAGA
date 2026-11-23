@@ -6,7 +6,7 @@ import IconButton from './IconButton';
 import Tutor from './Tutor';
 import Home from './Home';
 import GlobalSearch from './GlobalSearch';
-import DesignStudio from './DesignStudio';
+import PracticeStudio from './PracticeStudio';
 import ConnectionBanner from './ConnectionBanner';
 import SourcePreviewDialog from './SourcePreviewDialog';
 
@@ -128,7 +128,7 @@ export default function App() {
           <button className={`chapter-button ${studio ? 'selected' : ''}`}
             onClick={pickStudio}>
             <Compass size={17} />
-            <span className="chapter-text">架构实践<small>场景 → 方案 → 评审</small></span>
+            <span className="chapter-text">架构实践<small>案例 → 决策 → 追问 → 评审</small></span>
           </button>
           {chapters.map(item => <button key={item.id}
             className={`chapter-button ${selected === item.id ? 'selected' : ''}`}
@@ -161,7 +161,7 @@ export default function App() {
       {loading ? <div className="center-state" role="status">正在读取章节…</div>
         : error ? <div className="center-state" role="alert"><p>{error}</p>
           <button className="text-button" onClick={() => setReload(v => v + 1)}><RefreshCw size={16} />重新连接</button></div>
-          : studio ? <DesignStudio mode={mode} onMode={setMode}
+          : studio ? <PracticeStudio mode={mode} onMode={setMode}
             onOpenSource={(chapterId, slide) => setSource({ chapterId, slide })} />
             : !selected ? <Home chapters={chapters} />
               : chapterError ? <div className="center-state" role="alert"><p>{chapterError}</p>
