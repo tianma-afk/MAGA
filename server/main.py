@@ -24,6 +24,9 @@ from .models import (
 )
 from .design import design_review, design_scenarios, design_tactics
 from .retrieval_index import rebuild
+from .practice_cases import CASES
+from .practice_models import PracticePlanRequest, PracticePlanResponse, PracticeAnswerRequest, PracticeAnswerResponse, PracticeFinalRequest, PracticeFinalResponse
+from .practice import plan_practice, answer_practice, finalize_practice
 from .quiz import ai_quiz
 from .search import search_all
 
@@ -141,6 +144,24 @@ def create_app(book_dir: Path | None = None, slides_dir: Path | None = None):
         if request.slide > chapter.slideCount:
             raise HTTPException(422, "Slide number is outside this chapter")
         return await ai_quiz(chapter, request, app.state.llm_transport)
+
+    @app.get("/api/practice/cases")
+    def practice_cases():
+        # Do not disclose the authored evaluation rubrics to the learner before answering.
+        return [{key: value for key, value in case.items() if key != "objectives"}
+                for case in CASES]
+
+    @app.post("/api/practice/plan", response_model=PracticePlanResponse)
+    async def practice_plan(request: PracticePlanRequest):
+        return await plan_practice(store, request, app.state.llm_transport)
+
+    @app.post("/api/practice/answer", response_model=PracticeAnswerResponse)
+    async def practice_answer(request: PracticeAnswerRequest):
+        return await answer_practice(store, request, app.state.llm_transport)
+
+    @app.post("/api/practice/finalize", response_model=PracticeFinalResponse)
+    async def practice_finalize(request: PracticeFinalRequest):
+        return await finalize_practice(store, request, app.state.llm_transport)
 
     @app.post("/api/design/scenarios", response_model=DesignScenarioResponse, response_model_exclude_none=True)
     async def scenarios(request: DesignScenarioRequest):
