@@ -4,6 +4,7 @@ import { loadProgress } from './progress';
 import { loadQuizStore, quizSummary } from './quiz';
 import { answeredCount, loadQuizWorkspace } from './quizWorkspace';
 import { loadDesignProject } from './design';
+import { loadPractice } from './practice';
 import { analysisStatus, initialDesignStep, reviewStatus, tacticsStatus } from './designValidity';
 
 type StoragePort = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -75,6 +76,16 @@ export function homeSnapshot(store: StoragePort | undefined, chapters: Chapter[]
   }
   let design: ResumeTask | undefined;
   if (store) {
+    const practice = loadPractice(store);
+    if (practice) {
+      const finished = practice.decisions.filter(d => d.assessment?.action === 'complete').length;
+      design = {
+        kind: 'design', label: practice.final ? '查看实践报告' : '继续实践',
+        title: practice.caseTitle || practice.caseId,
+        detail: practice.final ? '已完成 · 可查看综合评审' : '架构决策 ' + finished + '/3 已完成',
+        href: '#/studio', updatedAt: practice.updatedAt || '',
+      };
+    }
     const project = loadDesignProject(store);
     const hasContent = project.title.trim() || project.scenario.trim() || project.requirements.trim()
       || project.qualityAttributes.length || project.scenarios.length || project.tactics.length || project.review;
@@ -84,11 +95,12 @@ export function homeSnapshot(store: StoragePort | undefined, chapters: Chapter[]
       const states = [analysisStatus(project), tacticsStatus(project), reviewStatus(project)];
       const note = states.includes('stale') ? ' · 有结果待更新'
         : states.includes('unrecorded') ? ' · 历史结果版本未记录' : '';
-      design = {
-        kind: 'design', label: '继续实践', title: project.title.trim() || '未命名实践草稿',
+      const oldDraft = {
+        kind: 'design' as const, label: '继续实践', title: project.title.trim() || '未命名实践草稿',
         detail: `${labels[step]}${note}`, href: '#/studio/legacy',
         updatedAt: timestamp(project.updatedAt) ? project.updatedAt : '',
       };
+      if (!design || timestamp(oldDraft.updatedAt) > timestamp(design.updatedAt)) design = oldDraft;
     }
   }
   const tasks = [learning, quiz, design].filter((item): item is ResumeTask => !!item);
