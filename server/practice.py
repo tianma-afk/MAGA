@@ -101,7 +101,7 @@ async def answer_practice(store, request: PracticeAnswerRequest, transport=None)
     )
     raw = await _complete_json(config, _system(task, PracticeAnswerDraft.model_json_schema()),
         json.dumps({"case": case, "objective": objective, "analysis": request.analysis,
-                    "question": request.decision, "turns": [t.model_dump() for t in request.turns],
+                    "question": request.decision.model_dump(), "turns": [t.model_dump() for t in request.turns],
                     "sources": sources}, ensure_ascii=False, default=str), transport)
     answer = _validated(raw, PracticeAnswerDraft)
     if maxed and answer.action == "followup":
