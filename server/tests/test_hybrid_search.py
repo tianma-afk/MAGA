@@ -82,3 +82,23 @@ def test_search_fallback_without_jina(tmp_path, monkeypatch):
     monkeypatch.delenv("JINA_API_KEY", raising=False)
     result = search_all(FakeStore(), "reliability")
     assert result.results[0].slide == 1
+
+
+def test_configured_but_missing_index_falls_back(tmp_path, monkeypatch):
+    from server.search import search_all
+    from server import hybrid_search as hybrid_module
+    monkeypatch.setenv("JINA_API_KEY", "fake")
+    monkeypatch.setattr(hybrid_module, "hybrid_search",
+                        lambda *args, **kwargs: (_ for _ in ()).throw(ValueError("index missing")))
+    result = search_all(FakeStore(), "availability")
+    assert result.results[0].slide == 1
+
+
+def test_incremental_update_after_content_change(tmp_path):
+    path = tmp_path / "index.sqlite3"
+    store = FakeStore()
+    rebuild(store, path=path, embed=fake_embed)
+    store.slides[0].notes = "updated material"
+    assert rebuild(store, path=path, embed=fake_embed) == {
+        "total": 2, "updated": 1, "deleted": 0
+    }
