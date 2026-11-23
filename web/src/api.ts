@@ -21,6 +21,10 @@ async function json<T>(path: string, init?: RequestInit): Promise<T> {
       && (detail as { code?: unknown }).code === 'AI_NOT_CONFIGURED') {
       throw new ConfigurationError();
     }
+    if (response.status === 503 && !!detail && typeof detail === 'object'
+      && (detail as { code?: unknown }).code === 'RAG_UNAVAILABLE') {
+      throw new Error('RAG 检索不可用：请检查 JINA_API_KEY、PPT 索引和英文查询模型配置。');
+    }
     throw new Error(failureMessage(response.status, detail));
   }
   try { return await response.json(); }
