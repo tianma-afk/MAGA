@@ -51,10 +51,10 @@ async function fixtures(page: Page) {
   }));
 }
 
-test('runs the architecture practice flow from the home page', async ({ page }) => {
+test('supports pre-v2 legacy architecture drafts at the legacy route', async ({ page }) => {
   await fixtures(page);
   await page.goto('/');
-  await page.getByRole('link', { name: /架构实践/ }).click();
+  await page.goto('/#/studio/legacy');
   await expect(page.getByRole('heading', { name: '架构实践' })).toBeVisible();
   await page.getByLabel('设计标题').fill('在线考试系统');
   await page.getByLabel('场景描述').fill('考试期间持续提供服务');
@@ -72,7 +72,7 @@ test('runs the architecture practice flow from the home page', async ({ page }) 
 
 test('keeps practice input across a reload before any generation', async ({ page }) => {
   await fixtures(page);
-  await page.goto('/#/studio');
+  await page.goto('/#/studio/legacy');
   await page.getByLabel('设计标题').fill('在线考试系统');
   await page.getByLabel('场景描述').fill('考试期间持续提供服务');
   await expect(page.getByText(/已保存到本地/)).toBeVisible();
@@ -84,7 +84,7 @@ test('keeps practice input across a reload before any generation', async ({ page
 
 test('opens a cited source in a dialog and returns to the same review', async ({ page }) => {
   await fixtures(page);
-  await page.goto('/#/studio');
+  await page.goto('/#/studio/legacy');
   await page.getByLabel('设计标题').fill('在线考试系统');
   await page.getByLabel('场景描述').fill('考试期间持续提供服务');
   await page.getByRole('button', { name: '生成质量属性与场景' }).click();
@@ -107,7 +107,7 @@ test('opens a cited source in a dialog and returns to the same review', async ({
 
 test('confirms before clearing the only practice draft', async ({ page }) => {
   await fixtures(page);
-  await page.goto('/#/studio');
+  await page.goto('/#/studio/legacy');
   await page.getByLabel('设计标题').fill('在线考试系统');
   await page.getByLabel('场景描述').fill('考试期间持续提供服务');
   await page.getByRole('button', { name: '生成质量属性与场景' }).click();
@@ -131,7 +131,7 @@ test('confirms before clearing the only practice draft', async ({ page }) => {
 });
 
 async function completeDraft(page: Page) {
-  await page.goto('/#/studio');
+  await page.goto('/#/studio/legacy');
   await page.getByLabel('设计标题').fill('在线考试系统');
   await page.getByLabel('场景描述').fill('考试期间持续提供服务');
   await page.getByRole('button', { name: '生成质量属性与场景' }).click();
@@ -205,7 +205,7 @@ test('preserves old results when regeneration is cancelled or fails and replaces
 
 test('marks the review stale after changing a selected tactic', async ({ page }) => {
   await fixtures(page);
-  await page.goto('/#/studio');
+  await page.goto('/#/studio/legacy');
   await page.getByLabel('设计标题').fill('在线考试系统');
   await page.getByLabel('场景描述').fill('考试期间持续提供服务');
   await page.getByRole('button', { name: '生成质量属性与场景' }).click();
