@@ -104,7 +104,8 @@ def rebuild(store, *, path=INDEX_PATH, embed=jina_embeddings):
     """Incrementally update changed slides and delete removed slides."""
     with open_index(path) as conn:
         source_rows = list(slide_rows(store))
-        known = dict(conn.execute("SELECT doc_id,digest,model FROM slides"))
+        known = {doc_id: (digest, model) for doc_id, digest, model in conn.execute(
+            "SELECT doc_id,digest,model FROM slides")}
         incoming = {row["doc_id"] for row in source_rows}
         deleted = set(known) - incoming
         changed = [row for row in source_rows if
