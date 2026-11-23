@@ -12,6 +12,7 @@ import {
 } from './designValidity';
 import type { DesignProject, Mode, RetrievalStrategy } from './types';
 import DesignRetrievalMode from './DesignRetrievalMode';
+import { useRetrievalIndex } from './useRetrievalIndex';
 import DesignCitations from './DesignCitations';
 import ConfirmDialog from './ConfirmDialog';
 import './studio.css';
@@ -49,12 +50,9 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
   });
   const [step, setStep] = useState<DesignStep>(() => initialDesignStep(project));
   const [loading, setLoading] = useState(false);
-  const [retrievalStrategy, setRetrievalStrategy] = useState<RetrievalStrategy>('baseline');
   const [retrievalFallback, setRetrievalFallback] = useState(false);
-  const [indexStatus, setIndexStatus] = useState<'idle' | 'building' | 'ready' | 'error'>('idle');
-  const [indexError, setIndexError] = useState('');
-  const [indexCount, setIndexCount] = useState(0);
-  const indexRequest = useRef<AbortController | null>(null);
+  const { strategy: retrievalStrategy, status: indexStatus, error: indexError,
+    count: indexCount, blocked: indexBlocked, select, retry: prepareIndex } = useRetrievalIndex();
   const retrievalInput = retrievalStrategy === 'baseline' ? {} : { retrievalStrategy };
   const [error, setError] = useState('');
   const [storageFailed, setStorageFailed] = useState(false);
@@ -64,7 +62,6 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
   const projectRef = useRef(project);
   const request = useRef<AbortController | null>(null);
   const unavailable = mode !== 'ai';
-  const indexBlocked = retrievalStrategy === 'hybrid' && indexStatus !== 'ready';
   const canStart = !!project.title.trim() && !!project.scenario.trim();
   const selectedTactics = project.tactics.filter(
     tactic => project.selectedTactics.includes(tactic.name),
@@ -76,41 +73,11 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
   const tacticsNote = statusNote(tacticsState, 'tactics');
   const reviewNote = statusNote(reviewState, 'review');
 
-  useEffect(() => () => {
-    request.current?.abort();
-    indexRequest.current?.abort();
-  }, []);
-
-  async function prepareIndex() {
-    indexRequest.current?.abort();
-    const controller = new AbortController();
-    indexRequest.current = controller;
-    setIndexStatus('building');
-    setIndexError('');
-    setIndexCount(0);
-    try {
-      const result = await api.ensureRetrievalIndex(controller.signal);
-      if (indexRequest.current !== controller || controller.signal.aborted) return;
-      setIndexCount(result.total);
-      setIndexStatus('ready');
-    } catch (caught) {
-      if (indexRequest.current !== controller || controller.signal.aborted) return;
-      setIndexError(errorText(caught));
-      setIndexStatus('error');
-    } finally {
-      if (indexRequest.current === controller) indexRequest.current = null;
-    }
-  }
+  useEffect(() => () => { request.current?.abort(); }, []);
 
   function changeRetrievalStrategy(value: RetrievalStrategy) {
-    indexRequest.current?.abort();
-    indexRequest.current = null;
-    setRetrievalStrategy(value);
+    select(value);
     setRetrievalFallback(false);
-    setIndexStatus('idle');
-    setIndexError('');
-    setIndexCount(0);
-    if (value === 'hybrid') void prepareIndex();
   }
 
   /** The single boundary for every project change: state, the in-flight
