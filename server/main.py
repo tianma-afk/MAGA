@@ -1,4 +1,9 @@
+import os
+import sqlite3
 from pathlib import Path
+from threading import Lock
+
+import httpx
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query, Request
@@ -18,6 +23,7 @@ from .models import (
     SearchResponse,
 )
 from .design import design_review, design_scenarios, design_tactics
+from .retrieval_index import rebuild
 from .quiz import ai_quiz
 from .search import search_all
 
@@ -39,6 +45,7 @@ def create_app(book_dir: Path | None = None, slides_dir: Path | None = None):
     app = FastAPI(title="Chapter PPT Tutor")
     store = ChapterStore(book_dir or ROOT / "book", slides_dir or ROOT / "data" / "slides")
     app.state.llm_transport = None
+    app.state.retrieval_index_lock = Lock()
     app.add_middleware(
         CORSMiddleware,
         allow_origin_regex=r"^https?://(?:localhost|127\.0\.0\.1|\[::1\])(?::[0-9]{1,5})?$",
@@ -60,6 +67,25 @@ def create_app(book_dir: Path | None = None, slides_dir: Path | None = None):
         config = read_ai_config()
         return {"status": "ok", "mode": "unconfigured" if config.missing else "ai",
                 "missing": list(config.missing)}
+
+    @app.post("/api/retrieval/index/ensure")
+    def ensure_retrieval_index():
+        if not os.getenv("JINA_API_KEY", "").strip():
+            raise HTTPException(503, {
+                "code": "RAG_INDEX_UNAVAILABLE",
+                "message": "请先在 .env 中配置 JINA_API_KEY。",
+            })
+        try:
+            with app.state.retrieval_index_lock:
+                result = rebuild(store)
+            if result["total"] < 1:
+                raise ValueError("No indexable PPT slides")
+        except (ValueError, OSError, TypeError, KeyError, sqlite3.Error, httpx.HTTPError) as exc:
+            raise HTTPException(503, {
+                "code": "RAG_INDEX_UNAVAILABLE",
+                "message": "RAG 索引构建失败，请检查课件文件、Jina API 和网络连接后重试。",
+            }) from exc
+        return {"status": "ready", **result}
 
     @app.get("/api/search", response_model=SearchResponse)
     def search(q: str = Query(..., min_length=1, max_length=200),
