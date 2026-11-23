@@ -51,7 +51,7 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
   const [loading, setLoading] = useState(false);
   const [retrievalStrategy, setRetrievalStrategy] = useState<RetrievalStrategy>('baseline');
   const [retrievalFallback, setRetrievalFallback] = useState(false);
-  const retrievalInput = retrievalStrategy === 'llm_assisted' ? { retrievalStrategy } : {};
+  const retrievalInput = retrievalStrategy === 'baseline' ? {} : { retrievalStrategy };
   const [error, setError] = useState('');
   const [storageFailed, setStorageFailed] = useState(false);
   const [savedAt, setSavedAt] = useState(() => stamp(project.updatedAt));
