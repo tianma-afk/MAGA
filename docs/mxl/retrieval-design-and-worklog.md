@@ -45,3 +45,14 @@ New requirement: make RAG an **explicit** option in the architecture practice sc
 - API frontend reports a specific RAG setup error. The selector does not persist across reloads, matching preexisting behavior.
 - Add browser-component tests for all three stage requests, client error handling, and backend source-selection tests including the 503 failure case.
 - This change does **not** auto-build the index, verify real Jina credentials, or independently benchmark relevance; those remain follow-up work.
+
+## 2026-11-23 — Automatic index readiness on selecting Hybrid RAG (implementation plan)
+
+Requirement: selecting **RAG 混合检索** in the architecture-practice UI must **check/build/update the index automatically**, and **no design-generation stage can run until success**. End users must not need to run `python -m server.retrieval_index`.
+
+Design before code:
+1. POST `/api/retrieval/index/ensure` checks `JINA_API_KEY` and invokes the existing `rebuild(store)` in a worker thread with a per-app asynchronous lock, avoiding concurrent builds. `rebuild()` retains/updates unchanged slide embeddings and transactionally replaces changed entries. Return bounded `{status:'ready',total,updated,deleted}`. Map missing key/upstream/index errors to sanitized HTTP 503 `RAG_INDEX_UNAVAILABLE`. Empty source corpus must not be reported ready.
+2. Frontend API exposes `ensureRetrievalIndex(signal)` and translates the known error code into an actionable message.
+3. When the selector changes to `hybrid`, initiate POST immediately and show an explicit `building` state; block **all three** generation buttons, request handlers, and confirmation while not ready. On success show ready counts; on error keep hybrid selected but blocked and provide a retry button. Switching away / unmount aborts client requests and discards stale completions. Selection remains session-local as before.
+4. Existing `hybrid_search()` still validates index existence/credentials when invoked by API without a prior UI selection; no implicit fallback. The index refresh is a UI activation operation, not a side effect of every query.
+5. Add backend endpoint tests including idempotence/error, and React tests for pending/success/failure/retry/race behavior. Run CI on final revision; live Jina key remains unverified in offline tests.
