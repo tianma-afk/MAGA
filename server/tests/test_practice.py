@@ -80,7 +80,7 @@ def test_practice_plan_and_answer_with_verified_sources(setup, monkeypatch):
     assert second.status_code == 200, second.text
     assert second.json()["action"] == "complete"
     assert len(captured) == 6
-    assert all("availability heartbeat recovery" in json.dumps(call)
+    assert all("Heartbeat detects failure" in json.dumps(call)
                for call in [captured[1], captured[3], captured[5]])
 
 
