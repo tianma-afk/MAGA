@@ -86,7 +86,7 @@ export function homeSnapshot(store: StoragePort | undefined, chapters: Chapter[]
         : states.includes('unrecorded') ? ' · 历史结果版本未记录' : '';
       design = {
         kind: 'design', label: '继续实践', title: project.title.trim() || '未命名实践草稿',
-        detail: `${labels[step]}${note}`, href: '#/studio',
+        detail: `${labels[step]}${note}`, href: '#/studio/legacy',
         updatedAt: timestamp(project.updatedAt) ? project.updatedAt : '',
       };
     }
