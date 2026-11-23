@@ -58,7 +58,7 @@ Git 仅跟踪 `.env.example`，忽略 `.env` 和 `.env.*`。
 
 ## 混合检索索引（可选）
 
-MAGA 可使用本地 SQLite FTS5 BM25 与 Jina `jina-embeddings-v3` 混合检索，每页 PPT 作为一个检索单元。权重为 Embedding **0.5**、BM25 **0.2**，剩余 **0.3** 暂不分配；按查询内 BM25 归一化以及余弦得分融合。查询使用英文，中文查询在已配置 LLM 时先翻译为英文。Jina API 无法使用、索引缺失或翻译失败时回退原有词法检索。
+MAGA 可使用本地 SQLite FTS5 BM25 与 Jina `jina-embeddings-v3` 混合检索，每页 PPT 作为一个检索单元。权重为 Embedding **0.5**、BM25 **0.2**，剩余 **0.3** 暂不分配；按查询内 BM25 归一化以及余弦得分融合。查询使用英文，中文查询在已配置 LLM 时先翻译为英文。仅在“架构实践 → 课程来源检索”明确选择“RAG 混合检索”时使用；RAG 索引或服务失败会明确报错，不会静默降级。标准检索与 AI 增强检索保持原行为。
 
 在 [Jina AI](https://jina.ai/) 注册并获取可用的免费 API Key（额度、速率限制以其官网当前说明为准），将其填写在根目录 `.env`：
 
@@ -66,13 +66,11 @@ MAGA 可使用本地 SQLite FTS5 BM25 与 Jina `jina-embeddings-v3` 混合检索
 JINA_API_KEY=your-jina-api-key
 ```
 
-首次建立索引或更换 PPT/OCR 文件后，在项目根目录执行：
+**无需手动建立索引。**启动前后端后，在架构实践页面选择“RAG 混合检索”，系统会自动检查并增量构建本地索引。构建中界面禁止继续生成；构建就绪后自动解锁。失败时展示原因并可点击“重试构建 RAG 索引”。首次运行可能需要向 Jina 发送全部课件文本，耗时取决于网络、额度与速率限制。
 
-```powershell
-.\\.venv\\Scripts\\python -m server.retrieval_index
-```
+需要排障或批量维护时仍可在项目根目录手动执行 `python -m server.retrieval_index`，但这不是正常使用的前置步骤。
 
-索引保存至被 Git 忽略的 `data/retrieval/index.sqlite3`，保留课件页码和真实内容。重建时仅对变化页面重新请求 Embedding。**索引构建会发送 PPT 文本至 Jina API**；请确认课程资料允许上传，且不把密钥提交 Git。索引和模型版本需要一致；不配置 Jina 时保留原搜索行为。架构设计和测试计划见 [docs/mxl/retrieval-design-and-worklog.md](docs/mxl/retrieval-design-and-worklog.md)。
+索引保存至被 Git 忽略的 `data/retrieval/index.sqlite3`，保留课件页码和真实内容。下次选择 RAG 时仅对变化页面重新请求 Embedding。**索引构建会发送 PPT 文本至 Jina API**；请确认课程资料允许上传，且不把密钥提交 Git。索引和模型版本需要一致；不配置 Jina 时保留原搜索行为。架构设计和测试计划见 [docs/mxl/retrieval-design-and-worklog.md](docs/mxl/retrieval-design-and-worklog.md)。
 
 ## 课件
 
