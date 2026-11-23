@@ -6,6 +6,7 @@ import os
 import sqlite3
 import time
 from pathlib import Path
+from contextlib import closing
 
 import httpx
 
@@ -102,14 +103,15 @@ def slide_rows(store):
 
 def rebuild(store, *, path=INDEX_PATH, embed=jina_embeddings):
     """Incrementally update changed slides and delete removed slides."""
-    with open_index(path) as conn:
+    with closing(open_index(path)) as conn, conn:
         source_rows = list(slide_rows(store))
-        known = {doc_id: (digest, model) for doc_id, digest, model in conn.execute(
-            "SELECT doc_id,digest,model FROM slides")}
+        known = {doc_id: (digest, model, chapter_title)
+                 for doc_id, digest, model, chapter_title in conn.execute(
+                     "SELECT doc_id,digest,model,chapter_title FROM slides")}
         incoming = {row["doc_id"] for row in source_rows}
         deleted = set(known) - incoming
         changed = [row for row in source_rows if
-                   known.get(row["doc_id"]) != (row["digest"], MODEL)]
+                   known.get(row["doc_id"]) != (row["digest"], MODEL, row["chapter_title"])]
         vectors = []
         for start in range(0, len(changed), 16):
             vectors.extend(embed([r["content"][:12000] for r in changed[start:start + 16]],
