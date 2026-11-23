@@ -25,6 +25,10 @@ async function json<T>(path: string, init?: RequestInit): Promise<T> {
       && (detail as { code?: unknown }).code === 'RAG_UNAVAILABLE') {
       throw new Error('RAG 检索不可用：请检查 JINA_API_KEY、PPT 索引和英文查询模型配置。');
     }
+    if (response.status === 503 && !!detail && typeof detail === 'object'
+      && (detail as { code?: unknown }).code === 'RAG_INDEX_UNAVAILABLE') {
+      throw new Error('RAG 索引构建失败：请检查 JINA_API_KEY、Jina API 网络和课件文件后重试。');
+    }
     throw new Error(failureMessage(response.status, detail));
   }
   try { return await response.json(); }
@@ -179,6 +183,18 @@ function designReview(value: unknown): DesignReview {
   };
 }
 export const api = {
+  async ensureRetrievalIndex(signal: AbortSignal): Promise<{
+    status: 'ready'; total: number; updated: number; deleted: number;
+  }> {
+    const result = await json<{ status?: unknown; total?: unknown;
+      updated?: unknown; deleted?: unknown }>('/api/retrieval/index/ensure', {
+      method: 'POST', signal,
+    });
+    if (result.status !== 'ready' || ![result.total, result.updated, result.deleted].every(
+      n => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0
+    ) || result.total === 0) throw new Error('RAG 索引状态异常，请重试。');
+    return result as { status: 'ready'; total: number; updated: number; deleted: number };
+  },
   health: (signal: AbortSignal) => json<Health>('/api/health', { signal }),
   chapters: (signal: AbortSignal) => json<Chapter[]>('/api/chapters', { signal }),
   chapter: (id: string, signal: AbortSignal) =>
