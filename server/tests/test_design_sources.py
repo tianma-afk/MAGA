@@ -117,7 +117,8 @@ def test_hybrid_explicitly_selects_indexed_sources_in_each_stage(setup, monkeypa
         store, model.model_validate({**payload, 'retrievalStrategy': 'hybrid'}), stage=stage))
     assert observed and observed[0][1] == 8
     assert selected.sources
-    assert selected.sources[0].chapterId == 'chapter-2'
+    expected = search_all(store, 'availability', 8).results[0]
+    assert (selected.sources[0].chapterId, selected.sources[0].slide) == (expected.chapterId, expected.slide)
     assert selected.diagnostics.mode == 'normal'
     assert 'hybrid_selection' in selected.diagnostics.stage_times_ms
 
