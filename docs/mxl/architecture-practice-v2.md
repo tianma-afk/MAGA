@@ -33,7 +33,7 @@ Fixed controller makes all transitions deterministic; model outputs content and 
 
 Each of **plan**, **answer** (including each follow-up), and **finalize** starts with a model call producing 1–3 **English** search queries, bounded length, structurally validated (no URLs, fabricated pages). Stage-specific prompts generate queries about decision principles and lecture topics rather than dumping an entire Chinese case description. Query step and teaching step are separate model calls. This applies even if learner selects baseline.
 
-Introduce `server/practice_knowledge.py` with `retrieve(store, queries, strategy, transport)`:
+Introduce `server/practice_knowledge.py` with `select_practice_knowledge(store, config, phase, context, strategy, transport)`:
 - `baseline`: first generated English query through existing `legacy_sources` lexical API.
 - `llm_assisted`: multi-query lexical retrieval; round-robin merge with dedupe.
 - `hybrid`: multi-query `hybrid_search` (existing FTS5 BM25=0.2 + Jina embedding=0.5), round-robin merge. Selecting hybrid uses existing `useRetrievalIndex` automatic index preparation gate; no user-run CLI required.
@@ -50,7 +50,7 @@ Do not let learner see private rubric or model reference answers before answerin
 - `server/practice_knowledge.py` — English query planner + strategy retrieval + source verification; reuse `server/design.py::_complete_json`, `design_sources.legacy_sources/validate_selection`, and `hybrid_search.hybrid_search`.
 - `server/practice.py` — fixed asynchronous `plan / answer / finalize` orchestration; strict stage schema and verified citations; no arbitrary tool loop or server-side session global.
 - `server/main.py` — four new endpoints (case list, plan, answer, finalize). Legacy `/api/design/*` kept for backward compatibility and tests; /studio changes to v2.
-- `web/src/practice.ts` — type definitions, versioned localStorage + recovery checks, import/export.
+- `web/src/practice.ts` — type definitions, versioned localStorage + recovery checks, Markdown export.
 - `web/src/PracticeStudio.tsx` — selection, independent analysis, per-question answer, round history, final review, course citations; reuses `DesignRetrievalMode` and `useRetrievalIndex`. Avoid editing the existing 477-line `DesignStudio.tsx` and breaking old draft format. No code editor or drawing canvas.
 - `web/src/api.ts` — typed practice endpoints, simple response validation.
 - `web/src/App.tsx` — change /studio view to new practice; original legacy component and exports can remain while migrating.
@@ -70,6 +70,23 @@ Risks: (1) extra LLM planning call at each stage increases latency/cost, (2) sma
 
 - [x] Audited actual branch implementations: `hybrid_search.py`, `retrieval_index.py`, `design_sources.py`, existing practice UI/API; retained original legacy interfaces.
 - [x] Authored this architecture/design record **before any practice code changes**.
-- [ ] Implement backend and tests.
-- [ ] Implement frontend and tests.
-- [ ] Execute CI / test commands; record actual results and any remaining limitations.
+- [x] Implement backend: `practice_cases.py`, `practice_models.py`, `practice_knowledge.py`, `practice.py`, API routing in `main.py`; mock-provider and source-validation tests in `server/tests/test_practice.py`.
+- [x] Implement frontend: `PracticeStudio.tsx`, `practice.ts`, `practice.css`, typed API, case selection/answer/follow-up/final review, source jump, export, local persistence, homepage resume, and manual retrieval-mode selection.
+- [x] Preserve old `/api/design/*` endpoints and saved v1 design drafts through `#/studio/legacy`. New route `#/studio` uses v2.
+- [x] Validate with GitHub Actions CI on code+README commit `423ad6dc97e69e73f4bdc6061c6ed56dd4de40c8`:
+  - Backend `python -m pytest server/tests -q`: **267 passed**, 1 warning.
+  - Frontend `npm --prefix web test`: **160 passed** across 22 files.
+  - Frontend `npm --prefix web run build`, file-length checker: **success**.
+  - Browser `npm run test:e2e`: **27 passed**.
+  - Evidence: [CI run 45204143987](https://github.com/tianma-afk/MAGA/actions/runs/45204143987); new tests `server/tests/test_practice.py`, `web/src/PracticeStudio.test.tsx`, `web/e2e/practice.spec.ts`.
+- [x] Add README tutorial for v2 flow, stage-bound RAG, and legacy migration.
+
+## 7. Implementation decisions and open validation
+
+- Actual retrieval step uses **one LLM request to generate 1–3 English queries**, followed by worker-thread lexical/hybrid recall, source canonicalization and a **second LLM request** to generate the stage's educational output. Baseline searches the first query; AI-assisted mode searches all queries lexically; hybrid runs all queries through existing Jina BM25/Embedding. No general-purpose agent runner and no arbitrary model-invoked tools.
+- Exactly three objectives are pre-authored per case. The plan LLM generates one question per objective but may not replace objective IDs. The public catalog hides case rubrics. Answers remain learner-authored and recorded; server response yields one specific follow-up or completion, capped at two follow-ups per decision.
+- Source excerpts are bounded for the model prompt; page references are validated and canonicalized against full original Slide data. A `KnowledgeReceipt` keeps query terms and citation handles, not private API credentials or full source text. Client records initial planning receipt, successive answer receipts and final receipt.
+- Browser stores local session (versioned key) and allows reload/resume via homepage. Retrieval strategy is locked after planning; legacy drafts have separate route and storage.
+- **Not verified live:** Real Jina quota/network behavior together with real LLM question planning, answer quality or cross-device persistence; CI intentionally mocks both providers. These tests establish contract integrity and UI flow, not pedagogical effectiveness or retrieval Recall.
+- **Known limitations:** Browser-local progress is not authoritative against a malicious caller; this is a formative learning exercise, not a secure examination. Model-generated feedback can be imperfect; no numerical grades. The system does not automatically benchmark answer quality or human-validate reference approaches. Every teaching stage incurs query-planning LLM overhead; a later iteration can cache equivalent stage queries or evaluate prompt quality.
+
