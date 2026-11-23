@@ -31,7 +31,7 @@ async function begin() {
     target: { value: '核心要求是名额一致性和故障恢复，需要关注高并发下锁竞争。' },
   });
   fireEvent.click(screen.getByRole('button', { name: '生成架构决策问题' }));
-  expect(await screen.findByText('如何保证名额一致，不出现超卖和重复报名？')).toBeTruthy();
+  expect(await screen.findByRole('heading', { name: /如何保证名额一致/ })).toBeTruthy();
 }
 
 it('starts from curated cases, learns through follow-up and produces a review', async () => {
@@ -57,13 +57,13 @@ it('starts from curated cases, learns through follow-up and produces a review', 
     target: { value: '事务失败时整体回滚，并做并发压测验证数据库吞吐能力。' },
   });
   fireEvent.click(screen.getByRole('button', { name: '提交回答并获得反馈' }));
-  expect(await screen.findByText('如何保证报名成功后通知失败不影响交易？')).toBeTruthy();
+  expect(await screen.findByRole('heading', { name: /如何保证报名成功后通知/ })).toBeTruthy();
   for (let i = 0; i < 2; i++) {
     fireEvent.change(screen.getByLabelText('你的架构设计思路'), {
       target: { value: '针对当前约束我优先使用模块化单体，并分析异常情况下的权衡。' },
     });
     fireEvent.click(screen.getByRole('button', { name: '提交回答并获得反馈' }));
-    await screen.findByText('方案合理但需要评估负载。');
+    await screen.findAllByText('方案合理但需要评估负载。');
   }
   fireEvent.click(screen.getByRole('button', { name: '生成综合评审与参考方案' }));
   expect(await screen.findByText('能根据案例约束做出合理设计。')).toBeTruthy();
@@ -93,7 +93,7 @@ it('blocks hybrid until automatic indexing completes and keeps the strategy', as
   done({ status: 'ready', total: 340, updated: 0, deleted: 0 });
   await screen.findByText(/RAG 索引已就绪/);
   fireEvent.click(screen.getByRole('button', { name: '生成架构决策问题' }));
-  await screen.findByText(decisions[0].question);
+  await screen.findByRole('heading', { name: /如何保证名额一致/ });
   expect(plan.mock.calls[0][0].retrievalStrategy).toBe('hybrid');
   expect(screen.getByLabelText('课程来源检索')).toHaveProperty('disabled', true);
 });
