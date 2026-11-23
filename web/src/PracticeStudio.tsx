@@ -49,6 +49,7 @@ export default function PracticeStudio({ mode, onMode, onOpenSource }: Props) {
   const completed = !!session && session.decisions.every(item => item.assessment?.action === 'complete');
 
   function update(next: PracticeSession) {
+    next = { ...next, updatedAt: new Date().toISOString() };
     if (!savePractice(next)) setSaveError(true);
     else setSaveError(false);
     setSession(next);
@@ -86,8 +87,9 @@ export default function PracticeStudio({ mode, onMode, onOpenSource }: Props) {
       caseId: selected.id, analysis: analysis.trim(), retrievalStrategy: strategy,
     }, signal), result => {
       update({
-        caseId: selected.id, analysis: analysis.trim(), retrievalStrategy: strategy,
+        caseId: selected.id, caseTitle: selected.title, analysis: analysis.trim(), retrievalStrategy: strategy,
         decisions: result.decisions.map(decision => ({ decision, turns: [] })),
+        planKnowledge: result.knowledge,
       });
       setAnswer('');
     });
@@ -112,6 +114,7 @@ export default function PracticeStudio({ mode, onMode, onOpenSource }: Props) {
             followup: result.followup, citations: result.citations,
           },
           pendingFollowup: result.followup || undefined, knowledge: result.knowledge,
+          knowledgeHistory: [...(item.knowledgeHistory || []), result.knowledge],
         }),
       });
       setAnswer('');
@@ -216,6 +219,8 @@ export default function PracticeStudio({ mode, onMode, onOpenSource }: Props) {
           <span>{i+1}</span>{item.decision.id} {item.assessment?.action === 'complete' ? '已完成' : ''}
         </li>)}
       </ol>
+      {session.planKnowledge && <details className="practice-queries"><summary>查看本次问题生成的课程检索词</summary>
+        <p>{session.planKnowledge.queries.join('；')}</p></details>}
       {session.decisions.map((item, i) => <article key={item.decision.id}
         className="practice-decision">
         <h3>{i+1}. {item.decision.question}</h3>
@@ -228,8 +233,9 @@ export default function PracticeStudio({ mode, onMode, onOpenSource }: Props) {
         {item.assessment && <div className="practice-feedback">
           <strong>助教反馈</strong><p>{item.assessment.feedback}</p>
           <DesignCitations citations={item.assessment.citations} onOpen={onOpenSource}/>
-          {item.knowledge && <details><summary>本轮检索的课程查询</summary>
-            <p>{item.knowledge.queries.join('；')}</p></details>}
+          {!!item.knowledgeHistory?.length && <details><summary>查看各轮课程检索词</summary>
+            {item.knowledgeHistory.map((receipt, j) =>
+              <p key={j}>第 {j+1} 轮：{receipt.queries.join('；')}</p>)}</details>}
         </div>}
         {i === decisionIndex && <div className="practice-compose">
           {item.pendingFollowup && <p><strong>针对性追问：</strong>{item.pendingFollowup}</p>}
