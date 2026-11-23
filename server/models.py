@@ -167,7 +167,7 @@ class DesignTactic(StrictModel):
     citations: list[DesignCitation] = Field(min_length=1, max_length=4)
 
 
-RetrievalStrategy = Literal["baseline", "llm_assisted"]
+RetrievalStrategy = Literal["baseline", "llm_assisted", "hybrid"]
 
 
 class DesignScenarioRequest(StrictModel):
