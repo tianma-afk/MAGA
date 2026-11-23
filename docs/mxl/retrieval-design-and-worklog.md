@@ -33,3 +33,15 @@ Do **not** copy BatMem's Node/sqlite-vec infrastructure or rerank requirement: M
 GitHub Actions run **45191068924**, PR #3 revision `9b36bc1` (2026-11-23): **backend 252 passed** (one upstream deprecation warning), **frontend 152 passed** in 21 files; TypeScript/Vite production build **passed**; line-length checker and its tests **passed**; **25 browser E2E passed**. This validates the revised index connection handling and the added missing-index / one-slide reindex tests. No real Jina requests were made by the test suite.
 
 Implementation limits: manually run index build after editing source PPT/OCR; no automated filesystem watch or current-source hash comparison on query. The stored embeddings must therefore be refreshed after edits. Jina model API connectivity and real free-tier quota not tested (no key accessed). Jina embeddings on the small ~340-page corpus are scanned in SQLite to calculate exact cosine, not ANN; this is deliberately simpler than BatMem's sqlite-vec. Optional English translation uses the configured LLM for Chinese queries and otherwise reverts to original lexical search; absence of API credentials does not block offline learning/search. Client request score remains a positive integer for compatibility, so absolute scores cannot be interpreted as a calibrated probability. No benchmark demonstrating throughput or relevance gains has yet been run.
+
+
+## 2026-11-23 — Architecture Practice RAG selector integration
+
+New requirement: make RAG an **explicit** option in the architecture practice screen; do not create another PR. GitHub working branch remains `feature/mxl-hybrid-retrieval`.
+
+- Existing modes `baseline` and `llm_assisted` are retained. Add `hybrid` to the frontend selector and strict backend request schema; the UI sends this value to scenarios, tactics and review.
+- Remove the previous implicit `JINA_API_KEY` switch inside global `search_all()`. Cross-chapter search and existing LLM-assisted planner therefore continue using the original search behavior. Only explicit `hybrid` invokes the persisted index.
+- The explicit hybrid path retrieves Top-8 indexed slide IDs, loads canonical original slide text, and passes the existing `validate_selection()` source integrity contract. If the index, translation or Jina API is unavailable, return sanitized HTTP 503 `RAG_UNAVAILABLE`, **not** an invisible downgrade to baseline.
+- API frontend reports a specific RAG setup error. The selector does not persist across reloads, matching preexisting behavior.
+- Add browser-component tests for all three stage requests, client error handling, and backend source-selection tests including the 503 failure case.
+- This change does **not** auto-build the index, verify real Jina credentials, or independently benchmark relevance; those remain follow-up work.
