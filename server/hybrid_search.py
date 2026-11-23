@@ -64,7 +64,9 @@ def hybrid_search(query, limit=20, *, path=INDEX_PATH,
                   translate=english_query, embed=jina_embeddings):
     """Raise on unavailable/mismatched index so the caller can use lexical fallback."""
     if not os.getenv("JINA_API_KEY", "").strip():
-        raise ValueError("Jina is not configured")
+        raise ValueError("JINA_API_KEY 未配置，请在 .env 中填写密钥。")
+    if not os.path.isfile(path):
+        raise ValueError("RAG 索引不存在，请先运行 python -m server.retrieval_index。")
     english = translate(query)
     terms = list(dict.fromkeys(t.lower() for t in ENGLISH.findall(english)))
     if not terms:
