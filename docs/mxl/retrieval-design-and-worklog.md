@@ -56,3 +56,11 @@ Design before code:
 3. When the selector changes to `hybrid`, initiate POST immediately and show an explicit `building` state; block **all three** generation buttons, request handlers, and confirmation while not ready. On success show ready counts; on error keep hybrid selected but blocked and provide a retry button. Switching away / unmount aborts client requests and discards stale completions. Selection remains session-local as before.
 4. Existing `hybrid_search()` still validates index existence/credentials when invoked by API without a prior UI selection; no implicit fallback. The index refresh is a UI activation operation, not a side effect of every query.
 5. Add backend endpoint tests including idempotence/error, and React tests for pending/success/failure/retry/race behavior. Run CI on final revision; live Jina key remains unverified in offline tests.
+
+## Automatic indexing implementation and validation
+
+Implemented `POST /api/retrieval/index/ensure` with a per-FastAPI-app lock, missing-key validation, synchronous readiness response after incremental `rebuild(store)`, empty-index rejection and sanitized 503 diagnostics. The frontend `useRetrievalIndex` hook prepares the index immediately on selecting `hybrid`, blocks all three generation stages during pending/error states, exposes count and retry, and rejects late completions after a selection change. The API does not claim readiness until index build has committed.
+
+CI run [45200002937](https://github.com/tianma-afk/MAGA/actions/runs/45200002937), code revision `9d12bf3`, **all jobs passed**: backend **260 passed**; frontend **156 passed** in 21 test files and production build passed; **25 browser E2E passed**; repository file-length checks passed. These are deterministic tests, with Jina mocked rather than live network credentials.
+
+**Operational boundaries:** selecting hybrid may wait for multiple Jina passage embedding batches on the first use, and it sends course text to Jina. Aborted browser requests do not forcibly cancel an already running server-side build; the server lock serializes concurrent ensure requests and the next attempt can reuse the committed index. Progress is exposed as a building/ready/failed status, not a per-slide percentage. A valid Jina key and external model connectivity still require live user-environment validation.
