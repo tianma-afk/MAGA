@@ -19,6 +19,7 @@ export interface PracticeDecision {
   decision: PracticeQuestion; turns: PracticeTurn[];
   assessment?: PracticeAssessment; pendingFollowup?: string;
   knowledge?: KnowledgeReceipt;
+  knowledgeHistory?: KnowledgeReceipt[];
 }
 export interface PracticeFinal {
   summary: string; strengths: string[]; improvements: string[];
@@ -26,14 +27,15 @@ export interface PracticeFinal {
   knowledge: KnowledgeReceipt;
 }
 export interface PracticeSession {
-  caseId: string; retrievalStrategy: RetrievalStrategy; analysis: string;
-  decisions: PracticeDecision[]; final?: PracticeFinal;
+  caseId: string; caseTitle?: string; retrievalStrategy: RetrievalStrategy; analysis: string;
+  decisions: PracticeDecision[]; planKnowledge?: KnowledgeReceipt;
+  final?: PracticeFinal; updatedAt?: string;
 }
 const KEY = 'chapter-tutor:practice:v2:current';
 
-export function loadPractice(): PracticeSession | null {
+export function loadPractice(store: Pick<Storage, 'getItem'> = localStorage): PracticeSession | null {
   try {
-    const value = JSON.parse(localStorage.getItem(KEY) || 'null') as PracticeSession | null;
+    const value = JSON.parse(store.getItem(KEY) || 'null') as PracticeSession | null;
     if (!value || typeof value.caseId !== 'string' || typeof value.analysis !== 'string'
       || !['baseline', 'llm_assisted', 'hybrid'].includes(value.retrievalStrategy)
       || !Array.isArray(value.decisions) || value.decisions.length !== 3
@@ -54,6 +56,9 @@ export function savePractice(value: PracticeSession | null) {
 export function practiceMarkdown(value: PracticeSession, caseTitle: string): string {
   const lines = ['# '+caseTitle, '', '## 需求理解', value.analysis, '',
     '## 课程来源检索策略', value.retrievalStrategy, ''];
+  if (value.planKnowledge) {
+    lines.push('## 初始课程知识检索', ...value.planKnowledge.queries.map(q => '- '+q), '');
+  }
   value.decisions.forEach((record, index) => {
     lines.push('## 决策点 '+(index+1), '', record.decision.question, '');
     record.turns.forEach((turn, i) => {
@@ -62,6 +67,9 @@ export function practiceMarkdown(value: PracticeSession, caseTitle: string): str
     });
     if (record.assessment) {
       lines.push('### 形成性反馈', record.assessment.feedback, '');
+    }
+    for (const receipt of record.knowledgeHistory || []) {
+      lines.push('### 本轮课程检索', ...receipt.queries.map(q => '- '+q), '');
     }
   });
   if (value.final) {
