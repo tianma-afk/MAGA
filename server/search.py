@@ -1,3 +1,8 @@
+import json
+import os
+import sqlite3
+
+import httpx
 from fastapi import HTTPException
 
 from .chapters import meaningful_text
@@ -38,6 +43,13 @@ def _snippet(title: str, body: str, notes: str, ocr: str, terms) -> str:
 
 
 def search_all(store, query: str, limit: int = 20) -> SearchResponse:
+    if os.getenv("JINA_API_KEY", "").strip():
+        try:
+            from .hybrid_search import hybrid_search
+            return hybrid_search(query, limit)
+        except (OSError, ValueError, KeyError, TypeError, sqlite3.Error, httpx.HTTPError, json.JSONDecodeError):
+            # Preserve course access when external vector/translation services fail.
+            pass
     terms = query_terms(query)
     if not terms:
         return SearchResponse(query=query, results=[])
