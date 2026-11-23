@@ -3,7 +3,7 @@ import { Compass, Download, RotateCcw } from 'lucide-react';
 import { api, ConfigurationError, errorText } from './api';
 import { loadPractice, savePractice, practiceMarkdown } from './practice';
 import type { PracticeCase, PracticeSession } from './practice';
-import type { Mode, RetrievalStrategy } from './types';
+import type { Mode } from './types';
 import { useRetrievalIndex } from './useRetrievalIndex';
 import DesignRetrievalMode from './DesignRetrievalMode';
 import DesignCitations from './DesignCitations';
