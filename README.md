@@ -56,6 +56,24 @@ AI 讲解、自测和图解不可用，聊天 API 返回 503。此时仍可浏�
 Git 仅跟踪 `.env.example`，忽略 `.env` 和 `.env.*`。
 不要在模板或前端环境变量中填写真实密钥。
 
+## 混合检索索引（可选）
+
+MAGA 可使用本地 SQLite FTS5 BM25 与 Jina `jina-embeddings-v3` 混合检索，每页 PPT 作为一个检索单元。权重为 Embedding **0.5**、BM25 **0.2**，剩余 **0.3** 暂不分配；按查询内 BM25 归一化以及余弦得分融合。查询使用英文，中文查询在已配置 LLM 时先翻译为英文。Jina API 无法使用、索引缺失或翻译失败时回退原有词法检索。
+
+在 [Jina AI](https://jina.ai/) 注册并获取可用的免费 API Key（额度、速率限制以其官网当前说明为准），将其填写在根目录 `.env`：
+
+```dotenv
+JINA_API_KEY=your-jina-api-key
+```
+
+首次建立索引或更换 PPT/OCR 文件后，在项目根目录执行：
+
+```powershell
+.\\.venv\\Scripts\\python -m server.retrieval_index
+```
+
+索引保存至被 Git 忽略的 `data/retrieval/index.sqlite3`，保留课件页码和真实内容。重建时仅对变化页面重新请求 Embedding。**索引构建会发送 PPT 文本至 Jina API**；请确认课程资料允许上传，且不把密钥提交 Git。索引和模型版本需要一致；不配置 Jina 时保留原搜索行为。架构设计和测试计划见 [docs/mxl/retrieval-design-and-worklog.md](docs/mxl/retrieval-design-and-worklog.md)。
+
 ## 课件
 
 当前课件为 Chapter 1、2、4、5、6、7、8，共 340 页。系统读取
