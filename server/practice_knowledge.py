@@ -2,7 +2,6 @@
 import json
 import re
 import sqlite3
-from concurrent.futures import ThreadPoolExecutor
 
 import httpx
 from fastapi import HTTPException
