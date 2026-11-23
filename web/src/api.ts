@@ -4,6 +4,8 @@ import type {
   DesignScenarioResponse, DesignTactic, DesignTacticResponse, Health, Message,
   Outline, QuizQuestion, QuizResponse, SearchResponse, SearchResult, RetrievalStrategy,
 } from './types';
+import type { PracticeCase, PracticeQuestion, PracticeTurn, PracticeAssessment, PracticeFinal,
+  KnowledgeReceipt, PracticeDecision } from './practice';
 import { boundedHistory, validDiagram } from './state';
 
 async function json<T>(path: string, init?: RequestInit): Promise<T> {
@@ -183,6 +185,53 @@ function designReview(value: unknown): DesignReview {
   };
 }
 export const api = {
+  async practiceCases(signal: AbortSignal): Promise<PracticeCase[]> {
+    const result = await json<PracticeCase[]>('/api/practice/cases', { signal });
+    if (!Array.isArray(result) || result.length < 1 || result.some(c => !c || !c.id
+      || !c.title || !Array.isArray(c.requirements) || !Array.isArray(c.constraints))) {
+      throw new Error('练习案例数据不完整。');
+    }
+    return result;
+  },
+  async practicePlan(input: { caseId: string; analysis: string; retrievalStrategy: RetrievalStrategy },
+    signal: AbortSignal): Promise<{ decisions: PracticeQuestion[]; knowledge: KnowledgeReceipt }> {
+    const result = await json<{ decisions: PracticeQuestion[]; knowledge: KnowledgeReceipt }>('/api/practice/plan', {
+      method: 'POST', signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input),
+    });
+    if (!Array.isArray(result.decisions) || result.decisions.length !== 3
+      || result.decisions.some(d => !d || typeof d.id !== 'string' || !d.question
+        || !Array.isArray(d.citations) || !d.citations.every(c => !!c.chapterId && c.slide > 0))
+      || !result.knowledge || !Array.isArray(result.knowledge.citations)) {
+      throw new Error('架构决策问题数据不完整。');
+    }
+    return result;
+  },
+  async practiceAnswer(input: { caseId: string; analysis: string; retrievalStrategy: RetrievalStrategy;
+    decision: PracticeQuestion; turns: PracticeTurn[] }, signal: AbortSignal):
+    Promise<PracticeAssessment & { knowledge: KnowledgeReceipt }> {
+    const result = await json<PracticeAssessment & { knowledge: KnowledgeReceipt }>('/api/practice/answer', {
+      method: 'POST', signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input),
+    });
+    if (!['followup', 'complete'].includes(result.action) || typeof result.feedback !== 'string'
+      || (result.action === 'followup' && !result.followup)
+      || !Array.isArray(result.citations) || !result.knowledge) {
+      throw new Error('架构追问数据不完整。');
+    }
+    return result;
+  },
+  async practiceFinalize(input: { caseId: string; analysis: string; retrievalStrategy: RetrievalStrategy;
+    decisions: { decision: PracticeQuestion; turns: PracticeTurn[]; assessment: PracticeAssessment }[] },
+    signal: AbortSignal): Promise<PracticeFinal> {
+    const result = await json<PracticeFinal>('/api/practice/finalize', {
+      method: 'POST', signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input),
+    });
+    if (!result || typeof result.summary !== 'string' || !result.referenceApproach
+      || !Array.isArray(result.strengths) || !Array.isArray(result.improvements)
+      || !Array.isArray(result.citations) || !result.knowledge) {
+      throw new Error('架构评审报告数据不完整。');
+    }
+    return result;
+  },
   async ensureRetrievalIndex(signal: AbortSignal): Promise<{
     status: 'ready'; total: number; updated: number; deleted: number;
   }> {
