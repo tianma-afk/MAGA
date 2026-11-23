@@ -5,7 +5,7 @@ import type {
   Outline, QuizQuestion, QuizResponse, SearchResponse, SearchResult, RetrievalStrategy,
 } from './types';
 import type { PracticeCase, PracticeQuestion, PracticeTurn, PracticeAssessment, PracticeFinal,
-  KnowledgeReceipt, PracticeDecision } from './practice';
+  KnowledgeReceipt } from './practice';
 import { boundedHistory, validDiagram } from './state';
 
 async function json<T>(path: string, init?: RequestInit): Promise<T> {
