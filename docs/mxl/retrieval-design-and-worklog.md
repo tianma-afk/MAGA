@@ -30,4 +30,8 @@ Do **not** copy BatMem's Node/sqlite-vec infrastructure or rerank requirement: M
 
 ## Test results and limitations
 
-Pending. No real API key or paid external requests should be required to run automated tests. Real Jina connectivity and cross-machine behavior must be reported as unverified unless actually run.
+GitHub Actions run **45190548870**, on PR #3 intermediate commit `3b58bfc`: backend **250 passed** (one upstream deprecation warning), frontend **152 passed** across 21 test files; TypeScript/Vite build passed; file-length checks passed; browser E2E passed. This was before final close/index-regression amendments; rerun required after amendments.
+
+Follow-up commits fix deterministic SQLite connection release, refresh chapter metadata, and add two tests for missing-index fallback and changed-slide reindex. Final-run result should replace this paragraph only after CI completes.
+
+Implementation limits: manually run index build after editing source PPT/OCR; no automated filesystem watch or current-source hash comparison on query. The stored embeddings must therefore be refreshed after edits. Jina model API connectivity and real free-tier quota not tested (no key accessed). Jina embeddings on the small ~340-page corpus are scanned in SQLite to calculate exact cosine, not ANN; this is deliberately simpler than BatMem's sqlite-vec. Optional English translation uses the configured LLM for Chinese queries and otherwise reverts to original lexical search; absence of API credentials does not block offline learning/search. Client request score remains a positive integer for compatibility, so absolute scores cannot be interpreted as a calibrated probability. No benchmark demonstrating throughput or relevance gains has yet been run.
