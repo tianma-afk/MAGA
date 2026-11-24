@@ -94,7 +94,11 @@ MXL 工作直接复用了团队此前已实现的：
 
 这些是依赖和兼容目标，**不是本轮新实现的全部功能**。本轮对 `main` 的实际增量以 `git diff main...feature/mxl-hybrid-retrieval` 为准。
 
-## 5. 验证与下一步
+## 5. PR 与分支状态
+
+混合检索早期曾建立 [PR #3](https://github.com/tianma-afk/MAGA/pull/3)（标题为 `feat: slide-level Jina + BM25 hybrid retrieval (mxl)`），**现已关闭、未合并**。后续案例教学重构、2026-11-24 开始按钮修复以及本次文档编写直接提交到同一功能分支，没有为这些工作重新创建 PR。工作仍未进入 `main`。
+
+## 6. 验证与下一步
 
 最终代码快照 `dfdfd3c3f`：[GitHub Actions CI](https://github.com/tianma-afk/MAGA/actions/runs/45312834087) 后端 **268 passed**、前端 **162 passed**、E2E **27 passed**、构建与代码长度检查通过。测试不调用真实 Jina/LLM 服务。
 
