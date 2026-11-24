@@ -62,6 +62,8 @@ async def plan_practice(store, request: PracticePlanRequest, transport=None):
             "authored case objective, retaining the objective ID and order. "
             "Do NOT give away approaches or expected answers. "
             "Question should elicit reasoning, constraints and alternatives. "
+            "If learner analysis is blank, treat it as NOT SUBMITTED; base questions "
+            "on the case itself and never attribute invented analysis to the learner. "
             "Use 0-4 grounded course citations per question.")
     raw = await _complete_json(config, _system(task, PracticePlanAnswer.model_json_schema()),
         json.dumps({"case": case, "analysis": request.analysis, "sources": sources},
