@@ -27,7 +27,7 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 async function begin() {
   fireEvent.click(await screen.findByRole('button', { name: /校园活动报名与名额管理/ }));
-  fireEvent.change(screen.getByLabelText('2. 你的需求理解、额外约束与潜在风险'), {
+  fireEvent.change(screen.getByLabelText('2. 你的需求理解、额外约束与潜在风险（可选）'), {
     target: { value: '核心要求是名额一致性和故障恢复，需要关注高并发下锁竞争。' },
   });
   fireEvent.click(screen.getByRole('button', { name: '生成架构决策问题' }));
@@ -86,7 +86,7 @@ it('blocks hybrid until automatic indexing completes and keeps the strategy', as
   render(<PracticeStudio mode="ai" onOpenSource={vi.fn()} />);
   fireEvent.change(screen.getByLabelText('课程来源检索'), { target: { value: 'hybrid' } });
   fireEvent.click(await screen.findByRole('button', { name: /校园活动报名与名额管理/ }));
-  fireEvent.change(screen.getByLabelText('2. 你的需求理解、额外约束与潜在风险'), {
+  fireEvent.change(screen.getByLabelText('2. 你的需求理解、额外约束与潜在风险（可选）'), {
     target: { value: '需要保证并发下的名额一致性和可用性，还要处理通知失败问题。' },
   });
   expect(screen.getByRole('button', { name: '生成架构决策问题' })).toHaveProperty('disabled', true);
@@ -96,4 +96,35 @@ it('blocks hybrid until automatic indexing completes and keeps the strategy', as
   await screen.findByRole('heading', { name: /如何保证名额一致/ });
   expect(plan.mock.calls[0][0].retrievalStrategy).toBe('hybrid');
   expect(screen.getByLabelText('课程来源检索')).toHaveProperty('disabled', true);
+});
+
+it('allows a selected case to start with empty analysis and keeps it marked as skipped', async () => {
+  const plan = vi.spyOn(api, 'practicePlan').mockResolvedValue({ decisions, knowledge: receipt });
+  render(<PracticeStudio mode="ai" onOpenSource={vi.fn()} />);
+  const button = screen.queryByRole('button', { name: '生成架构决策问题' });
+  expect(button).toBeNull(); // A case must be chosen first.
+  fireEvent.click(await screen.findByRole('button', { name: /校园活动报名与名额管理/ }));
+  expect(screen.getByText(/也可以直接开始/)).toBeTruthy();
+  expect(screen.getByRole('button', { name: '生成架构决策问题' }))
+    .toHaveProperty('disabled', false);
+  fireEvent.click(screen.getByRole('button', { name: '生成架构决策问题' }));
+  expect(await screen.findByRole('heading', { name: /如何保证名额一致/ })).toBeTruthy();
+  expect(plan).toHaveBeenCalledWith({
+    caseId: 'campus-booking', analysis: '', retrievalStrategy: 'baseline',
+  }, expect.any(AbortSignal));
+  expect(loadPractice()?.analysis).toBe('');
+});
+
+it('accepts short optional analysis without an artificial character threshold', async () => {
+  const plan = vi.spyOn(api, 'practicePlan').mockResolvedValue({ decisions, knowledge: receipt });
+  render(<PracticeStudio mode="ai" onOpenSource={vi.fn()} />);
+  fireEvent.click(await screen.findByRole('button', { name: /校园活动报名与名额管理/ }));
+  fireEvent.change(screen.getByLabelText('2. 你的需求理解、额外约束与潜在风险（可选）'), {
+    target: { value: '避免超卖' },
+  });
+  expect(screen.getByRole('button', { name: '生成架构决策问题' }))
+    .toHaveProperty('disabled', false);
+  fireEvent.click(screen.getByRole('button', { name: '生成架构决策问题' }));
+  await screen.findByRole('heading', { name: /如何保证名额一致/ });
+  expect(plan.mock.calls[0][0].analysis).toBe('避免超卖');
 });
