@@ -7,7 +7,7 @@
 MAGA（章节助教 / 架构师养成器）是面向**软件体系结构课程 PPT**的单用户本地学习工作台。已有按章节阅读、对话与讲解、原始 PPT 预览、自测、跨章搜索、学习记录和架构实践。不是通用多源文档管理系统，不提供生产级多用户账号或正式评分。
 
 - `main`：截至核对时停留在第三轮（iteration 3）合并结果，基线提交 `f3ad65f`（2026-11-18）。
-- `feature/mxl-hybrid-retrieval`：相对上述 `main` **ahead 73 commits / behind 0**（建立本文档之前的代码快照）；包括 MXL 混合检索与架构实践 v2 改造；**未创建与本轮工作对应的 PR**。
+- `feature/mxl-hybrid-retrieval`：相对上述 `main` **ahead 73 commits / behind 0**（建立本文档之前的代码快照）；包括 MXL 混合检索与架构实践 v2 改造；检索阶段曾有 [PR #3](https://github.com/tianma-afk/MAGA/pull/3)，现已**关闭、未合并**；后续架构实践改造与本次文档整理直接提交到功能分支，未新建 PR。
 - 第三轮原有的 `baseline` 默认 + `llm_assisted` 可选检索，是历史设计；MXL 在此基础上增加**显式 `hybrid`**，并非替换所有搜索端点。
 
 主要目录：
