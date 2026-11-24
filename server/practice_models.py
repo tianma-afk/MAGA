@@ -16,7 +16,7 @@ class KnowledgeReceipt(Strict):
 
 class PracticePlanRequest(Strict):
     caseId: str = Field(min_length=1, max_length=80)
-    analysis: str = Field(min_length=20, max_length=4000)
+    analysis: str = Field(default="", max_length=4000)
     retrievalStrategy: RetrievalStrategy = "baseline"
 
 
@@ -41,7 +41,7 @@ class PracticeTurn(Strict):
 
 class PracticeAnswerRequest(Strict):
     caseId: str = Field(min_length=1, max_length=80)
-    analysis: str = Field(min_length=20, max_length=4000)
+    analysis: str = Field(default="", max_length=4000)
     retrievalStrategy: RetrievalStrategy = "baseline"
     decision: PracticeQuestion
     turns: list[PracticeTurn] = Field(min_length=1, max_length=3)
@@ -82,7 +82,7 @@ class PracticeDecisionRecord(Strict):
 
 class PracticeFinalRequest(Strict):
     caseId: str = Field(min_length=1, max_length=80)
-    analysis: str = Field(min_length=20, max_length=4000)
+    analysis: str = Field(default="", max_length=4000)
     retrievalStrategy: RetrievalStrategy = "baseline"
     decisions: list[PracticeDecisionRecord] = Field(min_length=3, max_length=3)
 
