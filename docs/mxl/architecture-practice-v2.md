@@ -2,6 +2,8 @@
 
 Date: 2026-11-23. Target branch: `feature/mxl-hybrid-retrieval`. **This design was committed before implementation.**
 
+> **Current implementation check (2026-11-24):** The v2 practice workflow and three curated cases are implemented on the branch. Following user feedback, requirements analysis is optional; a case selection is sufficient to enable the start button once the AI and chosen retrieval mode are ready. The latest code [CI 45312834087](https://github.com/tianma-afk/MAGA/actions/runs/45312834087) passed: 268 backend, 162 frontend, and 27 browser tests. Earlier CI figures below are retained as dated historical evidence. For consolidated explanation see [practice-teaching-design.md](practice-teaching-design.md), [practice-architecture.md](practice-architecture.md), and [handoff.md](handoff.md).
+
 ## 1. Problem and learning objective
 
 The existing `DesignStudio` collects an unrestricted project description, then has AI produce quality-attribute scenarios and tactics. This assesses prompt-writing more than learner-led architecture reasoning. Replace the visible /studio route with **predefined case → learner's independent requirement analysis → three architecture decision questions → per-answer targeted follow-ups and bounded feedback → comparative final review**. No diagrams, code implementation, or detailed interface contracts are required. Assess interpretation, decision quality, alternatives, tradeoffs and response to changes, not one supposedly correct architecture.
