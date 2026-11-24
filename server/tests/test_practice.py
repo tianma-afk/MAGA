@@ -135,3 +135,35 @@ def test_unknown_case_and_unconfigured_model(setup):
     response = client.post("/api/practice/plan", json=PLAN)
     assert response.status_code == 503
     assert response.json()["detail"]["code"] == "AI_NOT_CONFIGURED"
+
+
+def test_optional_analysis_is_accepted_for_all_practice_stages(setup, monkeypatch):
+    client, app, _ = setup
+    minimal = {"caseId": "campus-booking", "retrievalStrategy": "baseline"}
+    captured = mock_sequence(app, monkeypatch, [
+        query(), {"decisions": QUESTIONS}, query(), COMPLETE, query(), FINAL])
+    plan = client.post("/api/practice/plan", json=minimal)
+    assert plan.status_code == 200, plan.text
+    decision = plan.json()["decisions"][0]
+    answer = client.post("/api/practice/answer", json={
+        **minimal, "decision": decision, "turns": [{
+            "question": decision["question"],
+            "answer": "我会用数据库事务控制名额并保留唯一约束来防止重复报名。",
+        }],
+    })
+    assert answer.status_code == 200, answer.text
+    records = [
+        {"decision": item, "turns": [{
+            "question": item["question"],
+            "answer": "先识别系统约束，再考虑事务一致性和错误恢复策略的权衡。",
+        }], "assessment": COMPLETE}
+        for item in plan.json()["decisions"]
+    ]
+    final = client.post("/api/practice/finalize",
+                        json={**minimal, "decisions": records})
+    assert final.status_code == 200, final.text
+    assert len(captured) == 6
+    assert "analysis" not in minimal
+    # The skipped analysis is not silently replaced with invented learner content.
+    assert any("NOT SUBMITTED" in call["messages"][0]["content"]
+               for call in captured)
