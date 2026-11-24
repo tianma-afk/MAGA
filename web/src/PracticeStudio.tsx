@@ -82,7 +82,7 @@ export default function PracticeStudio({ mode, onMode, onOpenSource }: Props) {
   }
 
   function start() {
-    if (!selected || analysis.trim().length < 20 || blocked || mode !== 'ai') return;
+    if (!selected || blocked || mode !== 'ai') return;
     void run(signal => api.practicePlan({
       caseId: selected.id, analysis: analysis.trim(), retrievalStrategy: strategy,
     }, signal), result => {
@@ -200,12 +200,13 @@ export default function PracticeStudio({ mode, onMode, onOpenSource }: Props) {
         <h3>{selected.title}</h3><p>{selected.background}</p>
         <strong>已知功能需求</strong><ul>{selected.requirements.map(x => <li key={x}>{x}</li>)}</ul>
         <strong>初始约束</strong><ul>{selected.constraints.map(x => <li key={x}>{x}</li>)}</ul>
-        <label>2. 你的需求理解、额外约束与潜在风险
+        <label>2. 你的需求理解、额外约束与潜在风险（可选）
           <textarea rows={6} maxLength={4000} value={analysis} disabled={loading}
             onChange={event => setAnalysis(event.target.value)}
-            placeholder="请先独立分析：项目中哪些需求最影响架构？还需要明确哪些约束？哪些风险需要提前考虑？" />
+            placeholder="建议先独立分析：哪些需求最影响架构、还有哪些约束与风险？也可以直接开始。" />
         </label>
-        <button className="studio-primary" disabled={inactive || analysis.trim().length < 20}
+        <p className="studio-muted">可以填写自己的分析，也可以直接开始；未填写时，AI 会依据案例需求生成问题。</p>
+        <button className="studio-primary" disabled={inactive}
           onClick={start}>生成架构决策问题</button>
       </div>}
     </section>}
