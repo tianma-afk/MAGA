@@ -1,6 +1,10 @@
 # MAGA Hybrid Retrieval: design and work log
 
-Date: 2026-11-23. Branch: `feature/mxl-hybrid-retrieval`. Status: **planned; implementation not yet verified**.
+Date: 2026-11-23. Branch: `feature/mxl-hybrid-retrieval`. **Historical design snapshot**: the original planning state below was recorded *before implementation*; it is not the current delivery status.
+
+**Current status (2026-11-24): implemented and automatically tested.** The explicit Hybrid selector, incremental SQLite FTS5/Jina index, automatic index preparation and practice integration are present on this branch. The most recent code CI [45312834087](https://github.com/tianma-afk/MAGA/actions/runs/45312834087) passed (backend 268, frontend 162, E2E 27). No live Jina credentials/model quality measurements have been verified. For authoritative as-built behavior use [retrieval-implementation.md](retrieval-implementation.md), [repository-status.md](repository-status.md), and [validation-and-risks.md](validation-and-risks.md).
+
+> **Historical decisions superseded by implementation:** the early plan proposed a lexical fallback on Jina/index failures and a manual offline index prerequisite. Current **explicit Hybrid** behavior instead returns a visible 503 on failure and automatically prepares the index when the mode is selected. The global `GET /api/search` remains lexical. The original checklist below is retained as planning evidence, not current open tasks.
 
 ## Scope and precedent
 
