@@ -149,9 +149,11 @@ export default function App() {
     </>}
     <div className="workspace">
       <header className="topbar">
-        <IconButton label={sidebar ? '收起章节目录' : '展开章节目录'} onClick={() => setSidebar(!sidebar)}>
-          {sidebar ? <PanelLeftClose size={19} /> : <PanelLeftOpen size={19} />}
-        </IconButton>
+        {!sidebar && (
+          <IconButton label="展开章节目录" onClick={() => setSidebar(true)}>
+            <PanelLeftOpen size={19} />
+          </IconButton>
+        )}
         <div className="breadcrumb"><button aria-label="返回学习空间" onClick={() => pickChapter('')}>学习空间</button>
           {studio ? <><span>/</span><strong>架构实践</strong></>
             : selected && <><span>/</span><strong>{chapters.find(c => c.id === selected)?.title || '章节'}</strong></>}

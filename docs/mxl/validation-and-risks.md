@@ -99,4 +99,22 @@ E2E 需预先安装 Playwright 浏览器：`cd web && npx playwright install chr
 
 有关具体开发/演示步骤见 [handoff.md](handoff.md)，有关检索机制见 [retrieval-implementation.md](retrieval-implementation.md)。
 
+## 7. 2026-11-27 第 6 轮最终评测（页图 + OCR + 真实 Jina）
+
+完整报告、图表与运行截图见 [docs/evaluation/README.md](../evaluation/README.md)；Word 版在 `docs/evaluation/MAGA_检索评测报告_通俗版_2026-11-27.docx`。
+
+- 数据准备：**340 张页图**（1600×1200）+ **82 个稀疏页 OCR 文本**；OCR 后 hybrid 索引增量更新 82 页（总 340 页）。
+- 真实运行：`deepseek-flash` + `jina-embeddings-v3`（经 `127.0.0.1:7890` 代理）；L1 72 + L2 144 = **216 行**，1 个翻译 JSON 解析错误（零填充）；回归 **268 后端 / 162 前端 / 27 E2E**、build、500 行检查通过。
+- 关键结果（L2 nDCG@8，95% bootstrap CI）：
+  - baseline **0.275**；中文自然语言 **0.025**；约束型 **0.020**。
+  - `hybrid` **0.565**，相对 baseline **+0.290 [0.195, 0.394]**；中文 **+0.403 [0.214, 0.600]**；约束型 **+0.540 [0.390, 0.693]**。
+  - `llm_assisted` **0.271**，相对 baseline **−0.004 [−0.038, 0.026]**（跨 0）；p50 3.02 s vs 0.14 s；回退 6/36。**未证明优于 baseline**。
+  - 「翻译+词法」消融 **0.367**，相对 baseline **+0.092 [0.035, 0.157]**；hybrid 比它再高 **+0.198 [0.114, 0.293]**，约束型高 **+0.453 [0.259, 0.646]**。消融不是产品模式。
+  - OCR 影响：baseline **−0.064 [−0.110, −0.029]**；hybrid **−0.045 [−0.107, 0.019]**；hybrid 约束型 **−0.108 [−0.191, −0.011]**。OCR 不是免费增益；本夹具没有图片页相关标注，图片页收益未证明。
+  - 延迟：hybrid p95 **3659 ms vs baseline 168 ms（约 22 倍）**；按跑前规则（p95 ≤2×）不设为全局默认，推荐为显式高质量选项。
+- 网络：初次直连被校园 DNS 拦截（索引 0 页）；根因是自动化 shell 未继承 Windows 系统代理。通过代理后真实索引 340 页并完成 hybrid 评测；直连失败时的 503 + 重试行为正确。
+- 失败样本：hybrid 实践 `POST /api/practice/plan` 出现过 502（AI 输出无法识别），重试后 200；截图 `screenshots/11-hybrid-error.png`，日志 `evidence/practice-plan-502.txt`。
+- 教学评测：只做了 1 案例、1 决策点的真实冒烟（含原始页引用），**不是** 27 份答案的双人盲评；教师 Rubric 与引用语义支撑率仍未完成。
+- 仍未验证：多标注者一致性、跨模型稳定性、Jina 429/限额/费用、OCR 图片页收益、生产负载。
+
 [返回文档索引](README.md)

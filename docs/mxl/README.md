@@ -14,6 +14,7 @@
 | [practice-architecture.md](practice-architecture.md) | 实践流程的技术设计 | 固定工作流、LLM Query、阶段检索、API、状态和引用如何协作？ |
 | [validation-and-risks.md](validation-and-risks.md) | 验证、证据与限制 | 哪些通过了自动化测试，哪些还未被实证？ |
 | [handoff.md](handoff.md) | 下一轮交接 | 如何复现、优先检查什么、可从哪里继续开发？ |
+| [../evaluation/README.md](../evaluation/README.md) | 第 6 轮检索评测（2026-11-26） | 三策略在 36 条标注 Query 上的真实结果、图表、截图与结论 |
 
 ## 已存在的原始设计/过程记录
 

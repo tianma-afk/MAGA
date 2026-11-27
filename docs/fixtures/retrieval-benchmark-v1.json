@@ -1,0 +1,571 @@
+{
+  "version": 1,
+  "date": "2026-11-26",
+  "description": "Course-grounded retrieval benchmark for MAGA. Nine architecture concepts, each asked four ways (English term, Chinese natural language, mixed paraphrase, constraint-style), 36 queries total. All four phrasings of a concept share that concept's human-labeled relevant slides so that the benchmark measures phrasing robustness rather than four unrelated questions.",
+  "labels": {
+    "grade2": "Directly defines, explains, or names the tactic/concept on that page.",
+    "grade1": "Relevant supporting page: example, scenario, summary, overview, or a closely related tactic.",
+    "unjudged": "Pages not listed are treated as grade 0. Judgments are concept-scoped and were checked against the PPT text on 2026-11-26; they are not an exhaustive pool over every possible page."
+  },
+  "categories": {
+    "english_term": "English terminology query.",
+    "chinese_nl": "Chinese natural-language question with no English terms.",
+    "mixed": "Chinese question containing English technical terms.",
+    "constraint": "Constraint/scenario-style question that implies the concept without naming it."
+  },
+  "queries": [
+    {
+      "id": "heartbeat-en",
+      "concept": "heartbeat",
+      "category": "english_term",
+      "query": "heartbeat",
+      "englishQuery": "heartbeat",
+      "relevant": [
+        {"chapterId": "chapter-5", "slide": 17, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 18, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 10, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 15, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 16, "grade": 1}
+      ]
+    },
+    {
+      "id": "heartbeat-zh",
+      "concept": "heartbeat",
+      "category": "chinese_nl",
+      "query": "怎么检测一个服务是不是还活着",
+      "englishQuery": "detect whether a service is alive",
+      "relevant": [
+        {"chapterId": "chapter-5", "slide": 17, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 18, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 10, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 15, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 16, "grade": 1}
+      ]
+    },
+    {
+      "id": "heartbeat-mixed",
+      "concept": "heartbeat",
+      "category": "mixed",
+      "query": "服务存活检测 heartbeat 周期性消息",
+      "englishQuery": "service liveness detection heartbeat periodic message",
+      "relevant": [
+        {"chapterId": "chapter-5", "slide": 17, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 18, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 10, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 15, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 16, "grade": 1}
+      ]
+    },
+    {
+      "id": "heartbeat-constraint",
+      "concept": "heartbeat",
+      "category": "constraint",
+      "query": "监控进程每隔几秒向被监控进程发消息，超时后判定它故障，这属于什么战术",
+      "englishQuery": "monitor periodically messages a process and declares a fault on timeout",
+      "relevant": [
+        {"chapterId": "chapter-5", "slide": 17, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 18, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 10, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 15, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 16, "grade": 1}
+      ]
+    },
+
+    {
+      "id": "availability-en",
+      "concept": "availability",
+      "category": "english_term",
+      "query": "availability",
+      "englishQuery": "availability",
+      "relevant": [
+        {"chapterId": "chapter-5", "slide": 6, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 7, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 9, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 12, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 38, "grade": 1}
+      ]
+    },
+    {
+      "id": "availability-zh",
+      "concept": "availability",
+      "category": "chinese_nl",
+      "query": "系统出故障的时候还要能继续提供服务，架构上要做什么",
+      "englishQuery": "keep providing service when faults occur",
+      "relevant": [
+        {"chapterId": "chapter-5", "slide": 6, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 7, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 9, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 12, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 38, "grade": 1}
+      ]
+    },
+    {
+      "id": "availability-mixed",
+      "concept": "availability",
+      "category": "mixed",
+      "query": "availability 可用性 故障 保持服务",
+      "englishQuery": "availability fault tolerance keep service",
+      "relevant": [
+        {"chapterId": "chapter-5", "slide": 6, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 7, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 9, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 12, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 38, "grade": 1}
+      ]
+    },
+    {
+      "id": "availability-constraint",
+      "concept": "availability",
+      "category": "constraint",
+      "query": "要求系统在部分服务器宕机时仍能对外服务，应该采用哪些可用性战术",
+      "englishQuery": "availability tactics for partial server outage",
+      "relevant": [
+        {"chapterId": "chapter-5", "slide": 6, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 7, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 9, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 12, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 38, "grade": 1}
+      ]
+    },
+
+    {
+      "id": "recovery-en",
+      "concept": "recovery",
+      "category": "english_term",
+      "query": "recovery tactics",
+      "englishQuery": "recovery tactics",
+      "relevant": [
+        {"chapterId": "chapter-5", "slide": 24, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 25, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 27, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 29, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 31, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 32, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 26, "grade": 1}
+      ]
+    },
+    {
+      "id": "recovery-zh",
+      "concept": "recovery",
+      "category": "chinese_nl",
+      "query": "服务挂了以后怎么恢复到正常状态",
+      "englishQuery": "recover a service after failure",
+      "relevant": [
+        {"chapterId": "chapter-5", "slide": 24, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 25, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 27, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 29, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 31, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 32, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 26, "grade": 1}
+      ]
+    },
+    {
+      "id": "recovery-mixed",
+      "concept": "recovery",
+      "category": "mixed",
+      "query": "recovery 恢复 回滚 重试 降级",
+      "englishQuery": "recovery rollback retry degradation redundancy",
+      "relevant": [
+        {"chapterId": "chapter-5", "slide": 24, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 25, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 27, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 29, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 31, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 32, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 26, "grade": 1}
+      ]
+    },
+    {
+      "id": "recovery-constraint",
+      "concept": "recovery",
+      "category": "constraint",
+      "query": "数据库写失败后要回到之前一致的状态，可以重试也可以回滚，分别怎么选",
+      "englishQuery": "rollback versus retry after a failed database write",
+      "relevant": [
+        {"chapterId": "chapter-5", "slide": 27, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 29, "grade": 2},
+        {"chapterId": "chapter-5", "slide": 24, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 25, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 31, "grade": 1},
+        {"chapterId": "chapter-5", "slide": 32, "grade": 1}
+      ]
+    },
+
+    {
+      "id": "interoperability-en",
+      "concept": "interoperability",
+      "category": "english_term",
+      "query": "interoperability",
+      "englishQuery": "interoperability",
+      "relevant": [
+        {"chapterId": "chapter-6", "slide": 2, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 3, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 4, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 7, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 12, "grade": 1}
+      ]
+    },
+    {
+      "id": "interoperability-zh",
+      "concept": "interoperability",
+      "category": "chinese_nl",
+      "query": "两个不同的系统之间怎么交换信息",
+      "englishQuery": "how two different systems exchange information",
+      "relevant": [
+        {"chapterId": "chapter-6", "slide": 2, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 3, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 4, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 7, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 12, "grade": 1}
+      ]
+    },
+    {
+      "id": "interoperability-mixed",
+      "concept": "interoperability",
+      "category": "mixed",
+      "query": "interoperability 互操作 语法 语义",
+      "englishQuery": "interoperability syntactic semantic",
+      "relevant": [
+        {"chapterId": "chapter-6", "slide": 2, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 3, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 4, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 7, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 12, "grade": 1}
+      ]
+    },
+    {
+      "id": "interoperability-constraint",
+      "concept": "interoperability",
+      "category": "constraint",
+      "query": "两个异构系统要交换数据，怎么保证不仅格式能解析、含义也一致",
+      "englishQuery": "heterogeneous systems exchange data syntactic and semantic agreement",
+      "relevant": [
+        {"chapterId": "chapter-6", "slide": 2, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 3, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 4, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 7, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 12, "grade": 1}
+      ]
+    },
+
+    {
+      "id": "service-discovery-en",
+      "concept": "service_discovery",
+      "category": "english_term",
+      "query": "service discovery",
+      "englishQuery": "service discovery",
+      "relevant": [
+        {"chapterId": "chapter-6", "slide": 22, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 28, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 6, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 23, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 29, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 33, "grade": 1}
+      ]
+    },
+    {
+      "id": "service-discovery-zh",
+      "concept": "service_discovery",
+      "category": "chinese_nl",
+      "query": "微服务的实例地址会变化，调用方怎么找到它",
+      "englishQuery": "how a caller finds changing microservice instance addresses",
+      "relevant": [
+        {"chapterId": "chapter-6", "slide": 22, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 28, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 6, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 23, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 29, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 33, "grade": 1}
+      ]
+    },
+    {
+      "id": "service-discovery-mixed",
+      "concept": "service_discovery",
+      "category": "mixed",
+      "query": "service discovery 服务注册 注册中心 查找",
+      "englishQuery": "service discovery registry lookup",
+      "relevant": [
+        {"chapterId": "chapter-6", "slide": 22, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 28, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 6, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 23, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 29, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 33, "grade": 1}
+      ]
+    },
+    {
+      "id": "service-discovery-constraint",
+      "concept": "service_discovery",
+      "category": "constraint",
+      "query": "新服务实例上线后要能被调用方自动发现，应该用什么机制",
+      "englishQuery": "automatically discover newly registered service instances",
+      "relevant": [
+        {"chapterId": "chapter-6", "slide": 22, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 28, "grade": 2},
+        {"chapterId": "chapter-6", "slide": 6, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 23, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 29, "grade": 1},
+        {"chapterId": "chapter-6", "slide": 33, "grade": 1}
+      ]
+    },
+
+    {
+      "id": "modifiability-en",
+      "concept": "modifiability",
+      "category": "english_term",
+      "query": "modifiability",
+      "englishQuery": "modifiability",
+      "relevant": [
+        {"chapterId": "chapter-7", "slide": 8, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 24, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 9, "grade": 1},
+        {"chapterId": "chapter-7", "slide": 20, "grade": 1},
+        {"chapterId": "chapter-7", "slide": 62, "grade": 1}
+      ]
+    },
+    {
+      "id": "modifiability-zh",
+      "concept": "modifiability",
+      "category": "chinese_nl",
+      "query": "需求经常变化，怎么让改代码的成本更低",
+      "englishQuery": "reduce the cost of changing code when requirements change",
+      "relevant": [
+        {"chapterId": "chapter-7", "slide": 8, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 24, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 9, "grade": 1},
+        {"chapterId": "chapter-7", "slide": 20, "grade": 1},
+        {"chapterId": "chapter-7", "slide": 62, "grade": 1}
+      ]
+    },
+    {
+      "id": "modifiability-mixed",
+      "concept": "modifiability",
+      "category": "mixed",
+      "query": "modifiability 可修改性 变更成本",
+      "englishQuery": "modifiability change cost",
+      "relevant": [
+        {"chapterId": "chapter-7", "slide": 8, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 24, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 9, "grade": 1},
+        {"chapterId": "chapter-7", "slide": 20, "grade": 1},
+        {"chapterId": "chapter-7", "slide": 62, "grade": 1}
+      ]
+    },
+    {
+      "id": "modifiability-constraint",
+      "concept": "modifiability",
+      "category": "constraint",
+      "query": "上线后要频繁增加新功能，架构上怎么降低修改的风险和代价",
+      "englishQuery": "reduce risk and cost of frequent feature additions",
+      "relevant": [
+        {"chapterId": "chapter-7", "slide": 8, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 24, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 9, "grade": 1},
+        {"chapterId": "chapter-7", "slide": 20, "grade": 1},
+        {"chapterId": "chapter-7", "slide": 62, "grade": 1}
+      ]
+    },
+
+    {
+      "id": "coupling-en",
+      "concept": "coupling_cohesion",
+      "category": "english_term",
+      "query": "coupling and cohesion",
+      "englishQuery": "coupling and cohesion",
+      "relevant": [
+        {"chapterId": "chapter-7", "slide": 26, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 27, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 29, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 31, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 32, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 34, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 28, "grade": 1}
+      ]
+    },
+    {
+      "id": "coupling-zh",
+      "concept": "coupling_cohesion",
+      "category": "chinese_nl",
+      "query": "改一个模块时不想影响其他模块，应该怎么设计",
+      "englishQuery": "design modules so changes do not affect others",
+      "relevant": [
+        {"chapterId": "chapter-7", "slide": 26, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 27, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 29, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 31, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 32, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 34, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 28, "grade": 1}
+      ]
+    },
+    {
+      "id": "coupling-mixed",
+      "concept": "coupling_cohesion",
+      "category": "mixed",
+      "query": "高内聚 低耦合 coupling cohesion 模块职责",
+      "englishQuery": "high cohesion low coupling module responsibilities",
+      "relevant": [
+        {"chapterId": "chapter-7", "slide": 26, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 27, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 29, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 31, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 32, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 34, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 28, "grade": 1}
+      ]
+    },
+    {
+      "id": "coupling-constraint",
+      "concept": "coupling_cohesion",
+      "category": "constraint",
+      "query": "两个模块有相似功能，怎么抽象才能减少重复和依赖",
+      "englishQuery": "abstract similar functionality to reduce duplicate dependencies",
+      "relevant": [
+        {"chapterId": "chapter-7", "slide": 26, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 27, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 29, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 31, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 32, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 34, "grade": 2},
+        {"chapterId": "chapter-7", "slide": 28, "grade": 1}
+      ]
+    },
+
+    {
+      "id": "performance-tactics-en",
+      "concept": "performance_tactics",
+      "category": "english_term",
+      "query": "performance tactics",
+      "englishQuery": "performance tactics",
+      "relevant": [
+        {"chapterId": "chapter-8", "slide": 18, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 21, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 22, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 28, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 29, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 32, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 33, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 19, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 20, "grade": 1}
+      ]
+    },
+    {
+      "id": "performance-tactics-zh",
+      "concept": "performance_tactics",
+      "category": "chinese_nl",
+      "query": "系统响应太慢，架构上可以怎么优化",
+      "englishQuery": "optimize a slow system at the architecture level",
+      "relevant": [
+        {"chapterId": "chapter-8", "slide": 18, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 21, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 22, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 28, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 29, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 32, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 33, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 19, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 20, "grade": 1}
+      ]
+    },
+    {
+      "id": "performance-tactics-mixed",
+      "concept": "performance_tactics",
+      "category": "mixed",
+      "query": "performance 性能 资源需求 并发 缓存",
+      "englishQuery": "performance resource demand concurrency cache",
+      "relevant": [
+        {"chapterId": "chapter-8", "slide": 18, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 21, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 22, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 28, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 29, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 32, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 33, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 19, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 20, "grade": 1}
+      ]
+    },
+    {
+      "id": "performance-tactics-constraint",
+      "concept": "performance_tactics",
+      "category": "constraint",
+      "query": "大量请求同时到达导致排队，应该限制事件响应还是增加并发",
+      "englishQuery": "limit event response or increase concurrency under load",
+      "relevant": [
+        {"chapterId": "chapter-8", "slide": 22, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 29, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 18, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 21, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 28, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 32, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 33, "grade": 1}
+      ]
+    },
+
+    {
+      "id": "scheduling-en",
+      "concept": "scheduling",
+      "category": "english_term",
+      "query": "task scheduling",
+      "englishQuery": "task scheduling",
+      "relevant": [
+        {"chapterId": "chapter-8", "slide": 39, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 43, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 45, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 46, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 40, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 42, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 50, "grade": 1}
+      ]
+    },
+    {
+      "id": "scheduling-zh",
+      "concept": "scheduling",
+      "category": "chinese_nl",
+      "query": "一批任务要在截止时间前完成，怎么安排执行顺序",
+      "englishQuery": "schedule tasks to meet deadlines",
+      "relevant": [
+        {"chapterId": "chapter-8", "slide": 39, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 43, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 45, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 46, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 40, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 42, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 50, "grade": 1}
+      ]
+    },
+    {
+      "id": "scheduling-mixed",
+      "concept": "scheduling",
+      "category": "mixed",
+      "query": "scheduling 调度 FCFS 优先级 DAG",
+      "englishQuery": "scheduling FCFS priority DAG",
+      "relevant": [
+        {"chapterId": "chapter-8", "slide": 39, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 43, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 45, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 46, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 40, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 42, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 50, "grade": 1}
+      ]
+    },
+    {
+      "id": "scheduling-constraint",
+      "concept": "scheduling",
+      "category": "constraint",
+      "query": "多个处理器上有一批任务，怎么分配给不同机器并满足截止时间",
+      "englishQuery": "assign tasks to multiple processors to meet deadlines",
+      "relevant": [
+        {"chapterId": "chapter-8", "slide": 46, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 39, "grade": 2},
+        {"chapterId": "chapter-8", "slide": 43, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 45, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 40, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 42, "grade": 1},
+        {"chapterId": "chapter-8", "slide": 50, "grade": 1}
+      ]
+    }
+  ]
+}

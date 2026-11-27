@@ -1,0 +1,427 @@
+{
+ "before": "docs\\evaluation\\results\\retrieval-run-with-hybrid.json",
+ "after": "data\\evaluation\\retrieval-run-with-ocr.json",
+ "note": "Positive delta means the with-OCR run ranked the labeled pages higher.",
+ "groups": {
+  "l1|baseline|ALL": {
+   "level": "l1",
+   "strategy": "baseline",
+   "category": "ALL",
+   "n": 36,
+   "meanDelta": -0.0562,
+   "ci95": [
+    -0.0897,
+    -0.0264
+   ],
+   "wins": 3,
+   "ties": 11,
+   "losses": 22
+  },
+  "l1|baseline|chinese_nl": {
+   "level": "l1",
+   "strategy": "baseline",
+   "category": "chinese_nl",
+   "n": 9,
+   "meanDelta": -0.05,
+   "ci95": [
+    -0.1115,
+    -0.0056
+   ],
+   "wins": 0,
+   "ties": 4,
+   "losses": 5
+  },
+  "l1|baseline|constraint": {
+   "level": "l1",
+   "strategy": "baseline",
+   "category": "constraint",
+   "n": 9,
+   "meanDelta": -0.0516,
+   "ci95": [
+    -0.0871,
+    -0.0261
+   ],
+   "wins": 0,
+   "ties": 1,
+   "losses": 8
+  },
+  "l1|baseline|english_term": {
+   "level": "l1",
+   "strategy": "baseline",
+   "category": "english_term",
+   "n": 9,
+   "meanDelta": -0.0163,
+   "ci95": [
+    -0.058,
+    0.0192
+   ],
+   "wins": 2,
+   "ties": 3,
+   "losses": 4
+  },
+  "l1|baseline|mixed": {
+   "level": "l1",
+   "strategy": "baseline",
+   "category": "mixed",
+   "n": 9,
+   "meanDelta": -0.1068,
+   "ci95": [
+    -0.2016,
+    -0.0222
+   ],
+   "wins": 1,
+   "ties": 3,
+   "losses": 5
+  },
+  "l1|hybrid|ALL": {
+   "level": "l1",
+   "strategy": "hybrid",
+   "category": "ALL",
+   "n": 36,
+   "meanDelta": -0.0238,
+   "ci95": [
+    -0.0508,
+    -0.0006
+   ],
+   "wins": 7,
+   "ties": 13,
+   "losses": 16
+  },
+  "l1|hybrid|chinese_nl": {
+   "level": "l1",
+   "strategy": "hybrid",
+   "category": "chinese_nl",
+   "n": 9,
+   "meanDelta": 0.0062,
+   "ci95": [
+    -0.0134,
+    0.0267
+   ],
+   "wins": 3,
+   "ties": 4,
+   "losses": 2
+  },
+  "l1|hybrid|constraint": {
+   "level": "l1",
+   "strategy": "hybrid",
+   "category": "constraint",
+   "n": 9,
+   "meanDelta": -0.0555,
+   "ci95": [
+    -0.1205,
+    -0.0036
+   ],
+   "wins": 0,
+   "ties": 4,
+   "losses": 5
+  },
+  "l1|hybrid|english_term": {
+   "level": "l1",
+   "strategy": "hybrid",
+   "category": "english_term",
+   "n": 9,
+   "meanDelta": -0.0148,
+   "ci95": [
+    -0.0876,
+    0.0404
+   ],
+   "wins": 3,
+   "ties": 3,
+   "losses": 3
+  },
+  "l1|hybrid|mixed": {
+   "level": "l1",
+   "strategy": "hybrid",
+   "category": "mixed",
+   "n": 9,
+   "meanDelta": -0.031,
+   "ci95": [
+    -0.0768,
+    0.0042
+   ],
+   "wins": 1,
+   "ties": 2,
+   "losses": 6
+  },
+  "l2|baseline|ALL": {
+   "level": "l2",
+   "strategy": "baseline",
+   "category": "ALL",
+   "n": 36,
+   "meanDelta": -0.0643,
+   "ci95": [
+    -0.1095,
+    -0.0292
+   ],
+   "wins": 1,
+   "ties": 18,
+   "losses": 17
+  },
+  "l2|baseline|chinese_nl": {
+   "level": "l2",
+   "strategy": "baseline",
+   "category": "chinese_nl",
+   "n": 9,
+   "meanDelta": -0.0168,
+   "ci95": [
+    -0.0401,
+    0.0
+   ],
+   "wins": 0,
+   "ties": 7,
+   "losses": 2
+  },
+  "l2|baseline|constraint": {
+   "level": "l2",
+   "strategy": "baseline",
+   "category": "constraint",
+   "n": 9,
+   "meanDelta": -0.0562,
+   "ci95": [
+    -0.1662,
+    0.0
+   ],
+   "wins": 0,
+   "ties": 7,
+   "losses": 2
+  },
+  "l2|baseline|english_term": {
+   "level": "l2",
+   "strategy": "baseline",
+   "category": "english_term",
+   "n": 9,
+   "meanDelta": -0.0313,
+   "ci95": [
+    -0.0657,
+    -0.0035
+   ],
+   "wins": 1,
+   "ties": 3,
+   "losses": 5
+  },
+  "l2|baseline|mixed": {
+   "level": "l2",
+   "strategy": "baseline",
+   "category": "mixed",
+   "n": 9,
+   "meanDelta": -0.1529,
+   "ci95": [
+    -0.2624,
+    -0.0626
+   ],
+   "wins": 0,
+   "ties": 1,
+   "losses": 8
+  },
+  "l2|hybrid|ALL": {
+   "level": "l2",
+   "strategy": "hybrid",
+   "category": "ALL",
+   "n": 36,
+   "meanDelta": -0.0446,
+   "ci95": [
+    -0.1071,
+    0.0194
+   ],
+   "wins": 11,
+   "ties": 5,
+   "losses": 20
+  },
+  "l2|hybrid|chinese_nl": {
+   "level": "l2",
+   "strategy": "hybrid",
+   "category": "chinese_nl",
+   "n": 9,
+   "meanDelta": -0.0084,
+   "ci95": [
+    -0.2322,
+    0.1945
+   ],
+   "wins": 6,
+   "ties": 0,
+   "losses": 3
+  },
+  "l2|hybrid|constraint": {
+   "level": "l2",
+   "strategy": "hybrid",
+   "category": "constraint",
+   "n": 9,
+   "meanDelta": -0.1082,
+   "ci95": [
+    -0.1911,
+    -0.0111
+   ],
+   "wins": 1,
+   "ties": 0,
+   "losses": 8
+  },
+  "l2|hybrid|english_term": {
+   "level": "l2",
+   "strategy": "hybrid",
+   "category": "english_term",
+   "n": 9,
+   "meanDelta": -0.0143,
+   "ci95": [
+    -0.0899,
+    0.0415
+   ],
+   "wins": 3,
+   "ties": 3,
+   "losses": 3
+  },
+  "l2|hybrid|mixed": {
+   "level": "l2",
+   "strategy": "hybrid",
+   "category": "mixed",
+   "n": 9,
+   "meanDelta": -0.0475,
+   "ci95": [
+    -0.1146,
+    0.006
+   ],
+   "wins": 1,
+   "ties": 2,
+   "losses": 6
+  },
+  "l2|llm_assisted|ALL": {
+   "level": "l2",
+   "strategy": "llm_assisted",
+   "category": "ALL",
+   "n": 36,
+   "meanDelta": -0.0778,
+   "ci95": [
+    -0.1413,
+    -0.0218
+   ],
+   "wins": 6,
+   "ties": 13,
+   "losses": 17
+  },
+  "l2|llm_assisted|chinese_nl": {
+   "level": "l2",
+   "strategy": "llm_assisted",
+   "category": "chinese_nl",
+   "n": 9,
+   "meanDelta": -0.0376,
+   "ci95": [
+    -0.235,
+    0.1158
+   ],
+   "wins": 2,
+   "ties": 6,
+   "losses": 1
+  },
+  "l2|llm_assisted|constraint": {
+   "level": "l2",
+   "strategy": "llm_assisted",
+   "category": "constraint",
+   "n": 9,
+   "meanDelta": -0.0862,
+   "ci95": [
+    -0.1803,
+    -0.0089
+   ],
+   "wins": 0,
+   "ties": 5,
+   "losses": 4
+  },
+  "l2|llm_assisted|english_term": {
+   "level": "l2",
+   "strategy": "llm_assisted",
+   "category": "english_term",
+   "n": 9,
+   "meanDelta": -0.0262,
+   "ci95": [
+    -0.1183,
+    0.0417
+   ],
+   "wins": 4,
+   "ties": 1,
+   "losses": 4
+  },
+  "l2|llm_assisted|mixed": {
+   "level": "l2",
+   "strategy": "llm_assisted",
+   "category": "mixed",
+   "n": 9,
+   "meanDelta": -0.1612,
+   "ci95": [
+    -0.2634,
+    -0.0677
+   ],
+   "wins": 0,
+   "ties": 1,
+   "losses": 8
+  },
+  "l2|translated_lexical|ALL": {
+   "level": "l2",
+   "strategy": "translated_lexical",
+   "category": "ALL",
+   "n": 36,
+   "meanDelta": -0.0817,
+   "ci95": [
+    -0.1406,
+    -0.031
+   ],
+   "wins": 4,
+   "ties": 12,
+   "losses": 20
+  },
+  "l2|translated_lexical|chinese_nl": {
+   "level": "l2",
+   "strategy": "translated_lexical",
+   "category": "chinese_nl",
+   "n": 9,
+   "meanDelta": -0.1253,
+   "ci95": [
+    -0.2626,
+    -0.0128
+   ],
+   "wins": 0,
+   "ties": 4,
+   "losses": 5
+  },
+  "l2|translated_lexical|constraint": {
+   "level": "l2",
+   "strategy": "translated_lexical",
+   "category": "constraint",
+   "n": 9,
+   "meanDelta": -0.1217,
+   "ci95": [
+    -0.2811,
+    0.0125
+   ],
+   "wins": 1,
+   "ties": 3,
+   "losses": 5
+  },
+  "l2|translated_lexical|english_term": {
+   "level": "l2",
+   "strategy": "translated_lexical",
+   "category": "english_term",
+   "n": 9,
+   "meanDelta": -0.0313,
+   "ci95": [
+    -0.0647,
+    -0.0042
+   ],
+   "wins": 1,
+   "ties": 3,
+   "losses": 5
+  },
+  "l2|translated_lexical|mixed": {
+   "level": "l2",
+   "strategy": "translated_lexical",
+   "category": "mixed",
+   "n": 9,
+   "meanDelta": -0.0485,
+   "ci95": [
+    -0.0964,
+    0.002
+   ],
+   "wins": 2,
+   "ties": 2,
+   "losses": 5
+  }
+ }
+}
