@@ -1,0 +1,7 @@
+# Optional tooling for the evaluation report (docs/evaluation).
+# The FastAPI app does not import these packages.
+python-docx>=1.1,<2
+
+# Optional: local ONNX embedding substitute for scripts/evaluate_local_hybrid.py
+# when the Jina API host is unreachable. Not used by the app.
+# fastembed>=0.9,<1

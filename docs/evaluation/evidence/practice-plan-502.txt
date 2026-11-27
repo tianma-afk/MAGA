@@ -1,0 +1,16 @@
+# Hybrid practice plan: one 502 then success (2026-11-26)
+
+Backend log from the real UI run (DeepSeek direct, Jina via 127.0.0.1:7890):
+
+```
+INFO:     127.0.0.1:53181 - "POST /api/practice/plan HTTP/1.1" 502 Bad Gateway
+INFO:     127.0.0.1:49197 - "POST /api/practice/plan HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65040 - "POST /api/practice/plan HTTP/1.1" 200 OK
+```
+
+- The first call failed the practice output/citation validation (502); the UI did
+  not fabricate a result.
+- The same request retried returned 200 and produced the three decision questions.
+- This is a negative sample: the hybrid path can still fail at generation/validation
+  even when retrieval and the index are healthy. The report does not count it in the
+  36-query retrieval benchmark.

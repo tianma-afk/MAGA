@@ -1,0 +1,20 @@
+.practice-case-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 10px; margin: 16px 0; }
+.practice-choice { text-align: left; border: 1px solid var(--line); padding: 14px; border-radius: 7px; background: #fff; display: grid; gap: 7px; }
+.practice-choice.selected { border-color: var(--green); background: #f2f8f4; }
+.practice-choice strong { font-size: 13px; }
+.practice-choice span, .practice-choice small { color: var(--muted); font-size: 11px; }
+.practice-case-info { border-top: 1px solid var(--line); padding-top: 16px; font-size: 12px; line-height: 1.9; }
+.practice-case-info ul, .practice-final ul { padding-left: 20px; }
+.practice-case-info li, .practice-final li { margin-bottom: 7px; }
+.practice-decision { border-top: 1px solid var(--line); padding: 16px 0; font-size: 12px; line-height: 1.8; }
+.practice-decision h3 { font-size: 14px; }
+.practice-turn { padding: 12px; background: #f4f6f4; border-radius: 6px; margin: 10px 0; }
+.practice-turn p { white-space: pre-wrap; margin: 6px 0; }
+.practice-feedback { border-left: 3px solid var(--green); padding: 10px 14px; background: #f6faf7; margin: 10px 0; }
+.practice-feedback p, .practice-final p { white-space: pre-wrap; line-height: 1.8; }
+.practice-compose { margin-top: 12px; }
+.practice-compose textarea { width: 100%; }
+.practice-final { line-height: 1.8; }
+.practice-final h3 { margin-top: 16px; }
+.practice-final details, .practice-feedback details { margin-top: 10px; color: var(--muted); font-size: 11px; }
+@media(max-width:760px) { .practice-case-grid { grid-template-columns: 1fr; } }

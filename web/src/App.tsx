@@ -6,6 +6,7 @@ import IconButton from './IconButton';
 import Tutor from './Tutor';
 import Home from './Home';
 import GlobalSearch from './GlobalSearch';
+import PracticeStudio from './PracticeStudio';
 import DesignStudio from './DesignStudio';
 import ConnectionBanner from './ConnectionBanner';
 import SourcePreviewDialog from './SourcePreviewDialog';
@@ -15,13 +16,14 @@ function routeChapter() {
   catch { return ''; }
 }
 function routeStudio() {
-  return window.location.hash === '#/studio';
+  return window.location.hash === '#/studio' || window.location.hash === '#/studio/legacy';
 }
 export default function App() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [selected, setSelected] = useState(routeChapter);
   const [quizView, setQuizView] = useState(() => window.location.hash.endsWith('?view=quiz'));
   const [studio, setStudio] = useState(routeStudio);
+  const [legacyStudio, setLegacyStudio] = useState(() => window.location.hash === '#/studio/legacy');
   const [jump, setJump] = useState<{ chapterId: string; slide: number; token: number }>();
   const [source, setSource] = useState<{ chapterId: string; slide: number }>();
   const jumpToken = useRef(0);
@@ -69,6 +71,7 @@ export default function App() {
       setSelected(routeChapter());
       setQuizView(window.location.hash.endsWith('?view=quiz'));
       setStudio(routeStudio());
+      setLegacyStudio(window.location.hash === '#/studio/legacy');
       setSource(undefined);
       if (window.innerWidth <= 760) setSidebar(false);
     };
@@ -128,7 +131,7 @@ export default function App() {
           <button className={`chapter-button ${studio ? 'selected' : ''}`}
             onClick={pickStudio}>
             <Compass size={17} />
-            <span className="chapter-text">架构实践<small>场景 → 方案 → 评审</small></span>
+            <span className="chapter-text">架构实践<small>案例 → 决策 → 追问 → 评审</small></span>
           </button>
           {chapters.map(item => <button key={item.id}
             className={`chapter-button ${selected === item.id ? 'selected' : ''}`}
@@ -146,9 +149,11 @@ export default function App() {
     </>}
     <div className="workspace">
       <header className="topbar">
-        <IconButton label={sidebar ? '收起章节目录' : '展开章节目录'} onClick={() => setSidebar(!sidebar)}>
-          {sidebar ? <PanelLeftClose size={19} /> : <PanelLeftOpen size={19} />}
-        </IconButton>
+        {!sidebar && (
+          <IconButton label="展开章节目录" onClick={() => setSidebar(true)}>
+            <PanelLeftOpen size={19} />
+          </IconButton>
+        )}
         <div className="breadcrumb"><button aria-label="返回学习空间" onClick={() => pickChapter('')}>学习空间</button>
           {studio ? <><span>/</span><strong>架构实践</strong></>
             : selected && <><span>/</span><strong>{chapters.find(c => c.id === selected)?.title || '章节'}</strong></>}
@@ -161,8 +166,10 @@ export default function App() {
       {loading ? <div className="center-state" role="status">正在读取章节…</div>
         : error ? <div className="center-state" role="alert"><p>{error}</p>
           <button className="text-button" onClick={() => setReload(v => v + 1)}><RefreshCw size={16} />重新连接</button></div>
-          : studio ? <DesignStudio mode={mode} onMode={setMode}
+          : studio ? (legacyStudio ? <DesignStudio mode={mode} onMode={setMode}
             onOpenSource={(chapterId, slide) => setSource({ chapterId, slide })} />
+            : <PracticeStudio mode={mode} onMode={setMode}
+            onOpenSource={(chapterId, slide) => setSource({ chapterId, slide })} />)
             : !selected ? <Home chapters={chapters} />
               : chapterError ? <div className="center-state" role="alert"><p>{chapterError}</p>
                 <button className="text-button" onClick={() => setRetry(v => v + 1)}><RefreshCw size={16} />重试加载</button></div>

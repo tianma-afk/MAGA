@@ -1,0 +1,1794 @@
+{
+  "metric": "Top-5 contains at least one expected (chapterId, slide)",
+  "cases": "docs\\fixtures\\retrieval-terms.json",
+  "baselineRef": "44a1e3f",
+  "before": {
+    "hits": 8,
+    "total": 20,
+    "rows": [
+      {
+        "query": "heartbeat",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 17
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 17,
+            "title": "Detect Faults: Heartbeat",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 18,
+            "title": "Detect Faults: Heartbeat",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 10,
+            "title": "Sample Concrete Availability Scenario",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 76,
+            "title": "Software Architecture",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 13,
+            "title": "Availability Tactics",
+            "score": 1
+          }
+        ]
+      },
+      {
+        "query": "心跳",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 17
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-6",
+            "slide": 19,
+            "title": "“网约车”",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 13,
+            "title": "“黄焖鸡”",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 15,
+            "title": "“黄焖鸡”",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 17,
+            "title": "“网约车”",
+            "score": 1
+          }
+        ]
+      },
+      {
+        "query": "availability",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 12
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 6,
+            "title": "What is Availability?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 7,
+            "title": "Availability",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 13,
+            "title": "Availability Tactics",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 1,
+            "title": "Chapter 5: Availability",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 9,
+            "title": "Availability General Scenario",
+            "score": 5
+          }
+        ]
+      },
+      {
+        "query": "可用性",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 12
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 26,
+            "title": "Recover from Faults",
+            "score": 9
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 66,
+            "title": "Software Architecture",
+            "score": 7
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 13,
+            "title": "Slide 13",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 16,
+            "title": "Blocked time",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 9,
+            "title": "阿里双十一——超大规模电商系统",
+            "score": 4
+          }
+        ]
+      },
+      {
+        "query": "interoperability",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-6",
+            "slide": 2
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 3
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-6",
+            "slide": 2,
+            "title": "What is Interoperability?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 3,
+            "title": "What is Interoperability?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 4,
+            "title": "What is Interoperability?",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 21,
+            "title": "Interoperability Tactics",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 38,
+            "title": "Interoperability Tactics",
+            "score": 5
+          }
+        ]
+      },
+      {
+        "query": "互操作性",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-6",
+            "slide": 2
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 3
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-6",
+            "slide": 3,
+            "title": "What is Interoperability?",
+            "score": 8
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 39,
+            "title": "场景： 你在便利店用支付宝扫描二维码购买一瓶水",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 51,
+            "title": "UNIX System V 操作系统的层结构",
+            "score": 4
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 66,
+            "title": "Software Architecture",
+            "score": 4
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 10,
+            "title": "Slide 10",
+            "score": 2
+          }
+        ]
+      },
+      {
+        "query": "modifiability",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-7",
+            "slide": 8
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 24
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-7",
+            "slide": 8,
+            "title": "What is Modifiability?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 1,
+            "title": "Chapter 7: Modifiability",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 21,
+            "title": "Modifiability General Scenario",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 23,
+            "title": "Sample Concrete Modifiability Scenario",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 24,
+            "title": "Goal of Modifiability Tactics",
+            "score": 5
+          }
+        ]
+      },
+      {
+        "query": "可修改性",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-7",
+            "slide": 8
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 24
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-1",
+            "slide": 66,
+            "title": "Software Architecture",
+            "score": 12
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 26,
+            "title": "Control Resource Demand 控制资源需求",
+            "score": 12
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 10,
+            "title": "Slide 10",
+            "score": 9
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 15,
+            "title": "What is the cost of the change?",
+            "score": 9
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 21,
+            "title": "Modifiability General Scenario",
+            "score": 6
+          }
+        ]
+      },
+      {
+        "query": "performance",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-8",
+            "slide": 2
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 18
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-8",
+            "slide": 3,
+            "title": "Why is Performance Important?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 4,
+            "title": "Why is Performance Important?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 19,
+            "title": "Performance Tactics",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 1,
+            "title": "Chapter 8: Performance",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 2,
+            "title": "What is Performance?",
+            "score": 5
+          }
+        ]
+      },
+      {
+        "query": "性能",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-8",
+            "slide": 2
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 18
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-1",
+            "slide": 66,
+            "title": "Software Architecture",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 10,
+            "title": "Slide 10",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 38,
+            "title": "Performance Tactics on the Road",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-2",
+            "slide": 5,
+            "title": "例子",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 16,
+            "title": "Specific Types of Changes",
+            "score": 2
+          }
+        ]
+      },
+      {
+        "query": "tactic",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-4",
+            "slide": 14
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 15
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-4",
+            "slide": 14,
+            "title": "Achieving Quality Attributes Through Tactics",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 15,
+            "title": "Tactic v.s. Architectural pattern",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 17,
+            "title": "Achieving Quality Attributes Through Tactics",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 12,
+            "title": "Goal of Availability Tactics",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 13,
+            "title": "Availability Tactics",
+            "score": 6
+          }
+        ]
+      },
+      {
+        "query": "战术",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-4",
+            "slide": 14
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 15
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-4",
+            "slide": 16,
+            "title": "Tactic v.s. Architectural pattern",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 17,
+            "title": "Achieving Quality Attributes Through Tactics",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 38,
+            "title": "Performance Tactics on the Road",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 26,
+            "title": "Recover from Faults",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 37,
+            "title": "Prevent Faults",
+            "score": 2
+          }
+        ]
+      },
+      {
+        "query": "fault",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 11
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 9
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 26,
+            "title": "Recover from Faults",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 30,
+            "title": "Recover from Faults \u000b(Preparation & Repair)",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 34,
+            "title": "Prevent Faults",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 35,
+            "title": "Prevent Faults",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 37,
+            "title": "Prevent Faults",
+            "score": 5
+          }
+        ]
+      },
+      {
+        "query": "故障",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 11
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 9
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-4",
+            "slide": 13,
+            "title": "Slide 13",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 2,
+            "title": "Slide 2",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 3,
+            "title": "Slide 3",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 4,
+            "title": "Slide 4",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 26,
+            "title": "Recover from Faults",
+            "score": 3
+          }
+        ]
+      },
+      {
+        "query": "redundancy",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 24
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 25
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 13,
+            "title": "Availability Tactics",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 22,
+            "title": "Detect Faults",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 24,
+            "title": "Recover from Faults \u000b(Preparation & Repair)",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 25,
+            "title": "Recover from Faults \u000b(Preparation & Repair)",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 27,
+            "title": "Recover from Faults \u000b(Preparation & Repair)",
+            "score": 1
+          }
+        ]
+      },
+      {
+        "query": "冗余",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 24
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 25
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 26,
+            "title": "Recover from Faults",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 12,
+            "title": "北斗卫星导航系统",
+            "score": 2
+          }
+        ]
+      },
+      {
+        "query": "recovery",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 27
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 29
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 32
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 39,
+            "title": "Summary",
+            "score": 1
+          }
+        ]
+      },
+      {
+        "query": "恢复",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 27
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 29
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 32
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 26,
+            "title": "Recover from Faults",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 3,
+            "title": "Slide 3",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 4,
+            "title": "Slide 4",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 23,
+            "title": "Software Architecture",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-2",
+            "slide": 5,
+            "title": "例子",
+            "score": 1
+          }
+        ]
+      },
+      {
+        "query": "security",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-2",
+            "slide": 5
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-1",
+            "slide": 65,
+            "title": "Software Architecture",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 6,
+            "title": "Major Contents",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 27,
+            "title": "Software Architecture",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 42,
+            "title": "Structures Provide Insight",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 60,
+            "title": "Some Useful Allocation Structures",
+            "score": 1
+          }
+        ]
+      },
+      {
+        "query": "安全性",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-2",
+            "slide": 5
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-4",
+            "slide": 17,
+            "title": "Achieving Quality Attributes Through Tactics",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 3,
+            "title": "Slide 3",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 10,
+            "title": "特性 | SOAP (WS- Stack)* | REST",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 31,
+            "title": "泰坦尼克",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 12,
+            "title": "北斗卫星导航系统",
+            "score": 1
+          }
+        ]
+      }
+    ]
+  },
+  "after": {
+    "hits": 16,
+    "total": 20,
+    "rows": [
+      {
+        "query": "heartbeat",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 17
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 17,
+            "title": "Detect Faults: Heartbeat",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 18,
+            "title": "Detect Faults: Heartbeat",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 10,
+            "title": "Sample Concrete Availability Scenario",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 19,
+            "title": "“网约车”",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 76,
+            "title": "Software Architecture",
+            "score": 1
+          }
+        ]
+      },
+      {
+        "query": "心跳",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 17
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 17,
+            "title": "Detect Faults: Heartbeat",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 18,
+            "title": "Detect Faults: Heartbeat",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 10,
+            "title": "Sample Concrete Availability Scenario",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 19,
+            "title": "“网约车”",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 76,
+            "title": "Software Architecture",
+            "score": 1
+          }
+        ]
+      },
+      {
+        "query": "availability",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 12
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 6,
+            "title": "What is Availability?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 7,
+            "title": "Availability",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 13,
+            "title": "Availability Tactics",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 1,
+            "title": "Chapter 5: Availability",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 9,
+            "title": "Availability General Scenario",
+            "score": 5
+          }
+        ]
+      },
+      {
+        "query": "可用性",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 12
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 6,
+            "title": "What is Availability?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 7,
+            "title": "Availability",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 13,
+            "title": "Availability Tactics",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 1,
+            "title": "Chapter 5: Availability",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 9,
+            "title": "Availability General Scenario",
+            "score": 5
+          }
+        ]
+      },
+      {
+        "query": "interoperability",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-6",
+            "slide": 2
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 3
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-6",
+            "slide": 3,
+            "title": "What is Interoperability?",
+            "score": 8
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 2,
+            "title": "What is Interoperability?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 4,
+            "title": "What is Interoperability?",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 21,
+            "title": "Interoperability Tactics",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 38,
+            "title": "Interoperability Tactics",
+            "score": 5
+          }
+        ]
+      },
+      {
+        "query": "互操作性",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-6",
+            "slide": 2
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 3
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-6",
+            "slide": 3,
+            "title": "What is Interoperability?",
+            "score": 8
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 2,
+            "title": "What is Interoperability?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 4,
+            "title": "What is Interoperability?",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 21,
+            "title": "Interoperability Tactics",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-6",
+            "slide": 38,
+            "title": "Interoperability Tactics",
+            "score": 5
+          }
+        ]
+      },
+      {
+        "query": "modifiability",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-7",
+            "slide": 8
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 24
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-7",
+            "slide": 8,
+            "title": "What is Modifiability?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 21,
+            "title": "Modifiability General Scenario",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 23,
+            "title": "Sample Concrete Modifiability Scenario",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 25,
+            "title": "Modifiability Tactics",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 1,
+            "title": "Chapter 7: Modifiability",
+            "score": 5
+          }
+        ]
+      },
+      {
+        "query": "可修改性",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-7",
+            "slide": 8
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 24
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-7",
+            "slide": 8,
+            "title": "What is Modifiability?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 21,
+            "title": "Modifiability General Scenario",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 23,
+            "title": "Sample Concrete Modifiability Scenario",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 25,
+            "title": "Modifiability Tactics",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-7",
+            "slide": 1,
+            "title": "Chapter 7: Modifiability",
+            "score": 5
+          }
+        ]
+      },
+      {
+        "query": "performance",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-8",
+            "slide": 2
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 18
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-8",
+            "slide": 38,
+            "title": "Performance Tactics on the Road",
+            "score": 8
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 3,
+            "title": "Why is Performance Important?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 4,
+            "title": "Why is Performance Important?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 8,
+            "title": "Performance General Scenario",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 11,
+            "title": "Sample Concrete Performance Scenario",
+            "score": 6
+          }
+        ]
+      },
+      {
+        "query": "性能",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-8",
+            "slide": 2
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 18
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-8",
+            "slide": 38,
+            "title": "Performance Tactics on the Road",
+            "score": 8
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 3,
+            "title": "Why is Performance Important?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 4,
+            "title": "Why is Performance Important?",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 8,
+            "title": "Performance General Scenario",
+            "score": 6
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 11,
+            "title": "Sample Concrete Performance Scenario",
+            "score": 6
+          }
+        ]
+      },
+      {
+        "query": "tactic",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-4",
+            "slide": 14
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 15
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-4",
+            "slide": 17,
+            "title": "Achieving Quality Attributes Through Tactics",
+            "score": 9
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 38,
+            "title": "Performance Tactics on the Road",
+            "score": 8
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 15,
+            "title": "Tactic v.s. Architectural pattern",
+            "score": 7
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 16,
+            "title": "Tactic v.s. Architectural pattern",
+            "score": 7
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 14,
+            "title": "Achieving Quality Attributes Through Tactics",
+            "score": 6
+          }
+        ]
+      },
+      {
+        "query": "战术",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-4",
+            "slide": 14
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 15
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-4",
+            "slide": 17,
+            "title": "Achieving Quality Attributes Through Tactics",
+            "score": 9
+          },
+          {
+            "chapterId": "chapter-8",
+            "slide": 38,
+            "title": "Performance Tactics on the Road",
+            "score": 8
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 15,
+            "title": "Tactic v.s. Architectural pattern",
+            "score": 7
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 16,
+            "title": "Tactic v.s. Architectural pattern",
+            "score": 7
+          },
+          {
+            "chapterId": "chapter-4",
+            "slide": 14,
+            "title": "Achieving Quality Attributes Through Tactics",
+            "score": 6
+          }
+        ]
+      },
+      {
+        "query": "fault",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 11
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 9
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 26,
+            "title": "Recover from Faults",
+            "score": 8
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 34,
+            "title": "Prevent Faults",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 35,
+            "title": "Prevent Faults",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 9,
+            "title": "Availability General Scenario",
+            "score": 4
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 11,
+            "title": "Goal of Availability Tactics",
+            "score": 4
+          }
+        ]
+      },
+      {
+        "query": "故障",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 11
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 9
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 26,
+            "title": "Recover from Faults",
+            "score": 8
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 34,
+            "title": "Prevent Faults",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 35,
+            "title": "Prevent Faults",
+            "score": 5
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 9,
+            "title": "Availability General Scenario",
+            "score": 4
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 11,
+            "title": "Goal of Availability Tactics",
+            "score": 4
+          }
+        ]
+      },
+      {
+        "query": "redundancy",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 24
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 25
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 26,
+            "title": "Recover from Faults",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 12,
+            "title": "北斗卫星导航系统",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 13,
+            "title": "Availability Tactics",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 22,
+            "title": "Detect Faults",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 24,
+            "title": "Recover from Faults \u000b(Preparation & Repair)",
+            "score": 1
+          }
+        ]
+      },
+      {
+        "query": "冗余",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 24
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 25
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 26,
+            "title": "Recover from Faults",
+            "score": 3
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 12,
+            "title": "北斗卫星导航系统",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 13,
+            "title": "Availability Tactics",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 22,
+            "title": "Detect Faults",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 24,
+            "title": "Recover from Faults \u000b(Preparation & Repair)",
+            "score": 1
+          }
+        ]
+      },
+      {
+        "query": "recovery",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 27
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 29
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 32
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 26,
+            "title": "Recover from Faults",
+            "score": 8
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 24,
+            "title": "Recover from Faults \u000b(Preparation & Repair)",
+            "score": 4
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 25,
+            "title": "Recover from Faults \u000b(Preparation & Repair)",
+            "score": 4
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 27,
+            "title": "Recover from Faults \u000b(Preparation & Repair)",
+            "score": 4
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 28,
+            "title": "Recover from Faults \u000b(Preparation & Repair)",
+            "score": 4
+          }
+        ]
+      },
+      {
+        "query": "恢复",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 27
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 29
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 32
+          }
+        ],
+        "hit": true,
+        "top5": [
+          {
+            "chapterId": "chapter-5",
+            "slide": 26,
+            "title": "Recover from Faults",
+            "score": 8
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 24,
+            "title": "Recover from Faults \u000b(Preparation & Repair)",
+            "score": 4
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 25,
+            "title": "Recover from Faults \u000b(Preparation & Repair)",
+            "score": 4
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 27,
+            "title": "Recover from Faults \u000b(Preparation & Repair)",
+            "score": 4
+          },
+          {
+            "chapterId": "chapter-5",
+            "slide": 28,
+            "title": "Recover from Faults \u000b(Preparation & Repair)",
+            "score": 4
+          }
+        ]
+      },
+      {
+        "query": "security",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-2",
+            "slide": 5
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-1",
+            "slide": 65,
+            "title": "Software Architecture",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 6,
+            "title": "Major Contents",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 27,
+            "title": "Software Architecture",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 42,
+            "title": "Structures Provide Insight",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 60,
+            "title": "Some Useful Allocation Structures",
+            "score": 1
+          }
+        ]
+      },
+      {
+        "query": "安全性",
+        "expectedSources": [
+          {
+            "chapterId": "chapter-2",
+            "slide": 5
+          }
+        ],
+        "hit": false,
+        "top5": [
+          {
+            "chapterId": "chapter-1",
+            "slide": 65,
+            "title": "Software Architecture",
+            "score": 2
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 6,
+            "title": "Major Contents",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 27,
+            "title": "Software Architecture",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 42,
+            "title": "Structures Provide Insight",
+            "score": 1
+          },
+          {
+            "chapterId": "chapter-1",
+            "slide": 60,
+            "title": "Some Useful Allocation Structures",
+            "score": 1
+          }
+        ]
+      }
+    ]
+  },
+  "limitations": "Small fixed course fixture, not general retrieval or AI quality accuracy."
+}

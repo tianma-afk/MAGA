@@ -47,7 +47,7 @@ export default function Home({ chapters }: { chapters: Chapter[] }) {
       <Compass size={22} />
       <span>
         <strong>架构实践</strong>
-        <small>选一个真实场景，用课程中的质量属性和战术完成设计草案</small>
+        <small>选择真实项目案例，独立作出架构决策并接受针对性追问</small>
       </span>
       <ArrowUpRight size={18} aria-hidden="true" />
     </a>}

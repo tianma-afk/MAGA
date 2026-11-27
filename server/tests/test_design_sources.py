@@ -96,3 +96,40 @@ def test_cancellation_is_not_converted_to_fallback(monkeypatch):
     monkeypatch.setattr(design_sources, 'run_in_threadpool', cancel)
     with pytest.raises(asyncio.CancelledError):
         asyncio.run(select_sources(None, DesignScenarioRequest(title='x', scenario='y'), stage='scenarios'))
+
+
+@pytest.mark.parametrize('stage,model', [('scenarios', DesignScenarioRequest),
+    ('tactics', DesignTacticRequest), ('review', DesignReviewRequest)])
+def test_hybrid_explicitly_selects_indexed_sources_in_each_stage(setup, monkeypatch, stage, model):
+    from server import design_sources
+    from server.search import search_all
+    _, _, root = setup
+    store = ChapterStore(root / 'book', root / 'slides')
+    observed = []
+    def retrieval(query, limit):
+        observed.append((query, limit))
+        return search_all(store, 'availability', limit)
+    monkeypatch.setattr(design_sources, 'hybrid_search', retrieval)
+    payload = {'scenario': 'heartbeat'}
+    if stage != 'tactics':
+        payload['title'] = 'availability'
+    selected = asyncio.run(select_sources(
+        store, model.model_validate({**payload, 'retrievalStrategy': 'hybrid'}), stage=stage))
+    assert observed and observed[0][1] == 8
+    assert selected.sources
+    expected = search_all(store, 'availability', 8).results[0]
+    assert (selected.sources[0].chapterId, selected.sources[0].slide) == (expected.chapterId, expected.slide)
+    assert selected.diagnostics.mode == 'normal'
+    assert 'hybrid_selection' in selected.diagnostics.stage_times_ms
+
+
+def test_hybrid_failure_is_reported_not_silently_downgraded(monkeypatch):
+    from server import design_sources
+    monkeypatch.setattr(design_sources, 'hybrid_search',
+                        lambda *args: (_ for _ in ()).throw(ValueError('missing index')))
+    request = DesignScenarioRequest(title='x', scenario='y', retrievalStrategy='hybrid')
+    with pytest.raises(HTTPException) as captured:
+        asyncio.run(select_sources(None, request, stage='scenarios'))
+    assert captured.value.status_code == 503
+    assert captured.value.detail['code'] == 'RAG_UNAVAILABLE'
+    assert 'missing index' not in str(captured.value.detail)

@@ -118,7 +118,7 @@ export interface DesignVersions {
   tactics?: string;
   review?: string;
 }
-export type RetrievalStrategy = 'baseline' | 'llm_assisted';
+export type RetrievalStrategy = 'baseline' | 'llm_assisted' | 'hybrid';
 export interface DesignScenarioResponse {
   retrievalFallback?: boolean;
   qualityAttributes: DesignQualityAttribute[];

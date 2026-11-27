@@ -12,6 +12,7 @@ import {
 } from './designValidity';
 import type { DesignProject, Mode, RetrievalStrategy } from './types';
 import DesignRetrievalMode from './DesignRetrievalMode';
+import { useRetrievalIndex } from './useRetrievalIndex';
 import DesignCitations from './DesignCitations';
 import ConfirmDialog from './ConfirmDialog';
 import './studio.css';
@@ -49,9 +50,10 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
   });
   const [step, setStep] = useState<DesignStep>(() => initialDesignStep(project));
   const [loading, setLoading] = useState(false);
-  const [retrievalStrategy, setRetrievalStrategy] = useState<RetrievalStrategy>('baseline');
   const [retrievalFallback, setRetrievalFallback] = useState(false);
-  const retrievalInput = retrievalStrategy === 'llm_assisted' ? { retrievalStrategy } : {};
+  const { strategy: retrievalStrategy, status: indexStatus, error: indexError,
+    count: indexCount, blocked: indexBlocked, select, retry: prepareIndex } = useRetrievalIndex();
+  const retrievalInput = retrievalStrategy === 'baseline' ? {} : { retrievalStrategy };
   const [error, setError] = useState('');
   const [storageFailed, setStorageFailed] = useState(false);
   const [savedAt, setSavedAt] = useState(() => stamp(project.updatedAt));
@@ -72,6 +74,11 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
   const reviewNote = statusNote(reviewState, 'review');
 
   useEffect(() => () => { request.current?.abort(); }, []);
+
+  function changeRetrievalStrategy(value: RetrievalStrategy) {
+    select(value);
+    setRetrievalFallback(false);
+  }
 
   /** The single boundary for every project change: state, the in-flight
    *  request's view of it, and local storage stay in step. */
@@ -94,7 +101,7 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
   }
 
   function requestGeneration(stage: GenerationStage) {
-    if (unavailable || loading || request.current) return;
+    if (unavailable || loading || request.current || indexBlocked) return;
     const current = projectRef.current;
     if (stage === 'analysis' && (!current.title.trim() || !current.scenario.trim())) return;
     if (stage === 'tactics' && blocksNextStage(analysisStatus(current))) return;
@@ -111,6 +118,7 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
 
   function runGeneration(stage: GenerationStage) {
     setConfirmGeneration(null);
+    if (indexBlocked) return;
     if (stage === 'analysis') void generateScenarios();
     else if (stage === 'tactics') void generateTactics();
     else void generateReview();
@@ -118,7 +126,7 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
 
   async function generateScenarios() {
     const current = projectRef.current;
-    if (unavailable || loading || request.current || !current.title.trim() || !current.scenario.trim()) return;
+    if (unavailable || loading || request.current || indexBlocked || !current.title.trim() || !current.scenario.trim()) return;
     const inputs = {
       title: current.title.trim(),
       scenario: current.scenario.trim(),
@@ -161,7 +169,7 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
   }
 
   async function generateTactics() {
-    if (unavailable || loading || request.current || blocksNextStage(analysisState)) return;
+    if (unavailable || loading || request.current || indexBlocked || blocksNextStage(analysisState)) return;
     const current = projectRef.current;
     const key = tacticsKey(current);
     const controller = new AbortController();
@@ -204,7 +212,7 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
   }
 
   async function generateReview() {
-    if (unavailable || loading || request.current || !selectedTactics.length
+    if (unavailable || loading || request.current || indexBlocked || !selectedTactics.length
       || blocksNextStage(tacticsState)) return;
     const current = projectRef.current;
     const chosen = selectedTacticsOf(current);
@@ -275,8 +283,7 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
     setStorageFailed(false);
     setSavedAt('');
     setConfirmReset(false);
-    setRetrievalStrategy('baseline');
-    setRetrievalFallback(false);
+    changeRetrievalStrategy('baseline');
   }
 
   function exportDesign() {
@@ -300,7 +307,8 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
       </div>
     </header>
     <DesignRetrievalMode value={retrievalStrategy} disabled={loading} fallback={retrievalFallback}
-      onChange={value => { setRetrievalStrategy(value); setRetrievalFallback(false); }} />
+      indexStatus={indexStatus} indexError={indexError} indexCount={indexCount}
+      onRetry={() => { void prepareIndex(); }} onChange={changeRetrievalStrategy} />
     <ol className="studio-steps" aria-label="设计步骤">
       {STEPS.map((item, index) => {
         const current = item.id === step;
@@ -352,7 +360,7 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
           onChange={event => patch({ requirements: event.target.value })}
           placeholder="例如：考试期间不能中断；峰值 1 万人同时在线。" />
       </label>
-      <button className="studio-primary" disabled={unavailable || loading || !canStart}
+      <button className="studio-primary" disabled={unavailable || loading || indexBlocked || !canStart}
         onClick={() => requestGeneration('analysis')}>
         生成质量属性与场景
       </button>
@@ -385,7 +393,7 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
           <DesignCitations citations={scenario.citations} onOpen={onOpenSource} />
         </article>)}
       </div>
-      <button className="studio-primary" disabled={unavailable || loading || blocksNextStage(analysisState)}
+      <button className="studio-primary" disabled={unavailable || loading || indexBlocked || blocksNextStage(analysisState)}
         title={blocksNextStage(analysisState) ? '请先重新生成质量属性与场景' : undefined}
         onClick={() => requestGeneration('tactics')}>推荐架构战术</button>
     </section> : null}
@@ -416,7 +424,7 @@ export default function DesignStudio({ mode, onMode, onOpenSource }: Props) {
         </label>)}
       </div>
       <button className="studio-primary"
-        disabled={unavailable || loading || !selectedTactics.length || blocksNextStage(tacticsState)}
+        disabled={unavailable || loading || indexBlocked || !selectedTactics.length || blocksNextStage(tacticsState)}
         title={blocksNextStage(tacticsState) ? '请先重新推荐架构战术' : undefined}
         onClick={() => requestGeneration('review')}>生成 AI 评审</button>
     </section> : null}

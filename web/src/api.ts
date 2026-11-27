@@ -4,6 +4,8 @@ import type {
   DesignScenarioResponse, DesignTactic, DesignTacticResponse, Health, Message,
   Outline, QuizQuestion, QuizResponse, SearchResponse, SearchResult, RetrievalStrategy,
 } from './types';
+import type { PracticeCase, PracticeQuestion, PracticeTurn, PracticeAssessment, PracticeFinal,
+  KnowledgeReceipt } from './practice';
 import { boundedHistory, validDiagram } from './state';
 
 async function json<T>(path: string, init?: RequestInit): Promise<T> {
@@ -20,6 +22,14 @@ async function json<T>(path: string, init?: RequestInit): Promise<T> {
     if (response.status === 503 && !!detail && typeof detail === 'object'
       && (detail as { code?: unknown }).code === 'AI_NOT_CONFIGURED') {
       throw new ConfigurationError();
+    }
+    if (response.status === 503 && !!detail && typeof detail === 'object'
+      && (detail as { code?: unknown }).code === 'RAG_UNAVAILABLE') {
+      throw new Error('RAG 检索不可用：请检查 JINA_API_KEY、PPT 索引和英文查询模型配置。');
+    }
+    if (response.status === 503 && !!detail && typeof detail === 'object'
+      && (detail as { code?: unknown }).code === 'RAG_INDEX_UNAVAILABLE') {
+      throw new Error('RAG 索引构建失败：请检查 JINA_API_KEY、Jina API 网络和课件文件后重试。');
     }
     throw new Error(failureMessage(response.status, detail));
   }
@@ -175,6 +185,65 @@ function designReview(value: unknown): DesignReview {
   };
 }
 export const api = {
+  async practiceCases(signal: AbortSignal): Promise<PracticeCase[]> {
+    const result = await json<PracticeCase[]>('/api/practice/cases', { signal });
+    if (!Array.isArray(result) || result.length < 1 || result.some(c => !c || !c.id
+      || !c.title || !Array.isArray(c.requirements) || !Array.isArray(c.constraints))) {
+      throw new Error('练习案例数据不完整。');
+    }
+    return result;
+  },
+  async practicePlan(input: { caseId: string; analysis: string; retrievalStrategy: RetrievalStrategy },
+    signal: AbortSignal): Promise<{ decisions: PracticeQuestion[]; knowledge: KnowledgeReceipt }> {
+    const result = await json<{ decisions: PracticeQuestion[]; knowledge: KnowledgeReceipt }>('/api/practice/plan', {
+      method: 'POST', signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input),
+    });
+    if (!Array.isArray(result.decisions) || result.decisions.length !== 3
+      || result.decisions.some(d => !d || typeof d.id !== 'string' || !d.question
+        || !Array.isArray(d.citations) || !d.citations.every(c => !!c.chapterId && c.slide > 0))
+      || !result.knowledge || !Array.isArray(result.knowledge.citations)) {
+      throw new Error('架构决策问题数据不完整。');
+    }
+    return result;
+  },
+  async practiceAnswer(input: { caseId: string; analysis: string; retrievalStrategy: RetrievalStrategy;
+    decision: PracticeQuestion; turns: PracticeTurn[] }, signal: AbortSignal):
+    Promise<PracticeAssessment & { knowledge: KnowledgeReceipt }> {
+    const result = await json<PracticeAssessment & { knowledge: KnowledgeReceipt }>('/api/practice/answer', {
+      method: 'POST', signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input),
+    });
+    if (!['followup', 'complete'].includes(result.action) || typeof result.feedback !== 'string'
+      || (result.action === 'followup' && !result.followup)
+      || !Array.isArray(result.citations) || !result.knowledge) {
+      throw new Error('架构追问数据不完整。');
+    }
+    return result;
+  },
+  async practiceFinalize(input: { caseId: string; analysis: string; retrievalStrategy: RetrievalStrategy;
+    decisions: { decision: PracticeQuestion; turns: PracticeTurn[]; assessment: PracticeAssessment }[] },
+    signal: AbortSignal): Promise<PracticeFinal> {
+    const result = await json<PracticeFinal>('/api/practice/finalize', {
+      method: 'POST', signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input),
+    });
+    if (!result || typeof result.summary !== 'string' || !result.referenceApproach
+      || !Array.isArray(result.strengths) || !Array.isArray(result.improvements)
+      || !Array.isArray(result.citations) || !result.knowledge) {
+      throw new Error('架构评审报告数据不完整。');
+    }
+    return result;
+  },
+  async ensureRetrievalIndex(signal: AbortSignal): Promise<{
+    status: 'ready'; total: number; updated: number; deleted: number;
+  }> {
+    const result = await json<{ status?: unknown; total?: unknown;
+      updated?: unknown; deleted?: unknown }>('/api/retrieval/index/ensure', {
+      method: 'POST', signal,
+    });
+    if (result.status !== 'ready' || ![result.total, result.updated, result.deleted].every(
+      n => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0
+    ) || result.total === 0) throw new Error('RAG 索引状态异常，请重试。');
+    return result as { status: 'ready'; total: number; updated: number; deleted: number };
+  },
   health: (signal: AbortSignal) => json<Health>('/api/health', { signal }),
   chapters: (signal: AbortSignal) => json<Chapter[]>('/api/chapters', { signal }),
   chapter: (id: string, signal: AbortSignal) =>

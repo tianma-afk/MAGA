@@ -36,6 +36,9 @@ jobs:
 
       - run: python -m pytest server/tests -q
 
+      # Pure metric functions; no network or model keys required.
+      - run: python -m unittest scripts/test_eval_metrics.py
+
   frontend:
     runs-on: ubuntu-latest
     steps:

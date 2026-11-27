@@ -8,6 +8,7 @@ import { newQuizDraft, saveQuizWorkspace } from './quizWorkspace';
 import { newQuizRecord, saveQuizRecord } from './quiz';
 import { emptyDesignProject, saveDesignProject } from './design';
 import { analysisKey } from './designValidity';
+import { savePractice } from './practice';
 import type { Chapter } from './types';
 
 const chapters: Chapter[] = [
@@ -135,4 +136,22 @@ it('shows no invented chapter task when chapters are unavailable', () => {
   render(<Home chapters={[]} />);
   expect(screen.getByText('暂无可用章节。')).toBeTruthy();
   expect(screen.queryByRole('link', { name: /继续学习/ })).toBeNull();
+});
+
+it('resumes a saved case-driven decision training session from the home page', () => {
+  savePractice({
+    caseId: 'campus-booking', caseTitle: '校园活动报名与名额管理',
+    analysis: '必须保证一致性并考虑通知服务异常和性能瓶颈。',
+    retrievalStrategy: 'baseline', updatedAt: new Date().toISOString(),
+    decisions: ['capacity', 'notification', 'evolution'].map(id => ({
+      decision: { id, question: '如何在业务约束内设计模块协作和一致性机制？', citations: [] },
+      turns: [],
+    })),
+  });
+  const result = homeSnapshot(localStorage, chapters);
+  expect(result.tasks.find(task => task.kind === 'design')).toMatchObject({
+    title: '校园活动报名与名额管理', href: '#/studio',
+  });
+  render(<Home chapters={chapters} />);
+  expect(screen.getByRole('link', { name: '继续实践：校园活动报名与名额管理' })).toBeTruthy();
 });

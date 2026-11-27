@@ -1,0 +1,59 @@
+# Jina connectivity evidence (captured 2026-11-26 23:10:56 +0800)
+
+$ nslookup api.jina.ai
+非权威应答:
+服务器:  gzicndns1.scut.edu.cn
+Address:  10.6.6.6
+
+名称:    api.jina.ai
+Addresses:  2a03:2880:f126:83:face:b00c:0:25de
+	  31.13.84.34
+
+# 说明：这两个地址不属于 Jina AI（2a03:2880::/32 与 31.13.0.0/16 均为 Meta 网段），
+# 是校园 DNS（gzicndns1.scut.edu.cn）返回的拦截地址；同一域名的解析结果在多次查询中
+# 在 162.125.80.5 / 173.252.248.244 / 31.13.84.34 之间变化，进一步说明不是真实服务 IP。
+
+$ curl -4 -sS -m 15 -o /dev/null -w "%{http_code}\n" https://api.jina.ai/v1/embeddings
+curl: (28) Connection timed out after 15011 milliseconds
+000
+
+$ curl -sS -m 15 -o /dev/null -w "%{http_code}\n" https://api.jina.ai/v1/embeddings
+curl: (28) Connection timed out after 15007 milliseconds
+000
+
+$ .venv/Scripts/python.exe -m server.retrieval_index
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "D:\02pythonLearn\MAGA\MAGA\.venv\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectTimeout: [WinError 10060] 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。
+
+$ sqlite rows
+0
+
+## Resolution (2026-11-26 23:30, Asia/Shanghai)
+
+The machine already had a Windows system proxy configured but the automation
+shell did not inherit it:
+
+    ProxyEnable : 1
+    ProxyServer : 127.0.0.1:7890
+
+With that proxy, the Jina host is reachable:
+
+    $ curl -x http://127.0.0.1:7890 -H "Authorization: Bearer ***" \
+        https://r.jina.ai/https://www.example.com
+    code=200 time=0.677
+
+    $ curl -x http://127.0.0.1:7890 -o /dev/null -w "%{http_code}" \
+        https://api.jina.ai/v1/embeddings
+    401        # reachable; 401 is the expected unauthenticated response
+
+Real index build through the proxy:
+
+    $ HTTPS_PROXY=http://127.0.0.1:7890 python -m server.retrieval_index
+    {'total': 340, 'updated': 340, 'deleted': 0}
+
+So the earlier failure was not a Jina outage and not a bad key; the shell was
+bypassing the system proxy (direct connection), and campus DNS returns
+intercepted addresses for Jina. Hybrid evaluation below uses this proxy.
+

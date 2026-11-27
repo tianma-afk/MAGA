@@ -1,10 +1,16 @@
 """Practice-only dispatch: baseline by default, original B explicitly selected."""
+import json
+import sqlite3
 from time import perf_counter
+
+import httpx
+from fastapi import HTTPException
 
 from starlette.concurrency import run_in_threadpool
 
 from .design_source_contracts import SourceDiagnostics, SourceSelection
 from .design_planner import plan_sources
+from .hybrid_search import hybrid_search
 from .models import DesignReviewRequest, DesignScenarioRequest, DesignTacticRequest
 from .search import search_all
 from .tutor import excerpt
@@ -69,6 +75,32 @@ def validate_selection(store, selection):
 
 async def select_sources(store, request, *, stage, transport=None):
     query = build_query(request, stage)
+    if request.retrievalStrategy == 'hybrid':
+        start = perf_counter()
+        try:
+            result = await run_in_threadpool(hybrid_search, query, MAX_SOURCES)
+        except (OSError, ValueError, KeyError, TypeError, sqlite3.Error,
+                httpx.HTTPError, json.JSONDecodeError) as exc:
+            raise HTTPException(503, {
+                "code": "RAG_UNAVAILABLE",
+                "message": "RAG 混合检索不可用；请检查 JINA_API_KEY、索引构建及英文查询模型配置。",
+            }) from exc
+        sources = []
+        seen = set()
+        for hit in result.results:
+            key = (hit.chapterId, hit.slide)
+            if key in seen:
+                continue
+            seen.add(key)
+            chapter = store.read(hit.chapterId)
+            slide = chapter.slides[hit.slide - 1]
+            sources.append({"chapterId": chapter.id, "slide": slide.number,
+                            "title": slide.title, "source": excerpt(slide)})
+        selection = SourceSelection(sources=sources, diagnostics=SourceDiagnostics(
+            stage=stage, mode="normal", status="ok" if sources else "empty",
+            queries=[query], stage_times_ms={
+                "hybrid_selection": (perf_counter() - start) * 1000}))
+        return await run_in_threadpool(validate_selection, store, selection)
     if request.retrievalStrategy == 'llm_assisted':
         sources, info = await plan_sources(store, request, query, legacy_sources, transport)
         selection = SourceSelection(sources=sources, diagnostics=SourceDiagnostics(

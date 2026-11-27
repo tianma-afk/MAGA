@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="360" viewBox="0 0 780 360" role="img" aria-label="混合检索相对标准检索的 nDCG@8 差值"><style>
+  .surface { fill: var(--surface, #fcfcfb); }
+  .ink { fill: var(--ink, #0b0b0b); }
+  .secondary { fill: var(--secondary, #52514e); }
+  .muted { fill: var(--muted, #898781); }
+  .grid { stroke: var(--grid, #e1e0d9); stroke-width: 1; }
+  .axis { stroke: var(--axis, #c3c2b7); stroke-width: 1; }
+  .s1 { fill: var(--s1, #2a78d6); }
+  .s2 { fill: var(--s2, #eb6834); }
+  .s3 { fill: var(--s3, #1baf7a); }
+  .s4 { fill: var(--s4, #6250d6); }
+  .neg { fill: var(--neg, #d03b3b); }
+  .pos { fill: var(--s1, #2a78d6); }
+  .zero { stroke: var(--axis, #c3c2b7); stroke-width: 1; }
+  text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; } .ink { fill: #f0efec; }
+    .secondary { fill: #c3c2b7; } .muted { fill: #898781; }
+    .grid { stroke: #2c2c2a; } .axis { stroke: #383835; }
+    .s1 { fill: #3987e5; } .s2 { fill: #d95926; } .s3 { fill: #199e70; } .s4 { fill: #9085e9; }
+  }
+</style><rect class="surface" x="0" y="0" width="780" height="360" rx="10"/><text class="ink" x="28" y="30" font-size="16" font-weight="600">混合检索相对标准检索的 nDCG@8 差值</text><text class="secondary" x="28" y="50" font-size="12">高于 0=比标准检索好，低于 0=更差；看混合检索是否值得</text><rect class="pos" x="28" y="57" width="10" height="10" rx="2"/><text class="secondary" x="44" y="66" font-size="12">增强更好</text><rect class="neg" x="104" y="57" width="10" height="10" rx="2"/><text class="secondary" x="120" y="66" font-size="12">增强更差</text><line class="zero" x1="62" y1="197.0" x2="756" y2="197.0"/><line class="grid" x1="62" y1="298.0" x2="756" y2="298.0"/><text class="muted" x="54" y="302.0" font-size="11" text-anchor="end">-0.65</text><line class="grid" x1="62" y1="247.5" x2="756" y2="247.5"/><text class="muted" x="54" y="251.5" font-size="11" text-anchor="end">-0.32</text><line class="grid" x1="62" y1="146.5" x2="756" y2="146.5"/><text class="muted" x="54" y="150.5" font-size="11" text-anchor="end">+0.32</text><line class="grid" x1="62" y1="96.0" x2="756" y2="96.0"/><text class="muted" x="54" y="100.0" font-size="11" text-anchor="end">+0.65</text><g><title>英文术语: +0.025</title><path class="pos" d="M107.4,197.0 V197.0 Q107.4,193.0 111.4,193.0 H151.4 Q155.4,193.0 155.4,197.0 V197.0 Z"/></g><text class="secondary" x="131.4" y="187.0" font-size="11" text-anchor="middle">+0.025</text><text class="secondary" x="131.4" y="320" font-size="12" text-anchor="middle">英文术语</text><g><title>中文自然语言: +0.403</title><path class="pos" d="M246.2,197.0 V138.2 Q246.2,134.2 250.2,134.2 H290.2 Q294.2,134.2 294.2,138.2 V197.0 Z"/></g><text class="secondary" x="270.2" y="128.2" font-size="11" text-anchor="middle">+0.403</text><text class="secondary" x="270.2" y="320" font-size="12" text-anchor="middle">中文自然语言</text><g><title>中英混合: +0.190</title><path class="pos" d="M385.0,197.0 V171.4 Q385.0,167.4 389.0,167.4 H429.0 Q433.0,167.4 433.0,171.4 V197.0 Z"/></g><text class="secondary" x="409.0" y="161.4" font-size="11" text-anchor="middle">+0.190</text><text class="secondary" x="409.0" y="320" font-size="12" text-anchor="middle">中英混合</text><g><title>约束型: +0.540</title><path class="pos" d="M523.8,197.0 V116.8 Q523.8,112.8 527.8,112.8 H567.8 Q571.8,112.8 571.8,116.8 V197.0 Z"/></g><text class="secondary" x="547.8" y="106.8" font-size="11" text-anchor="middle">+0.540</text><text class="secondary" x="547.8" y="320" font-size="12" text-anchor="middle">约束型</text><g><title>全部: +0.290</title><path class="pos" d="M662.6,197.0 V155.9 Q662.6,151.9 666.6,151.9 H706.6 Q710.6,151.9 710.6,155.9 V197.0 Z"/></g><text class="secondary" x="686.6" y="145.9" font-size="11" text-anchor="middle">+0.290</text><text class="secondary" x="686.6" y="320" font-size="12" text-anchor="middle">全部</text></svg>

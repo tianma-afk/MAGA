@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="390" viewBox="0 0 780 390" role="img" aria-label="L2 检索阶段延迟（毫秒）"><style>
+  .surface { fill: var(--surface, #fcfcfb); }
+  .ink { fill: var(--ink, #0b0b0b); }
+  .secondary { fill: var(--secondary, #52514e); }
+  .muted { fill: var(--muted, #898781); }
+  .grid { stroke: var(--grid, #e1e0d9); stroke-width: 1; }
+  .axis { stroke: var(--axis, #c3c2b7); stroke-width: 1; }
+  .s1 { fill: var(--s1, #2a78d6); }
+  .s2 { fill: var(--s2, #eb6834); }
+  .s3 { fill: var(--s3, #1baf7a); }
+  .s4 { fill: var(--s4, #6250d6); }
+  .neg { fill: var(--neg, #d03b3b); }
+  .pos { fill: var(--s1, #2a78d6); }
+  .zero { stroke: var(--axis, #c3c2b7); stroke-width: 1; }
+  text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; } .ink { fill: #f0efec; }
+    .secondary { fill: #c3c2b7; } .muted { fill: #898781; }
+    .grid { stroke: #2c2c2a; } .axis { stroke: #383835; }
+    .s1 { fill: #3987e5; } .s2 { fill: #d95926; } .s3 { fill: #199e70; } .s4 { fill: #9085e9; }
+  }
+</style><rect class="surface" x="0" y="0" width="780" height="390" rx="10"/><text class="ink" x="28" y="30" font-size="16" font-weight="600">L2 检索阶段延迟（毫秒）</text><text class="secondary" x="28" y="50" font-size="12">一次检索要等多久（毫秒）；越矮越快；它不是质量分</text><rect class="s1" x="28" y="57" width="10" height="10" rx="2"/><text class="secondary" x="44" y="66" font-size="12">p50</text><rect class="s2" x="92" y="57" width="10" height="10" rx="2"/><text class="secondary" x="108" y="66" font-size="12">p95</text><line class="axis" x1="62" y1="328" x2="756" y2="328"/><line class="grid" x1="62" y1="328.0" x2="756" y2="328.0"/><text class="muted" x="54" y="332.0" font-size="11" text-anchor="end">0</text><line class="grid" x1="62" y1="270.0" x2="756" y2="270.0"/><text class="muted" x="54" y="274.0" font-size="11" text-anchor="end">1500</text><line class="grid" x1="62" y1="212.0" x2="756" y2="212.0"/><text class="muted" x="54" y="216.0" font-size="11" text-anchor="end">3000</text><line class="grid" x1="62" y1="154.0" x2="756" y2="154.0"/><text class="muted" x="54" y="158.0" font-size="11" text-anchor="end">4500</text><line class="grid" x1="62" y1="96.0" x2="756" y2="96.0"/><text class="muted" x="54" y="100.0" font-size="11" text-anchor="end">6000</text><g><title>p50 · 标准检索 baseline: 142</title><path class="s1" d="M123.8,328.0 V326.5 Q123.8,322.5 127.8,322.5 H143.8 Q147.8,322.5 147.8,326.5 V328.0 Z"/></g><g><title>p95 · 标准检索 baseline: 168</title><path class="s2" d="M149.8,328.0 V325.5 Q149.8,321.5 153.8,321.5 H169.8 Q173.8,321.5 173.8,325.5 V328.0 Z"/></g><text class="secondary" x="148.8" y="350" font-size="12" text-anchor="middle">标准检索 baseline</text><g><title>p50 · AI 增强检索 llm_assisted: 3018</title><path class="s1" d="M297.2,328.0 V215.3 Q297.2,211.3 301.2,211.3 H317.2 Q321.2,211.3 321.2,215.3 V328.0 Z"/></g><g><title>p95 · AI 增强检索 llm_assisted: 4685</title><path class="s2" d="M323.2,328.0 V150.8 Q323.2,146.8 327.2,146.8 H343.2 Q347.2,146.8 347.2,150.8 V328.0 Z"/></g><text class="secondary" x="322.2" y="350" font-size="12" text-anchor="middle">AI 增强检索 llm_assisted</text><g><title>p50 · 混合检索 hybrid: 2605</title><path class="s1" d="M470.8,328.0 V231.3 Q470.8,227.3 474.8,227.3 H490.8 Q494.8,227.3 494.8,231.3 V328.0 Z"/></g><g><title>p95 · 混合检索 hybrid: 3659</title><path class="s2" d="M496.8,328.0 V190.5 Q496.8,186.5 500.8,186.5 H516.8 Q520.8,186.5 520.8,190.5 V328.0 Z"/></g><text class="secondary" x="495.8" y="350" font-size="12" text-anchor="middle">混合检索 hybrid</text><g><title>p50 · 翻译+词法（消融）: 1520</title><path class="s1" d="M644.2,328.0 V273.2 Q644.2,269.2 648.2,269.2 H664.2 Q668.2,269.2 668.2,273.2 V328.0 Z"/></g><g><title>p95 · 翻译+词法（消融）: 2240</title><path class="s2" d="M670.2,328.0 V245.4 Q670.2,241.4 674.2,241.4 H690.2 Q694.2,241.4 694.2,245.4 V328.0 Z"/></g><text class="secondary" x="669.2" y="350" font-size="12" text-anchor="middle">翻译+词法（消融）</text></svg>
